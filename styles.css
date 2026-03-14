@@ -1,0 +1,697 @@
+/* ══════════════════════════════════════════
+   Invest AI — styles.css
+   ══════════════════════════════════════════ */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #0a0c10;
+  --surface: #111318;
+  --surface2: #181b22;
+  --border: rgba(255, 255, 255, 0.08);
+  --border2: rgba(255, 255, 255, 0.14);
+  --text: #f0f2f7;
+  --muted: #8a8fa8;
+  --accent: #00e5a0;
+  --accent2: #00b87a;
+  --gold: #f5c542;
+  --blue: #4fa3f7;
+  --red: #ff6b6b;
+  --font-display: 'Syne', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+}
+
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── SCREENS ── */
+.screen {
+  display: none;
+  min-height: 100vh;
+  flex-direction: column;
+}
+.screen.active {
+  display: flex;
+}
+
+/* ══════════════════════════════════════════
+   SCREEN 1 — INPUT FORM
+   ══════════════════════════════════════════ */
+#s-input {
+  padding: 2rem 1.5rem 3rem;
+  max-width: 600px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 2.5rem;
+}
+.brand-icon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #00e5a0, #4fa3f7);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+.brand-name {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+.brand-tag {
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.badge {
+  display: inline-block;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 5px 14px;
+  border-radius: 20px;
+  margin-bottom: 1.2rem;
+}
+
+h1 {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1.15;
+  margin-bottom: 0.8rem;
+}
+h1 span {
+  color: var(--accent);
+}
+
+.subtitle {
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+/* ── FORM GRID ── */
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.full {
+  grid-column: 1 / -1;
+}
+
+.field label {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.field input,
+.field textarea {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s;
+  resize: none;
+}
+.field input::placeholder,
+.field textarea::placeholder {
+  color: #454a5c;
+}
+.field input:focus,
+.field textarea:focus {
+  border-color: var(--accent);
+}
+
+.prefix {
+  position: relative;
+}
+.prefix > span {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-size: 0.9rem;
+  pointer-events: none;
+}
+.prefix input {
+  padding-left: 24px;
+}
+
+/* ── CTA BUTTON ── */
+.btn-main {
+  width: 100%;
+  margin-top: 1.5rem;
+  background: var(--accent);
+  color: #051a10;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 16px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: opacity 0.2s, transform 0.1s;
+}
+.btn-main:hover {
+  opacity: 0.9;
+}
+.btn-main:active {
+  transform: scale(0.98);
+}
+.btn-main:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ══════════════════════════════════════════
+   SCREEN 2 — PLAN
+   ══════════════════════════════════════════ */
+#s-plan {
+  padding: 0;
+  max-width: 600px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.plan-header {
+  padding: 2rem 1.5rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+.back-btn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 1.2rem;
+  padding: 0;
+}
+.back-btn:hover {
+  color: var(--text);
+}
+.plan-header h2 {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+.plan-header p {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
+
+/* ── STEP TABS ── */
+.steps-nav {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.steps-nav::-webkit-scrollbar {
+  display: none;
+}
+.step-tab {
+  flex: 1;
+  padding: 14px 8px;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  white-space: nowrap;
+  font-family: var(--font-body);
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  min-width: 100px;
+}
+.step-tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+.step-tab:hover:not(.active) {
+  color: var(--text);
+}
+
+.step-content {
+  flex: 1;
+  overflow-y: auto;
+}
+.step-panel {
+  display: none;
+  padding: 1.5rem;
+}
+.step-panel.active {
+  display: block;
+}
+
+/* ══════════════════════════════════════════
+   STEP 1 — FINANCE BASICS
+   ══════════════════════════════════════════ */
+.summary-bar {
+  background: var(--surface2);
+  border-radius: 12px;
+  padding: 1rem 1.2rem;
+  margin-bottom: 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.s-item {
+  text-align: center;
+}
+.s-label {
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 3px;
+}
+.s-val {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+.s-val.green { color: var(--accent); }
+.s-val.red   { color: var(--red); }
+
+/* AI Analysis Box */
+.ai-plan-box {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 14px;
+  padding: 1.2rem;
+  margin-bottom: 1rem;
+}
+.ai-plan-box .ai-label {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ai-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--accent);
+  border-radius: 50%;
+  display: inline-block;
+}
+.ai-plan-box p {
+  font-size: 0.88rem;
+  color: var(--text);
+  line-height: 1.65;
+}
+
+/* Tip Cards */
+.tip-card {
+  background: var(--surface2);
+  border-left: 3px solid var(--blue);
+  border-radius: 0 10px 10px 0;
+  padding: 10px 14px;
+  margin-bottom: 10px;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.tip-card strong {
+  color: var(--text);
+  display: block;
+  margin-bottom: 2px;
+  font-size: 0.88rem;
+}
+
+/* Loading Spinner */
+.loader {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--muted);
+}
+.spin {
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--border2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 1rem;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ══════════════════════════════════════════
+   STEP 2 — COMPOUNDING CALCULATOR
+   ══════════════════════════════════════════ */
+.result-hero {
+  text-align: center;
+  background: linear-gradient(135deg, rgba(0, 229, 160, 0.08), rgba(79, 163, 247, 0.08));
+  border: 1px solid rgba(0, 229, 160, 0.2);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1.2rem;
+}
+.rh-label {
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.rh-val {
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--accent);
+}
+.rh-sub {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.calc-card {
+  background: var(--surface2);
+  border-radius: 14px;
+  padding: 1.2rem;
+  margin-bottom: 1.2rem;
+}
+.calc-card label {
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.calc-card label span {
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 13px;
+}
+input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent);
+  height: 4px;
+  cursor: pointer;
+}
+
+/* Bar Chart */
+.bar-chart {
+  margin-top: 1rem;
+}
+.bar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: 0.78rem;
+}
+.bar-label {
+  width: 40px;
+  color: var(--muted);
+  text-align: right;
+  flex-shrink: 0;
+}
+.bar-track {
+  flex: 1;
+  height: 8px;
+  background: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+.bar-fill.contrib { background: var(--blue); }
+.bar-fill.growth  { background: var(--accent); }
+.bar-amount {
+  width: 70px;
+  color: var(--text);
+  font-size: 0.75rem;
+  text-align: right;
+  flex-shrink: 0;
+}
+.legend {
+  display: flex;
+  gap: 16px;
+  margin-top: 10px;
+}
+.leg-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.leg-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+
+/* Investing Options */
+.section-heading {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  margin: 1.5rem 0 0.8rem;
+  font-weight: 700;
+}
+.invest-options {
+  margin-top: 0;
+}
+.option-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 10px;
+  transition: border-color 0.2s;
+}
+.option-card:hover {
+  border-color: var(--border2);
+}
+.oc-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.oc-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.oc-badge {
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+.badge-low  { background: rgba(0, 229, 160, 0.15); color: var(--accent); }
+.badge-med  { background: rgba(245, 197, 66, 0.15); color: var(--gold); }
+.badge-high { background: rgba(255, 107, 107, 0.15); color: var(--red); }
+.option-card p {
+  font-size: 0.8rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.oc-ret {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-top: 6px;
+}
+.oc-ret span {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* ══════════════════════════════════════════
+   STEP 3 — PAYWALL
+   ══════════════════════════════════════════ */
+.paywall-wrapper {
+  position: relative;
+}
+.paywall-preview {
+  filter: blur(3px);
+  pointer-events: none;
+  user-select: none;
+  opacity: 0.4;
+}
+.paywall-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  text-align: center;
+}
+.lock-icon {
+  width: 56px;
+  height: 56px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  margin: 0 auto 1rem;
+}
+.paywall-overlay h3 {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+.paywall-overlay p {
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+.perks {
+  margin: 0 0 1.2rem;
+  text-align: left;
+  width: 100%;
+}
+.perk {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+  font-size: 0.85rem;
+}
+.perk-icon {
+  color: var(--accent);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.perk-text {
+  color: var(--muted);
+  line-height: 1.4;
+}
+.perk-text strong {
+  color: var(--text);
+}
+
+.btn-unlock {
+  background: linear-gradient(135deg, var(--accent), var(--blue));
+  color: #051a10;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 14px 28px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  width: 100%;
+  transition: opacity 0.2s, transform 0.1s;
+}
+.btn-unlock:hover {
+  opacity: 0.9;
+}
+.btn-unlock:active {
+  transform: scale(0.98);
+}
+
+.price-note {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-top: 10px;
+}
+
+/* Stock mock cards (shown blurred in paywall) */
+.stock-mock {
+  background: var(--surface2);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.sm-left .sm-ticker {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1rem;
+}
+.sm-left .sm-name {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.sm-right .sm-chg {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-align: right;
+}
+.sm-right .sm-fit {
+  font-size: 0.7rem;
+  color: var(--muted);
+  text-align: right;
+}
+
+/* ══════════════════════════════════════════
+   RESPONSIVE
+   ══════════════════════════════════════════ */
+@media (max-width: 480px) {
+  #s-input { padding: 1.5rem 1rem 2.5rem; }
+  h1 { font-size: 1.7rem; }
+  .grid2 { grid-template-columns: 1fr; }
+  .full { grid-column: 1; }
+  .summary-bar { grid-template-columns: repeat(3, 1fr); gap: 4px; }
+  .s-val { font-size: 0.9rem; }
+  .rh-val { font-size: 1.8rem; }
+}
