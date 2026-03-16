@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Your AI Stock Picks — Invest AI Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0a0c10; --surface: #111318; --surface2: #181b22;
+  --border: rgba(255,255,255,0.08); --border2: rgba(255,255,255,0.15);
+  --text: #f0f2f7; --muted: #8a8fa8;
+  --accent: #00e5a0; --gold: #f5c542; --blue: #4fa3f7;
+  --red: #ff6b6b; --purple: #a78bfa;
+  --font-display: 'Syne', sans-serif; --font-body: 'DM Sans', sans-serif;
+}
+html, body { background: var(--bg); color: var(--text); font-family: var(--font-body); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+.page { max-width: 600px; margin: 0 auto; padding: 2rem 1.5rem 5rem; }
+
+.top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+.brand { display: flex; align-items: center; gap: 9px; }
+.brand-icon { width: 34px; height: 34px; background: linear-gradient(135deg,#00e5a0,#4fa3f7); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 17px; }
+.brand-name { font-family: var(--font-display); font-size: 17px; font-weight: 700; }
+.pro-badge { background: rgba(0,229,160,0.12); border: 1px solid rgba(0,229,160,0.3); color: var(--accent); font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; padding: 3px 9px; border-radius: 20px; }
+.back-link { color: var(--muted); font-size: 0.82rem; text-decoration: none; display: flex; align-items: center; gap: 5px; margin-bottom: 1.5rem; }
+.back-link:hover { color: var(--text); }
+
+/* WELCOME */
+.welcome { text-align: center; padding: 1rem 0 1.4rem; }
+.welcome-emoji { font-size: 2.2rem; margin-bottom: 0.6rem; animation: pop 0.5s ease; }
+@keyframes pop { from { transform: scale(0.3) rotate(-10deg); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.welcome h1 { font-family: var(--font-display); font-size: 1.65rem; font-weight: 800; line-height: 1.2; margin-bottom: 0.4rem; }
+.welcome h1 span { color: var(--accent); }
+.welcome p { color: var(--muted); font-size: 0.82rem; line-height: 1.55; }
+
+/* PROFILE BAR */
+.profile-bar { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; background: var(--surface2); border-radius: 12px; padding: 0.9rem 1rem; margin-bottom: 1.8rem; }
+.pb-item { text-align: center; }
+.pb-label { font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 3px; }
+.pb-val { font-family: var(--font-display); font-size: 0.95rem; font-weight: 700; }
+.pb-val.g { color: var(--accent); }
+
+/* PORTFOLIO SELECTOR */
+.selector-card { background: var(--surface2); border: 1px solid var(--border2); border-radius: 14px; padding: 1.3rem; margin-bottom: 1.2rem; }
+.selector-label { font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; display: flex; align-items: center; gap: 5px; }
+.selector-label::before { content: ''; width: 5px; height: 5px; background: var(--accent); border-radius: 50%; display: inline-block; }
+.selector-card h2 { font-family: var(--font-display); font-size: 1rem; font-weight: 800; margin-bottom: 4px; }
+.selector-card p { font-size: 0.78rem; color: var(--muted); margin-bottom: 1rem; line-height: 1.5; }
+
+.tier-btns { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+.tier-btn {
+  background: var(--surface); border: 1.5px solid var(--border2);
+  border-radius: 11px; padding: 1rem 0.5rem; text-align: center;
+  cursor: pointer; transition: all 0.2s;
+}
+.tier-btn:hover { border-color: rgba(255,255,255,0.25); transform: translateY(-1px); }
+.tier-btn.active-conservative { border-color: var(--blue); background: rgba(79,163,247,0.08); }
+.tier-btn.active-moderate    { border-color: var(--gold); background: rgba(245,197,66,0.08); }
+.tier-btn.active-aggressive  { border-color: var(--red);  background: rgba(255,107,107,0.08); }
+.tier-icon { font-size: 1.8rem; margin-bottom: 6px; }
+.tier-name { font-family: var(--font-display); font-size: 0.82rem; font-weight: 700; display: block; margin-bottom: 4px; }
+.active-conservative .tier-name { color: var(--blue); }
+.active-moderate    .tier-name { color: var(--gold); }
+.active-aggressive  .tier-name { color: var(--red); }
+.tier-desc { font-size: 0.67rem; color: var(--muted); line-height: 1.4; }
+
+.tier-detail { margin-top: 1rem; padding: 0.8rem 1rem; border-radius: 9px; font-size: 0.79rem; line-height: 1.55; display: none; }
+.tier-detail.show { display: block; }
+.tier-detail.td-c { background: rgba(79,163,247,0.07);  color: #a0c4f4; border-left: 3px solid var(--blue); border-radius: 0 8px 8px 0; }
+.tier-detail.td-m { background: rgba(245,197,66,0.07);  color: #f0d078; border-left: 3px solid var(--gold); border-radius: 0 8px 8px 0; }
+.tier-detail.td-a { background: rgba(255,107,107,0.07); color: #f4a0a0; border-left: 3px solid var(--red);  border-radius: 0 8px 8px 0; }
+
+/* GENERATE BTN */
+.btn-generate {
+  width: 100%; margin-top: 0;
+  background: var(--accent); color: #051a10;
+  font-family: var(--font-display); font-size: 1rem; font-weight: 700;
+  padding: 16px; border: none; border-radius: 12px; cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s; letter-spacing: 0.3px;
+}
+.btn-generate:hover { opacity: 0.9; }
+.btn-generate:active { transform: scale(0.98); }
+.btn-generate:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* LOADING */
+.ai-loading { display: none; text-align: center; padding: 3.5rem 1rem; }
+.spin { width: 36px; height: 36px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 1rem; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.ai-loading p { color: var(--muted); font-size: 0.88rem; }
+.thinking-msg { color: var(--accent); font-size: 0.78rem; margin-top: 5px; font-style: italic; }
+
+/* RESULTS */
+#results { display: none; }
+.sec-head { margin: 1.6rem 0 0.5rem; }
+.sec-head h2 { font-family: var(--font-display); font-size: 1rem; font-weight: 800; }
+.sec-head p { font-size: 0.76rem; color: var(--muted); margin-top: 2px; }
+
+/* STRATEGY BOX */
+.strategy-box { background: var(--surface); border: 1px solid var(--border2); border-radius: 14px; padding: 1.2rem; margin-bottom: 1rem; }
+.ai-lbl { font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; display: flex; align-items: center; gap: 5px; }
+.ai-dot { width: 5px; height: 5px; background: var(--accent); border-radius: 50%; }
+.strategy-box p { font-size: 0.86rem; line-height: 1.65; }
+
+/* RISK METER */
+.risk-meter { background: var(--surface2); border-radius: 12px; padding: 1rem 1.1rem; margin-bottom: 1rem; }
+.risk-lbl { font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
+.risk-track { height: 9px; background: var(--border); border-radius: 9px; overflow: hidden; margin-bottom: 5px; }
+.risk-fill { height: 100%; border-radius: 9px; background: linear-gradient(90deg, var(--blue), var(--gold), var(--red)); transition: width 0.9s ease; }
+.risk-ends { display: flex; justify-content: space-between; font-size: 9px; color: var(--muted); }
+.risk-desc { font-size: 0.76rem; color: var(--muted); margin-top: 6px; line-height: 1.45; }
+
+/* ALLOCATION BARS */
+.alloc-box { background: var(--surface2); border-radius: 12px; padding: 1rem 1.1rem; margin-bottom: 1rem; }
+.alloc-row { display: flex; align-items: center; gap: 9px; margin-bottom: 8px; }
+.alloc-row:last-child { margin-bottom: 0; }
+.alloc-name { font-size: 0.74rem; color: var(--muted); width: 140px; flex-shrink: 0; }
+.alloc-track { flex: 1; height: 7px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.alloc-fill { height: 100%; border-radius: 4px; transition: width 0.8s ease; }
+.alloc-pct { font-size: 0.74rem; font-weight: 600; width: 30px; text-align: right; flex-shrink: 0; }
+
+/* STOCK CARDS */
+.stock-card {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 13px; padding: 1rem 1.1rem; margin-bottom: 9px;
+  transition: border-color 0.2s;
+}
+.stock-card:hover { border-color: var(--border2); }
+.stock-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 0.6rem; gap: 10px; }
+.stock-left { display: flex; align-items: center; gap: 9px; }
+.stock-logo { width: 38px; height: 38px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+.ticker { font-family: var(--font-display); font-weight: 700; font-size: 0.95rem; }
+.sname { font-size: 0.7rem; color: var(--muted); margin-top: 1px; }
+.scategory { font-size: 0.64rem; color: var(--blue); margin-top: 2px; letter-spacing: 0.3px; }
+.stock-right { text-align: right; flex-shrink: 0; }
+.fit-pct { font-family: var(--font-display); font-size: 1.05rem; font-weight: 800; color: var(--accent); }
+.fit-lbl { font-size: 0.62rem; color: var(--muted); }
+.stock-valuation { display: flex; align-items: center; gap: 6px; margin-bottom: 0.5rem; }
+.val-badge { font-size: 9px; padding: 2px 7px; border-radius: 5px; font-weight: 600; letter-spacing: 0.3px; }
+.val-cheap  { background: rgba(0,229,160,0.15); color: var(--accent); }
+.val-fair   { background: rgba(245,197,66,0.15); color: var(--gold); }
+.val-metric { font-size: 0.72rem; color: var(--muted); }
+.stock-why { font-size: 0.79rem; color: var(--muted); line-height: 1.55; margin-bottom: 0.6rem; }
+.pills { display: flex; gap: 5px; flex-wrap: wrap; }
+.pill { font-size: 9px; padding: 2px 7px; border-radius: 5px; }
+.pg { background: rgba(0,229,160,0.12); color: var(--accent); }
+.pb { background: rgba(79,163,247,0.12); color: var(--blue); }
+.py { background: rgba(245,197,66,0.12); color: var(--gold); }
+.pp { background: rgba(167,139,250,0.12); color: var(--purple); }
+.pr { background: rgba(255,107,107,0.12); color: var(--red); }
+
+/* CATEGORY BREAKDOWN */
+.cat-breakdown { background: var(--surface2); border-radius: 12px; padding: 1rem 1.1rem; margin-bottom: 1rem; }
+.cat-row { display: flex; align-items: center; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 0.78rem; }
+.cat-row:last-child { border-bottom: none; }
+.cat-row-name { color: var(--muted); }
+.cat-row-stocks { color: var(--text); font-weight: 500; }
+
+/* ACTION STEPS */
+.action-box { background: var(--surface2); border-radius: 12px; padding: 1rem 1.1rem; margin-bottom: 1rem; }
+.action-lbl { font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--blue); margin-bottom: 10px; }
+.astep { display: flex; gap: 10px; margin-bottom: 10px; }
+.astep:last-child { margin-bottom: 0; }
+.anum { width: 24px; height: 24px; background: rgba(79,163,247,0.15); color: var(--blue); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+.abody strong { display: block; font-size: 0.84rem; margin-bottom: 2px; }
+.abody span { font-size: 0.76rem; color: var(--muted); line-height: 1.4; }
+
+/* REGENERATE */
+.btn-regen { width: 100%; background: var(--surface2); color: var(--text); border: 1px solid var(--border2); font-family: var(--font-display); font-size: 0.9rem; font-weight: 700; padding: 13px; border-radius: 11px; cursor: pointer; transition: all 0.2s; margin-top: 0.5rem; }
+.btn-regen:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,229,160,0.05); }
+
+/* DISCLAIMER */
+.disclaimer { background: rgba(245,197,66,0.05); border: 1px solid rgba(245,197,66,0.15); border-radius: 9px; padding: 0.9rem 1rem; margin-top: 1.2rem; }
+.disclaimer p { font-size: 0.69rem; color: var(--muted); line-height: 1.55; }
+.disclaimer strong { color: var(--gold); }
+
+/* NO PROFILE */
+.no-profile { text-align: center; padding: 3rem 1rem; }
+.no-profile h2 { font-family: var(--font-display); font-size: 1.3rem; margin-bottom: 0.6rem; }
+.no-profile p { color: var(--muted); font-size: 0.88rem; margin-bottom: 1.5rem; }
+.btn-go { display: inline-block; background: var(--accent); color: #051a10; font-family: var(--font-display); font-weight: 700; font-size: 0.95rem; padding: 14px 28px; border-radius: 12px; text-decoration: none; }
+
+@media (max-width: 420px) {
+  .tier-desc { display: none; }
+  .tier-btn { padding: 0.8rem 0.3rem; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="top-bar">
+    <div class="brand">
+      <div class="brand-icon">📈</div>
+      <div class="brand-name">Invest AI</div>
+    </div>
+    <div class="pro-badge">PRO</div>
+  </div>
+
+  <a href="index.html" class="back-link">← Back to my roadmap</a>
+
+  <div class="welcome">
+    <div class="welcome-emoji">🎉</div>
+    <h1>Your <span>AI Stock Picks</span></h1>
+    <p id="welcome-sub">Choose your risk appetite and we'll build your personalized portfolio — priced cheap or fair value only.</p>
+  </div>
+
+  <div id="market-note" style="display:none;font-size:0.75rem;color:var(--muted);background:var(--surface2);border-radius:0 9px 9px 0;padding:7px 12px;margin-bottom:1rem;line-height:1.5;border-left:3px solid var(--gold);"></div>
+
+  <div class="profile-bar" id="profile-bar" style="display:none">
+    <div class="pb-item"><span class="pb-label">Income</span><span class="pb-val" id="pb-income">—</span></div>
+    <div class="pb-item"><span class="pb-label">Free Cash</span><span class="pb-val g" id="pb-free">—</span></div>
+    <div class="pb-item"><span class="pb-label">Savings</span><span class="pb-val" id="pb-savings">—</span></div>
+  </div>
+
+  <!-- STEP: CHOOSE TIER -->
+  <div class="selector-card" id="selector-section">
+    <div class="selector-label">STEP 1 — CHOOSE YOUR RISK APPETITE</div>
+    <h2>What kind of investor are you?</h2>
+    <p>This determines how we mix growth stocks, quality compounders, and dividend payers in your portfolio.</p>
+
+    <div class="tier-btns">
+      <div class="tier-btn" id="btn-conservative" onclick="selectTier('conservative')">
+        <div class="tier-icon">🛡️</div>
+        <span class="tier-name">Conservative</span>
+        <div class="tier-desc">Capital safety + steady compounders + 2 dividend payers</div>
+      </div>
+      <div class="tier-btn" id="btn-moderate" onclick="selectTier('moderate')">
+        <div class="tier-icon">⚖️</div>
+        <span class="tier-name">Moderate</span>
+        <div class="tier-desc">Quality growth + some high-conviction bets</div>
+      </div>
+      <div class="tier-btn" id="btn-aggressive" onclick="selectTier('aggressive')">
+        <div class="tier-icon">🚀</div>
+        <span class="tier-name">Aggressive</span>
+        <div class="tier-desc">AI, EVs, Fintech, high-growth themes</div>
+      </div>
+    </div>
+
+    <div class="tier-detail td-c" id="detail-conservative">
+      Mix: ~40% quality/blue-chip (META, GOOGL, MSFT, ASML) · ~25% luxury/secular growth (LVMH, RACE) · ~20% dividend (KO, T, XOM) · ~15% selective growth (NVDA small, AMZN). Valuation filter: P/E below 10-yr avg or PEG &lt; 2.
+    </div>
+    <div class="tier-detail td-m" id="detail-moderate">
+      Mix: ~35% quality compounders · ~30% growth themes (AI, Cloud, Fintech) · ~20% consumption/brand growth · ~15% international. Valuation filter: PEG &lt; 2 for growth, P/E below historical avg for mature names.
+    </div>
+    <div class="tier-detail td-a" id="detail-aggressive">
+      Mix: ~40% AI/semiconductors · ~25% EV/disruptive tech · ~20% Fintech/Crypto · ~15% China growth or LATAM. Valuation filter: PEG &lt; 3 for hyper-growth, forward P/S below 3yr avg for early stage.
+    </div>
+
+    <button class="btn-generate" id="gen-btn" onclick="generatePicks()" disabled>
+      Choose a risk tier above →
+    </button>
+  </div>
+
+  <!-- LOADING -->
+  <div class="ai-loading" id="ai-loading">
+    <div class="spin"></div>
+    <p>Building your portfolio…</p>
+    <div class="thinking-msg" id="thinking-msg">Screening valuations across 12 categories</div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results">
+    <div class="strategy-box">
+      <div class="ai-lbl"><span class="ai-dot"></span> PORTFOLIO STRATEGY</div>
+      <p id="strategy-text"></p>
+    </div>
+
+    <div class="risk-meter">
+      <div class="risk-lbl">⚡ RISK SCORE</div>
+      <div class="risk-track"><div class="risk-fill" id="risk-fill" style="width:0%"></div></div>
+      <div class="risk-ends"><span>Conservative</span><span>Moderate</span><span>Aggressive</span></div>
+      <div class="risk-desc" id="risk-desc"></div>
+    </div>
+
+    <div class="sec-head"><h2>Portfolio Allocation</h2><p>How your monthly investment is split by theme</p></div>
+    <div class="alloc-box" id="alloc-bars"></div>
+
+    <div class="sec-head"><h2>Your Stock Picks</h2><p id="picks-subhead">Screened for cheap or fair value only — expensive names excluded</p></div>
+    <div id="stock-cards"></div>
+
+    <div class="sec-head"><h2>Category Breakdown</h2><p>Which of the 12 themes are in your portfolio</p></div>
+    <div class="cat-breakdown" id="cat-breakdown"></div>
+
+    <div class="sec-head"><h2>Your Action Plan</h2><p>Exactly what to do this week</p></div>
+    <div class="action-box">
+      <div class="action-lbl">FIRST STEPS</div>
+      <div id="action-steps"></div>
+    </div>
+
+    <button class="btn-regen" onclick="resetToSelector()">← Change risk tier / regenerate</button>
+
+    <div class="disclaimer">
+      <p><strong>⚠️ Important disclaimer.</strong> The portfolio and stock recommendations shown here are generated by an AI simulation engine using publicly available valuation data and heuristics. They are for <strong>educational and informational purposes only</strong> and must not be construed as financial advice, investment advice, or a solicitation to buy or sell any security. Valuations change daily — verify current prices before acting. All investments carry risk including the possible loss of principal. Past performance does not guarantee future results. <strong>Please consult a licensed financial advisor before making any investment decisions.</strong></p>
+    </div>
+  </div>
+
+  <!-- NO PROFILE -->
+  <div class="no-profile" id="no-profile" style="display:none">
+    <h2>No profile found</h2>
+    <p>Go back to the app, enter your financial details, and generate your roadmap first.</p>
+    <a href="index.html" class="btn-go">← Go to the App</a>
+  </div>
+
+</div>
+<script src="src/universe.js"></script>
+<script>
+/* ══════════════════════════════════════════════════
+   CONFIG
+══════════════════════════════════════════════════ */
+const USE_FALLBACK  = true;
+const API_ENDPOINT  = '/api/analyze';
+const STORAGE_KEY   = 'investai_profile';
+
+let selectedTier  = null;
+let userProfile   = {};
+let valuationCache = {}; // populated from /api/stock-cache on load
+
+/* ══════════════════════════════════════════════════
+   LOAD VALUATION CACHE FROM BACKEND
+   Merges fresh AI-evaluated statuses over static defaults.
+   Silently falls back to static data if unavailable.
+══════════════════════════════════════════════════ */
+async function loadValuationCache() {
+  try {
+    const res = await fetch('/api/stock-cache');
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.stocks && Object.keys(data.stocks).length > 0) {
+      valuationCache = data.stocks;
+      // Show cache freshness in UI if stale
+      if (data.stale) {
+        console.warn('⚠️ Valuation cache is stale (>26hrs old). Showing last known data.');
+      } else {
+        console.log(`✅ Valuation cache loaded. Updated: ${data.lastUpdated}. Market: ${data.marketNote}`);
+      }
+      // Show market note if available
+      if (data.marketNote) {
+        const el = document.getElementById('market-note');
+        if (el) { el.textContent = '📰 ' + data.marketNote; el.style.display = 'block'; }
+      }
+    }
+  } catch (e) {
+    console.log('ℹ️ Running with static valuations (no backend cache available).');
+  }
+}
+
+/* Merges cached valuation over a static stock object */
+function mergeCache(stock) {
+  const cached = valuationCache[stock.t];
+  if (!cached) return stock;
+  return {
+    ...stock,
+    status:  cached.status  || stock.status,
+    metric:  cached.metric  || stock.metric,
+    valNote: cached.valNote || stock.valNote,
+    why:     cached.why     || stock.why,
+    pills:   cached.pills   || stock.pills,
+  };
+}
+
+/* ══════════════════════════════════════════════════
+   UTILITIES
+══════════════════════════════════════════════════ */
+function fmt(n) { return '$' + Math.round(n).toLocaleString(); }
+
+/* ══════════════════════════════════════════════════
+   THINKING MESSAGES
+══════════════════════════════════════════════════ */
+const THINKING = [
+  'Screening valuations across 12 categories',
+  'Checking P/E against 10-year historical averages',
+  'Running PEG ratio filter on growth names',
+  'Excluding overvalued and expensive stocks',
+  'Matching picks to your goals and savings rate',
+  'Ranking by fit score and cheapness',
+  'Building your allocation mix',
+  'Almost ready…',
+];
+let thinkIdx = 0, thinkTimer;
+function startThinking() {
+  thinkIdx = 0;
+  thinkTimer = setInterval(() => {
+    thinkIdx = (thinkIdx + 1) % THINKING.length;
+    const el = document.getElementById('thinking-msg');
+    if (el) el.textContent = THINKING[thinkIdx];
+  }, 1800);
+}
+function stopThinking() { clearInterval(thinkTimer); }
+
+/* ══════════════════════════════════════════════════
+   TIER SELECTION
+══════════════════════════════════════════════════ */
+function selectTier(tier) {
+  selectedTier = tier;
+  ['conservative','moderate','aggressive'].forEach(t => {
+    document.getElementById('btn-' + t).className = 'tier-btn' + (t === tier ? ' active-' + t : '');
+    const d = document.getElementById('detail-' + t);
+    d.className = 'tier-detail td-' + t[0] + (t === tier ? ' show' : '');
+  });
+  const btn = document.getElementById('gen-btn');
+  btn.disabled = false;
+  btn.textContent = 'Build my ' + tier.charAt(0).toUpperCase() + tier.slice(1) + ' Portfolio →';
+}
+
+/* ══════════════════════════════════════════════════
+   LOAD PROFILE
+══════════════════════════════════════════════════ */
+function loadProfile() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch(e) { return null; }
+}
+
+function showProfileBar(p) {
+  const income   = parseFloat(p.income)   || 0;
+  const expenses = parseFloat(p.expenses) || 0;
+  const savings  = parseFloat(p.savings)  || 0;
+  document.getElementById('pb-income').textContent  = fmt(income) + '/mo';
+  document.getElementById('pb-free').textContent    = fmt(Math.max(0, income - expenses)) + '/mo';
+  document.getElementById('pb-savings').textContent = fmt(savings);
+  document.getElementById('profile-bar').style.display = 'grid';
+  if (p.goal1) {
+    document.getElementById('welcome-sub').textContent =
+      `Tailored to: "${p.goal1}" — and "${p.goal2 || 'long-term wealth'}"`;
+  }
+}
+
+/* ══════════════════════════════════════════════════
+   GENERATE PICKS — instant, no loading delay
+   All data is pre-loaded in UNIVERSE + cache.
+   Portfolio builds in <50ms — show immediately.
+══════════════════════════════════════════════════ */
+function generatePicks() {
+  if (!selectedTier) return;
+
+  // Build portfolio instantly from cached universe data
+  const data = buildPortfolio(selectedTier, userProfile);
+
+  // Hide selector, show results immediately — no spinner needed
+  document.getElementById('selector-section').style.display = 'none';
+  document.getElementById('ai-loading').style.display       = 'none';
+  document.getElementById('results').style.display          = 'block';
+
+  renderResults(data);
+}
+
+function resetToSelector() {
+  document.getElementById('results').style.display          = 'none';
+  document.getElementById('selector-section').style.display = 'block';
+  // Reset risk fill bar for next render
+  document.getElementById('risk-fill').style.width = '0%';
+}
+
+/* ══════════════════════════════════════════════════
+   THE 12-CATEGORY STOCK UNIVERSE
+   Each stock has: valuation method, current valuation status,
+   PEG/PE metric, and category tag.
+   Status: 'cheap' | 'fair' | 'expensive' (expensive = excluded)
+══════════════════════════════════════════════════ */
+// UNIVERSE is loaded from src/universe.js (300+ stocks)
+// Falls back to window.UNIVERSE set by the script tag below
+
+/* ══════════════════════════════════════════════════
+   PORTFOLIO BUILDER ENGINE
+══════════════════════════════════════════════════ */
+function buildPortfolio(tier, p) {
+  const income   = parseFloat(p.income)   || 3000;
+  const expenses = parseFloat(p.expenses) || 2000;
+  const savings  = parseFloat(p.savings)  || 5000;
+  const age      = parseInt(p.age)        || 30;
+  const free     = Math.max(0, income - expenses);
+  const savRate  = income > 0 ? Math.round((free / income) * 100) : 15;
+  const emMos    = expenses > 0 ? Math.round(savings / expenses) : 2;
+  const goal1    = p.goal1 || 'build wealth';
+  const goal2    = p.goal2 || 'retire comfortably';
+  const monthlyInvest = Math.round(free * (tier === 'conservative' ? 0.20 : tier === 'moderate' ? 0.25 : 0.30));
+
+  // ── RISK SCORE ──────────────────────────────────────────────────────
+  const riskBase = { conservative: 22, moderate: 52, aggressive: 78 }[tier];
+  const riskAdj  = Math.min(8, savRate / 5) + (emMos >= 6 ? 5 : 0) + (age < 30 ? 5 : age > 55 ? -8 : 0);
+  const riskScore = Math.min(92, Math.max(10, riskBase + riskAdj));
+
+  const riskDesc = {
+    conservative: `Conservative profile — capital safety first. Mix of quality blue-chips, luxury secular growers, and dividend payers. All names screened for below-average historical P/E or PEG < 2.`,
+    moderate:     `Moderate profile — balanced growth and quality. Core compounders + selective AI/Cloud/Fintech positions. Valuation filter: PEG < 2 for growth names, P/E below 5yr average for mature names.`,
+    aggressive:   `Aggressive profile — maximum growth. Heavy AI/semiconductors, EV disruptors, Fintech/Crypto, China growth. Valuation filter: PEG < 3 for hyper-growth, P/S below 3yr average for early stage.`,
+  }[tier];
+
+  // ── AGE-BASED PORTFOLIO PROFILE ─────────────────────────────────────
+  // Under 50:  50% growth, 20% quality, 20% China+consumption, 10% dividends
+  // 50–69:     conservative+ quality tilt (original conservative logic)
+  // 70+:       extremely risk-averse: 50% dividends, 30% quality, 20% growth only
+
+  let ageProfile;
+  if (age >= 70) {
+    ageProfile = 'elder';       // 70+ → extreme safety
+  } else if (age >= 50) {
+    ageProfile = 'senior';      // 50–69 → conservative+quality
+  } else {
+    ageProfile = 'growth';      // under 50 → growth-tilted
+  }
+
+  // Override tier for elder/senior if they picked aggressive/moderate
+  // Elder always gets elder profile regardless of tier choice
+  // Senior always gets senior profile regardless of tier choice
+  // Under 50 respects their tier choice but adjusts weights
+  const effectiveTier = ageProfile === 'elder'  ? 'conservative'
+                       : ageProfile === 'senior' ? tier === 'aggressive' ? 'moderate' : tier
+                       : tier;
+
+  // ── CATEGORY TARGETS ─────────────────────────────────────────────────
+  // Under 50: tier-driven but with growth boost
+  // Senior (50-69): quality-heavy conservative regardless of tier
+  // Elder (70+): dividends-heavy, minimal growth
+
+  let catTargets;
+
+  if (ageProfile === 'elder') {
+    catTargets = { Dividends:7, Quality:4, 'AI/Semis':2, Metals:1, 'Robotics/Defense':1 };
+  } else if (ageProfile === 'senior') {
+    if (effectiveTier === 'conservative') {
+      catTargets = { Quality:4, Luxury:3, Dividends:4, 'AI/Semis':2, Metals:2 };
+    } else {
+      catTargets = { Quality:4, Dividends:3, 'AI/Semis':2, Luxury:2, 'Cloud/SaaS':2, Metals:1, Fintech:1 };
+    }
+  } else {
+    if (tier === 'conservative') {
+      catTargets = { Quality:4, Luxury:3, Dividends:3, 'AI/Semis':2, Metals:2, Consumption:1 };
+    } else if (tier === 'moderate') {
+      // Under 50 moderate: 50% growth, 20% quality, 20% China+consumption, 10% dividends
+      catTargets = { 'AI/Semis':3, China:2, Fintech:2, 'Cloud/SaaS':2, Quality:2, Consumption:1, LATAM:1, Dividends:1, 'Innovation/Space':1 };
+    } else {
+      // Under 50 aggressive
+      catTargets = { 'AI/Semis':3, EVs:2, Fintech:2, China:2, LATAM:2, Cybersecurity:1, 'Cloud/SaaS':1, 'Innovation/Space':1, 'Robotics/Defense':1 };
+    }
+  }
+
+  // ── AGE-AWARE STRATEGY TEXT SUFFIX ───────────────────────────────────
+  const ageSuffix = ageProfile === 'elder'
+    ? ` At ${age}, capital preservation and income generation are the priority. This portfolio is built for safety — heavy dividends, quality blue-chips, and minimal growth exposure.`
+    : ageProfile === 'senior'
+    ? ` At ${age}, we've shifted toward quality and income — reducing volatility while keeping selective growth positions to maintain purchasing power through retirement.`
+    : ` At ${age}, time is your greatest compounding asset. Your portfolio is weighted toward growth themes (AI, Fintech, China) that compound fastest over long horizons.`;
+
+  // ── ALLOCATIONS BY AGE PROFILE + TIER ────────────────────────────────
+  const allocations = ageProfile === 'elder' ? [
+    { name: 'Dividend Income',          pct: 50, color: 'var(--gold)'   },
+    { name: 'Quality Compounders',      pct: 30, color: 'var(--accent)' },
+    { name: 'AI / Growth (Selective)',  pct: 15, color: 'var(--blue)'   },
+    { name: 'Metals / Safe Haven',      pct: 5,  color: 'var(--muted)'  },
+  ] : ageProfile === 'senior' ? (effectiveTier === 'conservative' ? [
+    { name: 'Quality Compounders',      pct: 35, color: 'var(--accent)' },
+    { name: 'Dividend Income',          pct: 30, color: 'var(--gold)'   },
+    { name: 'Luxury / Secular Growth',  pct: 20, color: 'var(--purple)' },
+    { name: 'AI / Semis (Selective)',   pct: 10, color: 'var(--blue)'   },
+    { name: 'Metals',                   pct: 5,  color: 'var(--muted)'  },
+  ] : [
+    { name: 'Quality Compounders',      pct: 30, color: 'var(--accent)' },
+    { name: 'Dividend Income',          pct: 25, color: 'var(--gold)'   },
+    { name: 'AI / Cloud',               pct: 20, color: 'var(--blue)'   },
+    { name: 'Luxury / Defensive',       pct: 15, color: 'var(--purple)' },
+    { name: 'Metals / Hedges',          pct: 10, color: 'var(--muted)'  },
+  ]) : tier === 'conservative' ? [
+    { name: 'Quality Compounders',      pct: 30, color: 'var(--accent)' },
+    { name: 'Luxury / Secular Growth',  pct: 20, color: 'var(--purple)' },
+    { name: 'Dividend Income',          pct: 25, color: 'var(--gold)'   },
+    { name: 'AI / Semis (Selective)',   pct: 15, color: 'var(--blue)'   },
+    { name: 'Metals / Hedges',          pct: 10, color: 'var(--muted)'  },
+  ] : tier === 'moderate' ? [
+    { name: 'Growth (AI+Fintech+Cloud)',  pct: 45, color: 'var(--accent)' },
+    { name: 'Quality Compounders',        pct: 20, color: 'var(--blue)'   },
+    { name: 'China + LATAM',              pct: 20, color: 'var(--red)'    },
+    { name: 'Dividend Income',            pct: 10, color: 'var(--gold)'   },
+    { name: 'Space / Innovation',         pct: 5,  color: 'var(--purple)' },
+  ] : [
+    { name: 'AI / Semiconductors',      pct: 30, color: 'var(--accent)' },
+    { name: 'EV / Disruptive Tech',     pct: 20, color: 'var(--blue)'   },
+    { name: 'Fintech / Crypto',         pct: 15, color: 'var(--gold)'   },
+    { name: 'China Growth',             pct: 15, color: 'var(--red)'    },
+    { name: 'LATAM Emerging',           pct: 10, color: 'var(--purple)' },
+    { name: 'Space / Robotics',         pct: 10, color: 'var(--muted)'  },
+  ];
+
+  // Filter to eligible stocks for this tier — merge fresh cache valuations first
+  const eligible = UNIVERSE
+    .map(s => mergeCache(s))  // overlay fresh AI valuations from nightly batch
+    .filter(s => s.tier.includes(effectiveTier) && s.status !== 'expensive');
+
+  // Pick stocks per category using catTargets
+  const picks = [];
+  const usedTickers = new Set();
+
+  // Sort eligible by: cheap first, then fair; within that by fit relevance
+  const sorted = [...eligible].sort((a, b) => {
+    if (a.status === 'cheap' && b.status !== 'cheap') return -1;
+    if (b.status === 'cheap' && a.status !== 'cheap') return 1;
+    return 0;
+  });
+
+  for (const [cat, count] of Object.entries(catTargets)) {
+    const catStocks = sorted.filter(s =>
+      s.cat === cat && !usedTickers.has(s.t)
+    ).slice(0, count);
+    catStocks.forEach(s => {
+      usedTickers.add(s.t);
+      picks.push(s);
+    });
+  }
+
+  // Assign fit scores (cheap = higher, + goal + age alignment bonus)
+  const goalText = (goal1 + ' ' + goal2).toLowerCase();
+  const scoredPicks = picks.map(s => {
+    let base = s.status === 'cheap' ? 88 : 78;
+    // Goal alignment
+    if (goalText.includes('retire') && ['Quality','Dividends','Metals'].includes(s.cat)) base += 6;
+    if (goalText.includes('passive') && s.cat === 'Dividends') base += 8;
+    if ((goalText.includes('tech') || goalText.includes('ai')) && s.cat === 'AI/Semis') base += 7;
+    if (goalText.includes('house') && s.cat === 'Dividends') base += 5;
+    if (goalText.includes('million') && tier === 'aggressive' && s.cat === 'AI/Semis') base += 6;
+    // Age profile bonuses
+    if (ageProfile === 'elder') {
+      if (s.cat === 'Dividends') base += 10;
+      if (s.cat === 'Quality')   base += 6;
+      if (['EVs','Fintech','China','Cybersecurity'].includes(s.cat)) base -= 8;
+    } else if (ageProfile === 'senior') {
+      if (s.cat === 'Quality')   base += 7;
+      if (s.cat === 'Dividends') base += 5;
+      if (['EVs','China'].includes(s.cat)) base -= 4;
+    } else {
+      // under 50
+      if (age < 30 && ['AI/Semis','EVs','Fintech','China'].includes(s.cat)) base += 6;
+      if (age < 40 && ['AI/Semis','Fintech','China'].includes(s.cat)) base += 3;
+    }
+    base += Math.floor(s.t.charCodeAt(0) % 7);
+    return { ...s, fit: Math.min(98, base) };
+  }).sort((a, b) => b.fit - a.fit);
+
+  // ── STRATEGY TEXT ───────────────────────────────────────────────────
+  const topTickers = scoredPicks.slice(0,3).map(s => s.t).join(', ');
+  const cheapCount = scoredPicks.filter(s => s.status === 'cheap').length;
+  const baseStrategy = ageProfile === 'elder'
+    ? `At ${age}, we've built an income-first portfolio — ${cheapCount} of ${scoredPicks.length} picks are trading below historical valuations. Dividend yield is the priority; the portfolio targets 4–6%+ annual income with capital preservation. Leads: ${topTickers}. Monthly target: ${fmt(monthlyInvest)}.`
+    : ageProfile === 'senior'
+    ? `At ${age} with a ${savRate}% savings rate, we've prioritized quality compounders and dividend income — businesses that grow reliably through any economic cycle. ${cheapCount} of ${scoredPicks.length} picks are below historical valuations. Leads: ${topTickers}. Monthly target: ${fmt(monthlyInvest)}.`
+    : effectiveTier === 'conservative'
+    ? `With a ${savRate}% savings rate and ${emMos} months of emergency coverage, we've built a defensive portfolio of quality compounders and luxury secular growers. ${cheapCount} of ${scoredPicks.length} picks are below historical valuations. Top: ${topTickers}. Monthly target: ${fmt(monthlyInvest)}.${ageSuffix}`
+    : effectiveTier === 'moderate'
+    ? `Your ${savRate}% savings rate supports a 50% growth / 20% quality / 20% China+consumption / 10% dividend split — all valuation-screened. ${cheapCount} of ${scoredPicks.length} picks are currently cheap vs historical averages. Leads: ${topTickers}. Monthly: ${fmt(monthlyInvest)}.${ageSuffix}`
+    : `Your aggressive portfolio targets AI, EVs, and fintech — the highest-conviction growth themes. ${cheapCount} of ${scoredPicks.length} picks are below historical P/S or PEG benchmarks. Core: ${topTickers}. Monthly: ${fmt(monthlyInvest)}.${ageSuffix}`;
+  const strategy = baseStrategy;
+
+  // ── CATEGORY BREAKDOWN ──────────────────────────────────────────────
+  const catSummary = {};
+  scoredPicks.forEach(s => {
+    if (!catSummary[s.cat]) catSummary[s.cat] = [];
+    catSummary[s.cat].push(s.t);
+  });
+
+  // ── ACTION STEPS ────────────────────────────────────────────────────
+  const top1 = scoredPicks[0]?.t || 'VOO';
+  const top2 = scoredPicks[1]?.t || 'MSFT';
+  const brokerRec = age < 30 ? 'Robinhood or Fidelity' : savings > 50000 ? 'Fidelity or Schwab' : 'Fidelity';
+  const steps = [
+    { title: `Open a ${brokerRec} account today`,
+      desc: `Free to open in 10 minutes. Have your SSN and bank details ready. All trades and account maintenance are free.` },
+    { title: `Start with ${fmt(Math.round(monthlyInvest * 0.40))}/mo into ${top1}`,
+      desc: `Your highest-conviction pick. Set up an automatic monthly purchase — consistency beats timing every single time.` },
+    { title: `Add ${top2} and your second position in week 2`,
+      desc: `Don't try to build the whole portfolio in one day. Get comfortable with your first position, then layer in the next.` },
+    { title: `Set a 6-month review — then leave it alone`,
+      desc: `Scheduled review: ${new Date(Date.now()+1000*60*60*24*180).toLocaleDateString('en-US',{month:'long',year:'numeric'})}. Between now and then, do not check daily. Emotional trading is the #1 portfolio killer.` },
+  ];
+
+  return { strategy, riskScore, riskDesc, allocation: allocations, picks: scoredPicks, catSummary, steps, monthlyInvest };
+}
+
+/* ══════════════════════════════════════════════════
+   RENDER
+══════════════════════════════════════════════════ */
+function renderResults(data) {
+  stopThinking();
+  document.getElementById('ai-loading').style.display = 'none';
+  document.getElementById('results').style.display    = 'block';
+
+  // Strategy
+  document.getElementById('strategy-text').textContent = data.strategy;
+
+  // Risk
+  setTimeout(() => { document.getElementById('risk-fill').style.width = data.riskScore + '%'; }, 120);
+  document.getElementById('risk-desc').textContent = data.riskDesc;
+
+  // Allocation bars
+  const allocColors = ['var(--accent)','var(--blue)','var(--gold)','var(--purple)','var(--red)'];
+  document.getElementById('alloc-bars').innerHTML = data.allocation.map((a,i) => `
+    <div class="alloc-row">
+      <span class="alloc-name">${a.name}</span>
+      <div class="alloc-track"><div class="alloc-fill" style="width:0%;background:${a.color||allocColors[i%5]}" data-w="${a.pct}"></div></div>
+      <span class="alloc-pct" style="color:${a.color||allocColors[i%5]}">${a.pct}%</span>
+    </div>`).join('');
+  setTimeout(() => {
+    document.querySelectorAll('.alloc-fill').forEach(el => { el.style.width = el.dataset.w + '%'; });
+  }, 180);
+
+  // Stock cards
+  const pillCls = ['pg','pb','py','pp'];
+  document.getElementById('stock-cards').innerHTML = data.picks.map(s => {
+    const pills = (s.pills||[]).map((pill,i) => {
+      const cls = pillCls.find(c => c === pill) || pillCls[i%4];
+      return `<span class="pill ${cls}">${pill}</span>`;
+    });
+    // Re-render pills properly — pills array has text + color class alternating or separate
+    const cleanPills = (s.pills||[]).filter(p => !['pg','pb','py','pp','pr'].includes(p));
+    const pillColors = (s.pills||[]).filter(p => ['pg','pb','py','pp','pr'].includes(p));
+    const renderedPills = cleanPills.map((txt,i) =>
+      `<span class="pill ${pillColors[i]||pillCls[i%4]}">${txt}</span>`
+    ).join('');
+
+    return `
+    <div class="stock-card">
+      <div class="stock-top">
+        <div class="stock-left">
+          <div class="stock-logo" style="background:${s.bg}">${s.emoji}</div>
+          <div>
+            <div class="ticker">${s.t}</div>
+            <div class="sname">${s.n}</div>
+            <div class="scategory">${s.cat}</div>
+          </div>
+        </div>
+        <div class="stock-right">
+          <div class="fit-pct">${s.fit}%</div>
+          <div class="fit-lbl">GOAL FIT</div>
+        </div>
+      </div>
+      <div class="stock-valuation">
+        <span class="val-badge ${s.status === 'cheap' ? 'val-cheap' : 'val-fair'}">${s.status === 'cheap' ? '✓ CHEAP' : '~ FAIR VALUE'}</span>
+        <span class="val-metric">${s.metric} — ${s.valNote}</span>
+      </div>
+      <div class="stock-why">${s.why}</div>
+      <div class="pills">${renderedPills}</div>
+    </div>`;
+  }).join('');
+
+  // Category breakdown
+  document.getElementById('cat-breakdown').innerHTML = Object.entries(data.catSummary).map(([cat,tickers]) =>
+    `<div class="cat-row"><span class="cat-row-name">${cat}</span><span class="cat-row-stocks">${tickers.join(', ')}</span></div>`
+  ).join('');
+
+  // Action steps
+  document.getElementById('action-steps').innerHTML = data.steps.map((s,i) => `
+    <div class="astep">
+      <div class="anum">${i+1}</div>
+      <div class="abody"><strong>${s.title}</strong><span>${s.desc}</span></div>
+    </div>`).join('');
+
+  // Update picks subhead
+  const cheapCount = data.picks.filter(s => s.status === 'cheap').length;
+  document.getElementById('picks-subhead').textContent =
+    `${cheapCount} cheap + ${data.picks.length - cheapCount} fair value picks — expensive names excluded`;
+}
+
+/* ══════════════════════════════════════════════════
+   API FETCH (when backend is live)
+══════════════════════════════════════════════════ */
+async function fetchFromAPI(tier, p) {
+  const income   = parseFloat(p.income)   || 0;
+  const expenses = parseFloat(p.expenses) || 0;
+  const savings  = parseFloat(p.savings)  || 0;
+  const free     = Math.max(0, income - expenses);
+  const savRate  = income > 0 ? Math.round((free / income) * 100) : 0;
+  const emMos    = expenses > 0 ? Math.round(savings / expenses) : 0;
+
+  const prompt = `You are a Morgan Stanley portfolio manager building a ${tier} portfolio.
+
+User profile:
+- Monthly income: $${income}, expenses: $${expenses}, free cash: $${free}/mo (${savRate}% savings rate)
+- Savings: $${savings} (~${emMos} months of expenses), Age: ${p.age || 'unspecified'}
+- Short-term goal: ${p.goal1 || 'build wealth'}, Long-term goal: ${p.goal2 || 'retire comfortably'}
+- Risk tier chosen: ${tier.toUpperCase()}
+
+You have access to 12 investment categories: EVs, AI/Semiconductors, Cybersecurity, Cloud/SaaS, China Growth, Luxury Consumption, Quality Compounders, Consumption Growth, Fintech/Stablecoins, LATAM, Metals/Miners, Dividends.
+
+Rules:
+1. Only include stocks that are cheap (below 5yr avg P/E or PEG < 1.5) or fair value (PEG < 2.5, P/S below 3yr avg). EXCLUDE expensive names.
+2. For growth stocks (AI, EVs, Fintech) use PEG ratio. For mature businesses (NFLX, KO, T) use P/E vs historical average.
+3. Conservative: Quality(3) + Luxury(2) + Dividends(2) + 1 AI + 1 Metal. Moderate: balanced across 5-6 categories. Aggressive: AI(3) + EVs(2) + Fintech(2) + China(2) + 1 Cyber + 1 Consumption.
+4. Each pick must include the current valuation metric and why it's cheap/fair.
+5. Tailor to user profile — age, savings rate, goals.
+
+Return ONLY valid JSON (no markdown):
+{
+  "strategy": "2-3 sentence strategy",
+  "riskScore": <10-90>,
+  "riskDesc": "one sentence",
+  "allocation": [{"name":"category","pct":N,"color":"var(--accent)"}],
+  "picks": [{"t":"TICKER","n":"Full Name","cat":"Category","emoji":"emoji","bg":"rgba(r,g,b,0.12)","status":"cheap|fair","metric":"P/E 14x","valNote":"why cheap/fair","why":"2 sentences specific to user","fit":N,"pills":["tag1","pg","tag2","pb"]}],
+  "catSummary": {"Category": ["TICKER1","TICKER2"]},
+  "steps": [{"title":"","desc":""}],
+  "monthlyInvest": N
+}`;
+
+  try {
+    const res = await fetch(API_ENDPOINT, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt }),
+    });
+    if (!res.ok) throw new Error('API ' + res.status);
+    const data   = await res.json();
+    const text   = (data.text || '').replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(text);
+    renderResults(parsed);
+  } catch(err) {
+    console.warn('API failed, using local engine:', err.message);
+    renderResults(buildPortfolio(tier, p));
+  }
+}
+
+/* ══════════════════════════════════════════════════
+   PREVIEW MODE TEST PROFILES
+   Loaded when ?preview=true is in the URL.
+   Switch profiles with ?preview=true&profile=2 etc.
+══════════════════════════════════════════════════ */
+const PREVIEW_PROFILES = [
+  {
+    label: 'Age 30 · Growth investor',
+    income: 6500, expenses: 3800, savings: 22000, age: 30,
+    goal1: 'Build $50K in savings and start investing consistently',
+    goal2: 'Retire at 55 with $2M portfolio and passive income',
+  },
+  {
+    label: 'Age 45 · Moderate · wants property',
+    income: 12000, expenses: 7500, savings: 85000, age: 45,
+    goal1: 'Buy a second property and pay off mortgage',
+    goal2: 'Build $1M portfolio and generate $5K/mo passive income',
+  },
+  {
+    label: 'Age 58 · Senior · capital preservation',
+    income: 9000, expenses: 5500, savings: 320000, age: 58,
+    goal1: 'Protect my savings and generate stable income',
+    goal2: 'Retire comfortably at 65 with dividend income covering expenses',
+  },
+  {
+    label: 'Age 72 · Elder · income first',
+    income: 4500, expenses: 3200, savings: 580000, age: 72,
+    goal1: 'Generate steady monthly income from my portfolio',
+    goal2: 'Preserve capital and leave wealth for my children',
+  },
+  {
+    label: 'Age 25 · Aggressive · tech focus',
+    income: 5000, expenses: 2800, savings: 8000, age: 25,
+    goal1: 'Build $100K investment portfolio in 3 years',
+    goal2: 'Retire early at 45 with $3M in AI and tech stocks',
+  },
+];
+
+/* ══════════════════════════════════════════════════
+   PREVIEW BAR — shown at top in preview mode
+══════════════════════════════════════════════════ */
+function showPreviewBar(profileIdx, total) {
+  const bar = document.createElement('div');
+  bar.id = 'preview-bar';
+  bar.style.cssText = `
+    background: rgba(245,197,66,0.1);
+    border-bottom: 1px solid rgba(245,197,66,0.25);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 11px;
+    font-family: var(--font-body);
+  `;
+
+  const label = PREVIEW_PROFILES[profileIdx].label;
+
+  bar.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;color:var(--gold)">
+      <span style="font-weight:700;letter-spacing:1px">🧪 PREVIEW MODE</span>
+      <span style="color:var(--muted)">Testing: <strong style="color:var(--text)">${label}</strong></span>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      ${PREVIEW_PROFILES.map((p, i) => `
+        <a href="?preview=true&profile=${i}"
+           style="padding:3px 10px;border-radius:6px;font-size:10px;text-decoration:none;
+                  background:${i===profileIdx?'rgba(245,197,66,0.2)':'rgba(255,255,255,0.06)'};
+                  color:${i===profileIdx?'var(--gold)':'var(--muted)'};
+                  border:1px solid ${i===profileIdx?'rgba(245,197,66,0.4)':'rgba(255,255,255,0.1)'};
+                  white-space:nowrap">
+          ${p.label.split('·')[0].trim()}
+        </a>`).join('')}
+    </div>
+  `;
+  document.body.insertBefore(bar, document.body.firstChild);
+}
+
+/* ══════════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════════ */
+window.addEventListener('DOMContentLoaded', () => {
+  const params      = new URLSearchParams(window.location.search);
+  const isPreview   = params.get('preview') === 'true';
+  const profileIdx  = Math.min(parseInt(params.get('profile') || '0'), PREVIEW_PROFILES.length - 1);
+
+  if (isPreview) {
+    // Load test profile — bypass localStorage and paywall entirely
+    showPreviewBar(profileIdx, PREVIEW_PROFILES.length);
+    userProfile = PREVIEW_PROFILES[profileIdx];
+    showProfileBar(userProfile);
+    loadValuationCache();
+    return;
+  }
+
+  // Normal flow — require saved profile
+  const profile = loadProfile();
+  if (!profile || !profile.income) {
+    document.getElementById('selector-section').style.display = 'none';
+    document.getElementById('no-profile').style.display = 'block';
+    return;
+  }
+  userProfile = profile;
+  showProfileBar(profile);
+  loadValuationCache();
+});
+
+function showProfileBar(p) {
+  const income   = parseFloat(p.income)   || 0;
+  const expenses = parseFloat(p.expenses) || 0;
+  const savings  = parseFloat(p.savings)  || 0;
+  document.getElementById('pb-income').textContent  = fmt(income)  + '/mo';
+  document.getElementById('pb-free').textContent    = fmt(Math.max(0,income-expenses)) + '/mo';
+  document.getElementById('pb-savings').textContent = fmt(savings);
+  document.getElementById('profile-bar').style.display = 'grid';
+  if (p.goal1) {
+    document.getElementById('welcome-sub').textContent =
+      `Choose your risk appetite — picks are screened for cheap or fair value only. Expensive names are always excluded.`;
+  }
+}
+</script>
+</body>
+</html>
