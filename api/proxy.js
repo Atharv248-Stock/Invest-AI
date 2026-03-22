@@ -63,7 +63,12 @@ const supabaseAdmin = createClient(
 app.use('/api/stripe-webhook', express.raw({ type: 'application/json' }));
 app.use(express.json());
 app.use(cors({
-  origin: process.env.YOUR_DOMAIN || '*',
+  origin: [
+    'https://atharv248-stock.github.io',
+    'http://localhost:3000',
+    'http://localhost:5500',
+    process.env.YOUR_DOMAIN,
+  ].filter(Boolean),
   credentials: true,
 }));
 app.use(express.static(path.join(__dirname, '..')));
@@ -571,3 +576,4 @@ app.listen(PORT, () => {
 });
 
 module.exports = app;
+
