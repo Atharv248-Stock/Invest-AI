@@ -1930,8 +1930,8 @@ async function signInWithApple() {
   try {
     const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
     const supabase = createClient(
-      'https://your-project.supabase.co',   // replace with your SUPABASE_URL
-      'your-anon-key'                        // replace with your SUPABASE_ANON_KEY
+      'https://pbhjyuafzkwswhktgblt.supabase.co',   // replace with your SUPABASE_URL
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBiaGp5dWFmemt3c3doa3RnYmx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3Nzk4MDUsImV4cCI6MjA4OTM1NTgwNX0.0PI4bOQaj2HF5uHHpo3UWvXabb7HoyLPfsV1G9VSz1w'                        // replace with your SUPABASE_ANON_KEY
     );
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'apple',
@@ -1947,8 +1947,8 @@ async function signInWithGoogle() {
   try {
     const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
     const supabase = createClient(
-      'https://your-project.supabase.co',   // replace with your SUPABASE_URL
-      'your-anon-key'                        // replace with your SUPABASE_ANON_KEY
+      'https://pbhjyuafzkwswhktgblt.supabase.co',   // replace with your SUPABASE_URL
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBiaGp5dWFmemt3c3doa3RnYmx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3Nzk4MDUsImV4cCI6MjA4OTM1NTgwNX0.0PI4bOQaj2HF5uHHpo3UWvXabb7HoyLPfsV1G9VSz1w'                        // replace with your SUPABASE_ANON_KEY
     );
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
