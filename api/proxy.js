@@ -1,3 +1,6 @@
+
+Copy
+
 /**
  * Invest AI — api/proxy.js  (Production)
  *
@@ -328,7 +331,7 @@ app.post('/api/create-checkout-session', requireAuth, async (req, res) => {
       success_url:          `${domain}/success.html?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url:           `${domain}/?cancelled=true`,
       allow_promotion_codes: true,
-      subscription_data:    { trial_period_days: 7 },
+      subscription_data:    {},
     });
  
     res.json({ sessionId: session.id, url: session.url });
