@@ -1,6 +1,3 @@
-
-Copy
-
 /**
  * Invest AI — api/proxy.js  (Production)
  *
@@ -331,6 +328,7 @@ app.post('/api/create-checkout-session', requireAuth, async (req, res) => {
       success_url:          `${domain}/success.html?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url:           `${domain}/?cancelled=true`,
       allow_promotion_codes: true,
+      payment_method_types: ['card', 'apple_pay', 'google_pay'],
       subscription_data:    {},
     });
  
