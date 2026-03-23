@@ -1995,7 +1995,7 @@ async function signInWithApple() {
     const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
     const supabase = createClient(
       'https://pbhjyuafzkwswhktgblt.supabase.co',
-      'REPLACE_WITH_YOUR_ANON_KEY'  // ← paste your Supabase anon key here
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBiaGp5dWFmemt3c3doa3RnYmx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3Nzk4MDUsImV4cCI6MjA4OTM1NTgwNX0.0PI4bOQaj2HF5uHHpo3UWvXabb7HoyLPfsV1G9VSz1w'  // ← paste your Supabase anon key here
     );
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'apple',
@@ -2012,7 +2012,7 @@ async function signInWithGoogle() {
     const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
     const supabase = createClient(
       'https://pbhjyuafzkwswhktgblt.supabase.co',
-      'REPLACE_WITH_YOUR_ANON_KEY'  // ← paste your Supabase anon key here
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBiaGp5dWFmemt3c3doa3RnYmx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3Nzk4MDUsImV4cCI6MjA4OTM1NTgwNX0.0PI4bOQaj2HF5uHHpo3UWvXabb7HoyLPfsV1G9VSz1w'  // ← paste your Supabase anon key here
     );
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
