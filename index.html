@@ -1364,7 +1364,20 @@ function handleUnlock() {
     Auth.showModal('signup');
     return;
   }
-  handleUnlockAuthenticated();
+  const btn = document.getElementById('btn-unlock');
+  if (btn) { btn.textContent = 'Checking…'; btn.disabled = true; }
+  Auth.checkSubscription().then(sub => {
+    console.log('Subscription status:', sub);
+    if (sub.subscribed) {
+      goToPortfolio();
+    } else {
+      if (btn) { btn.textContent = 'Unlock for $4.99/mo →'; btn.disabled = false; }
+      handleUnlockAuthenticated();
+    }
+  }).catch(function() {
+    if (btn) { btn.textContent = 'Unlock for $4.99/mo →'; btn.disabled = false; }
+    handleUnlockAuthenticated();
+  });
 }
 
 async function handleUnlockAuthenticated() {
