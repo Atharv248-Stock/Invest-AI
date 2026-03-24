@@ -1,0 +1,1958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Your AI Stock Picks — Invest AI Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0a0c10; --surface: #111318; --surface2: #181b22;
+  --border: rgba(255,255,255,0.08); --border2: rgba(255,255,255,0.15);
+  --text: #f0f2f7; --muted: #8a8fa8;
+  --accent: #00e5a0; --gold: #f5c542; --blue: #4fa3f7;
+  --red: #ff6b6b; --purple: #a78bfa;
+  --font-display: 'Syne', sans-serif; --font-body: 'DM Sans', sans-serif;
+}
+html, body { background: var(--bg); color: var(--text); font-family: var(--font-body); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+.page { max-width: 600px; margin: 0 auto; padding: 2rem 1.5rem 5rem; }
+
+.top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+.brand { display: flex; align-items: center; gap: 9px; }
+.brand-icon { width: 34px; height: 34px; background: linear-gradient(135deg,#00e5a0,#4fa3f7); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 17px; }
+.brand-name { font-family: var(--font-display); font-size: 17px; font-weight: 700; }
+.pro-badge { background: rgba(0,229,160,0.12); border: 1px solid rgba(0,229,160,0.3); color: var(--accent); font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; padding: 3px 9px; border-radius: 20px; }
+.back-link { color: var(--muted); font-size: 0.82rem; text-decoration: none; display: flex; align-items: center; gap: 5px; margin-bottom: 1.5rem; }
+.back-link:hover { color: var(--text); }
+
+/* WELCOME */
+.welcome { text-align: center; padding: 1rem 0 1.4rem; }
+.welcome-emoji { font-size: 2.2rem; margin-bottom: 0.6rem; animation: pop 0.5s ease; }
+@keyframes pop { from { transform: scale(0.3) rotate(-10deg); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.welcome h1 { font-family: var(--font-display); font-size: 1.65rem; font-weight: 800; line-height: 1.2; margin-bottom: 0.4rem; }
+.welcome h1 span { color: var(--accent); }
+.welcome p { color: var(--muted); font-size: 0.82rem; line-height: 1.55; }
+
+/* PROFILE BAR */
+.profile-bar { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; background: var(--surface2); border-radius: 12px; padding: 0.9rem 1rem; margin-bottom: 1.8rem; }
+.pb-item { text-align: center; }
+.pb-label { font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 3px; }
+.pb-val { font-family: var(--font-display); font-size: 0.95rem; font-weight: 700; }
+.pb-val.g { color: var(--accent); }
+
+/* PORTFOLIO SELECTOR */
+.selector-card { background: var(--surface2); border: 1px solid var(--border2); border-radius: 14px; padding: 1.3rem; margin-bottom: 1.2rem; }
+.selector-label { font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; display: flex; align-items: center; gap: 5px; }
+.selector-label::before { content: ''; width: 5px; height: 5px; background: var(--accent); border-radius: 50%; display: inline-block; }
+.selector-card h2 { font-family: var(--font-display); font-size: 1rem; font-weight: 800; margin-bottom: 4px; }
+.selector-card p { font-size: 0.78rem; color: var(--muted); margin-bottom: 1rem; line-height: 1.5; }
+
+.tier-btns { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+.tier-btn {
+  background: var(--surface); border: 1.5px solid var(--border2);
+  border-radius: 11px; padding: 1rem 0.5rem; text-align: center;
+  cursor: pointer; transition: all 0.2s;
+}
+.tier-btn:hover { border-color: rgba(255,255,255,0.25); transform: translateY(-1px); }
+.tier-btn.active-conservative { border-color: var(--blue); background: rgba(79,163,247,0.08); }
+.tier-btn.active-moderate    { border-color: var(--gold); background: rgba(245,197,66,0.08); }
+.tier-btn.active-aggressive  { border-color: var(--red);  background: rgba(255,107,107,0.08); }
+.tier-icon { font-size: 1.8rem; margin-bottom: 6px; }
+.tier-name { font-family: var(--font-display); font-size: 0.82rem; font-weight: 700; display: block; margin-bottom: 4px; }
+.active-conservative .tier-name { color: var(--blue); }
+.active-moderate    .tier-name { color: var(--gold); }
+.active-aggressive  .tier-name { color: var(--red); }
+.tier-desc { font-size: 0.67rem; color: var(--muted); line-height: 1.4; }
+
+.tier-detail { margin-top: 1rem; padding: 0.8rem 1rem; border-radius: 9px; font-size: 0.79rem; line-height: 1.55; display: none; }
+.tier-detail.show { display: block; }
+.tier-detail.td-c { background: rgba(79,163,247,0.07);  color: #a0c4f4; border-left: 3px solid var(--blue); border-radius: 0 8px 8px 0; }
+.tier-detail.td-m { background: rgba(245,197,66,0.07);  color: #f0d078; border-left: 3px solid var(--gold); border-radius: 0 8px 8px 0; }
+.tier-detail.td-a { background: rgba(255,107,107,0.07); color: #f4a0a0; border-left: 3px solid var(--red);  border-radius: 0 8px 8px 0; }
+
+/* GENERATE BTN */
+.btn-generate {
+  width: 100%; margin-top: 0;
+  background: var(--accent); color: #051a10;
+  font-family: var(--font-display); font-size: 1rem; font-weight: 700;
+  padding: 16px; border: none; border-radius: 12px; cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s; letter-spacing: 0.3px;
+}
+.btn-generate:hover { opacity: 0.9; }
+.btn-generate:active { transform: scale(0.98); }
+.btn-generate:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* LOADING */
+.ai-loading { display: none; text-align: center; padding: 3.5rem 1rem; }
+.spin { width: 36px; height: 36px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 1rem; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.ai-loading p { color: var(--muted); font-size: 0.88rem; }
+.thinking-msg { color: var(--accent); font-size: 0.78rem; margin-top: 5px; font-style: italic; }
+
+/* RESULTS */
+#results { display: none; }
+.sec-head { margin: 1.6rem 0 0.5rem; }
+.sec-head h2 { font-family: var(--font-display); font-size: 1rem; font-weight: 800; }
+.sec-head p { font-size: 0.76rem; color: var(--muted); margin-top: 2px; }
+
+/* STRATEGY BOX */
+.strategy-box { background: var(--surface); border: 1px solid var(--border2); border-radius: 14px; padding: 1.2rem; margin-bottom: 1rem; }
+.ai-lbl { font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; display: flex; align-items: center; gap: 5px; }
+.ai-dot { width: 5px; height: 5px; background: var(--accent); border-radius: 50%; }
+.strategy-box p { font-size: 0.86rem; line-height: 1.65; }
+
+/* RISK METER */
+.risk-meter { background: var(--surface2); border-radius: 12px; padding: 1rem 1.1rem; margin-bottom: 1rem; }
+.risk-lbl { font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
+.risk-track { height: 9px; background: var(--border); border-radius: 9px; overflow: hidden; margin-bottom: 5px; }
+.risk-fill { height: 100%; border-radius: 9px; background: linear-gradient(90deg, var(--blue), var(--gold), var(--red)); transition: width 0.9s ease; }
+.risk-ends { display: flex; justify-content: space-between; font-size: 9px; color: var(--muted); }
+.risk-desc { font-size: 0.76rem; color: var(--muted); margin-top: 6px; line-height: 1.45; }
+
+/* ALLOCATION BARS */
+.alloc-box { background: var(--surface2); border-radius: 12px; padding: 1rem 1.1rem; margin-bottom: 1rem; }
+.alloc-row { display: flex; align-items: center; gap: 9px; margin-bottom: 8px; }
+.alloc-row:last-child { margin-bottom: 0; }
+.alloc-name { font-size: 0.74rem; color: var(--muted); width: 140px; flex-shrink: 0; }
+.alloc-track { flex: 1; height: 7px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.alloc-fill { height: 100%; border-radius: 4px; transition: width 0.8s ease; }
+.alloc-pct { font-size: 0.74rem; font-weight: 600; width: 30px; text-align: right; flex-shrink: 0; }
+
+/* STOCK CARDS */
+.stock-card {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 13px; padding: 1rem 1.1rem; margin-bottom: 9px;
+  transition: border-color 0.2s;
+}
+.stock-card:hover { border-color: var(--border2); }
+.stock-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 0.6rem; gap: 10px; }
+.stock-left { display: flex; align-items: center; gap: 9px; }
+.stock-logo { width: 38px; height: 38px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+.ticker { font-family: var(--font-display); font-weight: 700; font-size: 0.95rem; }
+.sname { font-size: 0.7rem; color: var(--muted); margin-top: 1px; }
+.scategory { font-size: 0.64rem; color: var(--blue); margin-top: 2px; letter-spacing: 0.3px; }
+.stock-right { text-align: right; flex-shrink: 0; }
+.fit-pct { font-family: var(--font-display); font-size: 1.05rem; font-weight: 800; color: var(--accent); }
+.fit-lbl { font-size: 0.62rem; color: var(--muted); }
+.stock-valuation { display: flex; align-items: center; gap: 6px; margin-bottom: 0.5rem; }
+.val-badge { font-size: 9px; padding: 2px 7px; border-radius: 5px; font-weight: 600; letter-spacing: 0.3px; }
+.val-cheap  { background: rgba(0,229,160,0.15); color: var(--accent); }
+.val-fair   { background: rgba(245,197,66,0.15); color: var(--gold); }
+.val-metric { font-size: 0.72rem; color: var(--muted); }
+.stock-why { font-size: 0.79rem; color: var(--muted); line-height: 1.55; margin-bottom: 0.6rem; }
+.pills { display: flex; gap: 5px; flex-wrap: wrap; }
+.pill { font-size: 9px; padding: 2px 7px; border-radius: 5px; }
+.pg { background: rgba(0,229,160,0.12); color: var(--accent); }
+.pb { background: rgba(79,163,247,0.12); color: var(--blue); }
+.py { background: rgba(245,197,66,0.12); color: var(--gold); }
+.pp { background: rgba(167,139,250,0.12); color: var(--purple); }
+.pr { background: rgba(255,107,107,0.12); color: var(--red); }
+
+/* CATEGORY BREAKDOWN */
+.cat-breakdown { background: var(--surface2); border-radius: 12px; padding: 1rem 1.1rem; margin-bottom: 1rem; }
+.cat-row { display: flex; align-items: center; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 0.78rem; }
+.cat-row:last-child { border-bottom: none; }
+.cat-row-name { color: var(--muted); }
+.cat-row-stocks { color: var(--text); font-weight: 500; }
+
+/* ACTION STEPS */
+.action-box { background: var(--surface2); border-radius: 12px; padding: 1rem 1.1rem; margin-bottom: 1rem; }
+.action-lbl { font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--blue); margin-bottom: 10px; }
+.astep { display: flex; gap: 10px; margin-bottom: 10px; }
+.astep:last-child { margin-bottom: 0; }
+.anum { width: 24px; height: 24px; background: rgba(79,163,247,0.15); color: var(--blue); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+.abody strong { display: block; font-size: 0.84rem; margin-bottom: 2px; }
+.abody span { font-size: 0.76rem; color: var(--muted); line-height: 1.4; }
+
+/* REGENERATE */
+.btn-regen { width: 100%; background: var(--surface2); color: var(--text); border: 1px solid var(--border2); font-family: var(--font-display); font-size: 0.9rem; font-weight: 700; padding: 13px; border-radius: 11px; cursor: pointer; transition: all 0.2s; margin-top: 0.5rem; }
+.btn-regen:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,229,160,0.05); }
+
+/* DISCLAIMER */
+.disclaimer { background: rgba(245,197,66,0.05); border: 1px solid rgba(245,197,66,0.15); border-radius: 9px; padding: 0.9rem 1rem; margin-top: 1.2rem; }
+.disclaimer p { font-size: 0.69rem; color: var(--muted); line-height: 1.55; }
+.disclaimer strong { color: var(--gold); }
+
+/* NO PROFILE */
+.no-profile { text-align: center; padding: 3rem 1rem; }
+.no-profile h2 { font-family: var(--font-display); font-size: 1.3rem; margin-bottom: 0.6rem; }
+.no-profile p { color: var(--muted); font-size: 0.88rem; margin-bottom: 1.5rem; }
+.btn-go { display: inline-block; background: var(--accent); color: #051a10; font-family: var(--font-display); font-weight: 700; font-size: 0.95rem; padding: 14px 28px; border-radius: 12px; text-decoration: none; }
+
+@media (max-width: 420px) {
+  .tier-desc { display: none; }
+  .tier-btn { padding: 0.8rem 0.3rem; }
+}
+
+/* ── INTEREST AREAS ── */
+.interest-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 0.8rem; }
+.int-btn { background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px; padding: 9px 11px; cursor: pointer; transition: all .15s; display: flex; align-items: center; gap: 9px; }
+.int-btn:hover { border-color: var(--border2); }
+.int-btn.selected { border-color: var(--accent); background: rgba(0,229,160,0.07); }
+.int-icon { font-size: 18px; flex-shrink: 0; }
+.int-name { font-size: 0.78rem; font-weight: 600; display: block; line-height: 1.2; }
+.int-btn.selected .int-name { color: var(--accent); }
+.int-sub { font-size: 0.65rem; color: var(--muted); display: block; margin-top: 1px; }
+.int-count { font-size: 0.72rem; color: var(--muted); margin-top: 0.5rem; }
+.age-badge { display: inline-block; background: rgba(79,163,247,0.12); color: var(--blue); font-size: 10px; padding: 3px 9px; border-radius: 20px; letter-spacing: 0.5px; margin-bottom: 0.8rem; }
+@media(max-width:420px){ .interest-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="top-bar">
+    <div class="brand">
+      <div class="brand-icon">📈</div>
+      <div class="brand-name">Invest AI</div>
+    </div>
+    <div class="pro-badge">PRO</div>
+  </div>
+
+  <a href="index.html" class="back-link">← Back to my roadmap</a>
+
+  <div class="welcome">
+    <div class="welcome-emoji">🎉</div>
+    <h1>Your <span>AI Stock Picks</span></h1>
+    <p id="welcome-sub">Choose your risk appetite and we'll build your personalized portfolio — priced cheap or fair value only.</p>
+  </div>
+
+  <div id="market-note" style="display:none;font-size:0.75rem;color:var(--muted);background:var(--surface2);border-radius:0 9px 9px 0;padding:7px 12px;margin-bottom:1rem;line-height:1.5;border-left:3px solid var(--gold);"></div>
+
+  <div class="profile-bar" id="profile-bar" style="display:none">
+    <div class="pb-item"><span class="pb-label">Income</span><span class="pb-val" id="pb-income">—</span></div>
+    <div class="pb-item"><span class="pb-label">Free Cash</span><span class="pb-val g" id="pb-free">—</span></div>
+    <div class="pb-item"><span class="pb-label">Savings</span><span class="pb-val" id="pb-savings">—</span></div>
+  </div>
+
+  <!-- SELECTOR: 2 STEPS -->
+  <div id="selector-section">
+
+    <!-- STEP 1: INTEREST AREAS -->
+    <div class="selector-card" style="margin-bottom:1rem">
+      <div class="selector-label">STEP 1 — PICK YOUR INTEREST AREAS <span style="color:var(--muted);font-weight:400">(choose up to 3)</span></div>
+      <h2>What themes excite you?</h2>
+      <p>We'll weight your portfolio toward what you believe in — on top of your age and risk profile.</p>
+      <div class="interest-grid" id="interest-grid">
+        <div class="int-btn" data-key="innovation" onclick="toggleInterest(this)">
+          <span class="int-icon">🛸</span>
+          <span class="int-name">Innovation &amp; Space</span>
+          <span class="int-sub">Palantir, MDA, Kraken</span>
+        </div>
+        <div class="int-btn" data-key="evs" onclick="toggleInterest(this)">
+          <span class="int-icon">⚡</span>
+          <span class="int-name">EVs &amp; FSD</span>
+          <span class="int-sub">TSLA, XIACF, UBER</span>
+        </div>
+        <div class="int-btn" data-key="ai_cloud" onclick="toggleInterest(this)">
+          <span class="int-icon">🤖</span>
+          <span class="int-name">AI &amp; Cloud</span>
+          <span class="int-sub">NVDA, AMD, SNOW, CRM</span>
+        </div>
+        <div class="int-btn" data-key="humanoids" onclick="toggleInterest(this)">
+          <span class="int-icon">🦾</span>
+          <span class="int-name">Humanoids &amp; Robotics</span>
+          <span class="int-sub">TSLA, ISRG, FANUY</span>
+        </div>
+        <div class="int-btn" data-key="china_india" onclick="toggleInterest(this)">
+          <span class="int-icon">🐉</span>
+          <span class="int-name">China &amp; India Tech</span>
+          <span class="int-sub">BABA, PDD, KWEB</span>
+        </div>
+        <div class="int-btn" data-key="em" onclick="toggleInterest(this)">
+          <span class="int-icon">🌍</span>
+          <span class="int-name">EMs: LATAM &amp; Korea</span>
+          <span class="int-sub">NU, MELI, SE, EWY</span>
+        </div>
+        <div class="int-btn" data-key="glp1" onclick="toggleInterest(this)">
+          <span class="int-icon">💊</span>
+          <span class="int-name">GLP-1 &amp; Healthcare</span>
+          <span class="int-sub">NVO, LLY, HIMS</span>
+        </div>
+        <div class="int-btn" data-key="luxury" onclick="toggleInterest(this)">
+          <span class="int-icon">👜</span>
+          <span class="int-name">Luxury Consumption</span>
+          <span class="int-sub">LVMH, Ferrari, Hermès</span>
+        </div>
+        <div class="int-btn" data-key="emerging_brands" onclick="toggleInterest(this)">
+          <span class="int-icon">🌱</span>
+          <span class="int-name">Emerging Growth Brands</span>
+          <span class="int-sub">ONON, HIMS, TPB, CAVA</span>
+        </div>
+        <div class="int-btn" data-key="cybersecurity" onclick="toggleInterest(this)">
+          <span class="int-icon">🔒</span>
+          <span class="int-name">Cybersecurity</span>
+          <span class="int-sub">CRWD, ZS, PANW, NET</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2: RISK TIER -->
+    <div class="selector-card">
+      <div class="selector-label">STEP 2 — CHOOSE YOUR RISK APPETITE</div>
+      <h2>What kind of investor are you?</h2>
+      <p>Combined with your age and interest areas, this shapes your final 15-stock portfolio.</p>
+      <div class="tier-btns">
+        <div class="tier-btn" id="btn-conservative" onclick="selectTier('conservative')">
+          <div class="tier-icon">🛡️</div><span class="tier-name">Conservative</span>
+          <div class="tier-desc">Safety first · dividends · quality blue-chips</div>
+        </div>
+        <div class="tier-btn" id="btn-moderate" onclick="selectTier('moderate')">
+          <div class="tier-icon">⚖️</div><span class="tier-name">Moderate</span>
+          <div class="tier-desc">Balanced · growth + quality + dividends</div>
+        </div>
+        <div class="tier-btn" id="btn-aggressive" onclick="selectTier('aggressive')">
+          <div class="tier-icon">🚀</div><span class="tier-name">Aggressive</span>
+          <div class="tier-desc">Max growth · AI + EVs + emerging markets</div>
+        </div>
+      </div>
+      <div class="tier-detail td-c" id="detail-conservative"></div>
+      <div class="tier-detail td-m" id="detail-moderate"></div>
+      <div class="tier-detail td-a" id="detail-aggressive"></div>
+      <button class="btn-generate" id="gen-btn" onclick="generatePicks()" disabled>
+        Choose a risk tier above →
+      </button>
+    </div>
+
+  </div>
+
+  <!-- LOADING -->
+  <div class="ai-loading" id="ai-loading">
+    <div class="spin"></div>
+    <p>Building your portfolio…</p>
+    <div class="thinking-msg" id="thinking-msg">Screening valuations across 12 categories</div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results">
+    <div class="strategy-box">
+      <div class="ai-lbl"><span class="ai-dot"></span> PORTFOLIO STRATEGY</div>
+      <div id="age-bracket-badge" class="age-badge"></div>
+      <p id="strategy-text"></p>
+    </div>
+
+    <div class="risk-meter">
+      <div class="risk-lbl">⚡ RISK SCORE</div>
+      <div class="risk-track"><div class="risk-fill" id="risk-fill" style="width:0%"></div></div>
+      <div class="risk-ends"><span>Conservative</span><span>Moderate</span><span>Aggressive</span></div>
+      <div class="risk-desc" id="risk-desc"></div>
+    </div>
+
+    <div class="sec-head"><h2>Portfolio Allocation</h2><p>How your monthly investment is split by theme</p></div>
+    <div class="alloc-box" id="alloc-bars"></div>
+
+    <div class="sec-head"><h2>Your Stock Picks</h2><p id="picks-subhead">Tap any stock for detailed analysis · Screened for cheap or fair value only</p></div>
+    <div id="stock-cards"></div>
+
+    <div class="sec-head"><h2>Category Breakdown</h2><p>Which of the 12 themes are in your portfolio</p></div>
+    <div class="cat-breakdown" id="cat-breakdown"></div>
+
+    <div class="sec-head"><h2>Your Action Plan</h2><p>Exactly what to do this week</p></div>
+    <div class="action-box">
+      <div class="action-lbl">FIRST STEPS</div>
+      <div id="action-steps"></div>
+    </div>
+
+    <button class="btn-regen" onclick="resetToSelector()">← Change risk tier / regenerate</button>
+
+    <div class="disclaimer">
+      <p><strong>⚠️ Important disclaimer.</strong> The portfolio and stock recommendations shown here are generated by an AI simulation engine using publicly available valuation data and heuristics. They are for <strong>educational and informational purposes only</strong> and must not be construed as financial advice, investment advice, or a solicitation to buy or sell any security. Valuations change daily — verify current prices before acting. All investments carry risk including the possible loss of principal. Past performance does not guarantee future results. <strong>Please consult a licensed financial advisor before making any investment decisions.</strong></p>
+    </div>
+  </div>
+
+  <!-- STOCK ANALYSIS MODAL -->
+  <div id="stock-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:1000;overflow-y:auto;padding:1rem" onclick="if(event.target===this)closeModal()">
+    <div style="max-width:500px;margin:0 auto;background:#111318;border:1px solid rgba(255,255,255,.15);border-radius:18px;padding:1.5rem;position:relative">
+      <button onclick="closeModal()" style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:#8a8fa8;font-size:1.4rem;cursor:pointer;line-height:1">×</button>
+
+      <!-- Header -->
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.2rem">
+        <div id="modal-logo" style="width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0"></div>
+        <div style="flex:1">
+          <div style="display:flex;align-items:baseline;gap:8px">
+            <span id="modal-ticker" style="font-family:var(--font-display);font-size:1.4rem;font-weight:800"></span>
+            <span id="modal-price" style="font-size:1.1rem;font-weight:700;color:var(--accent)"></span>
+            <span id="modal-change" style="font-size:0.8rem"></span>
+          </div>
+          <div id="modal-name" style="font-size:0.82rem;color:var(--muted);margin-top:2px"></div>
+          <div id="modal-cat" style="font-size:0.72rem;color:var(--blue);margin-top:2px;letter-spacing:.3px"></div>
+        </div>
+        <div style="text-align:right">
+          <div id="modal-fit" style="font-family:var(--font-display);font-size:1.3rem;font-weight:800;color:var(--accent)"></div>
+          <div style="font-size:0.65rem;color:var(--muted)">GOAL FIT</div>
+        </div>
+      </div>
+
+      <!-- Valuation badge -->
+      <div id="modal-val-row" style="margin-bottom:1rem"></div>
+
+      <!-- Score bars (like the reference image) -->
+      <div id="modal-scores" style="background:#181b22;border-radius:12px;padding:1rem;margin-bottom:1rem"></div>
+
+      <!-- Stats grid -->
+      <div id="modal-stats" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem"></div>
+
+      <!-- Thesis -->
+      <div style="background:#181b22;border-radius:10px;padding:1rem;margin-bottom:1rem">
+        <div style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin-bottom:6px">AI INVESTMENT THESIS</div>
+        <p id="modal-why" style="font-size:0.84rem;line-height:1.65;color:var(--text)"></p>
+      </div>
+
+      <!-- Strengths & Weaknesses -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem">
+        <div style="background:rgba(0,229,160,.06);border:1px solid rgba(0,229,160,.15);border-radius:10px;padding:.9rem">
+          <div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--accent);margin-bottom:8px;font-weight:700">STRENGTHS</div>
+          <div id="modal-strengths" style="font-size:0.75rem;color:#8a8fa8;line-height:1.6"></div>
+        </div>
+        <div style="background:rgba(255,107,107,.06);border:1px solid rgba(255,107,107,.15);border-radius:10px;padding:.9rem">
+          <div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--red);margin-bottom:8px;font-weight:700">RISKS</div>
+          <div id="modal-risks" style="font-size:0.75rem;color:#8a8fa8;line-height:1.6"></div>
+        </div>
+      </div>
+
+      <!-- Pills -->
+      <div id="modal-pills" style="display:flex;gap:5px;flex-wrap:wrap"></div>
+
+      <div style="margin-top:1rem;font-size:0.68rem;color:#8a8fa8;text-align:center;line-height:1.5">
+        ⚠️ AI-simulated analysis for educational purposes only. Not financial advice. Consult a licensed financial advisor before investing.
+      </div>
+    </div>
+  </div>
+
+  <!-- NO PROFILE -->
+  <div class="no-profile" id="no-profile" style="display:none">
+    <h2>No profile found</h2>
+    <p>Go back to the app, enter your financial details, and generate your roadmap first.</p>
+    <a href="index.html" class="btn-go">← Go to the App</a>
+  </div>
+
+</div>
+<script>
+/**
+ * Invest AI — src/universe.js
+ *
+ * 300+ global stocks across 12 categories.
+ * Large-cap anchors + mid-cap compounders + small-cap high-conviction picks.
+ *
+ * Each stock:
+ *   t         ticker / symbol
+ *   n         full name
+ *   cat       category (must match CAT_TARGETS keys)
+ *   size      'large' | 'mid' | 'small'
+ *   region    'us' | 'canada' | 'europe' | 'asia' | 'latam' | 'global'
+ *   emoji     display icon
+ *   bg        card background color
+ *   tier      which risk tiers can include this stock
+ *   status    'cheap' | 'fair' | 'expensive' — overridden nightly by cache
+ *   metric    current valuation metric string
+ *   valNote   one-line valuation note
+ *   why       2-sentence investment thesis
+ *   pills     alternating [label, colorClass] — max 4 items (2 tags)
+ *
+ * Color classes: pg=green, pb=blue, py=gold, pp=purple, pr=red
+ *
+ * Categories:
+ *   EVs | AI/Semis | Cybersecurity | Cloud/SaaS | China |
+ *   Luxury | Quality | Consumption | Fintech | LATAM |
+ *   Metals | Dividends | Innovation/Space | Robotics/Defense
+ */
+
+const UNIVERSE = [
+
+  // ═══════════════════════════════════════════════════════
+  // 1. EVs & AUTONOMOUS MOBILITY
+  // ═══════════════════════════════════════════════════════
+  { t:'TSLA',  n:'Tesla Inc.',                  cat:'EVs', size:'large', region:'us',
+    emoji:'⚡', bg:'rgba(0,229,160,.12)',  tier:['aggressive','moderate'],
+    status:'fair',   metric:'PEG ~2.1',  valNote:'Fair PEG for EV+FSD+Optimus thesis',
+    why:'EV market leader + Full Self-Driving + Optimus humanoid robot pipeline. Revenue growing >20%/yr with energy storage becoming a second major business.',
+    pills:['EV Leader','FSD Optionality','pb','py'] },
+
+  { t:'XIACF', n:'Xiaomi Corp (EV+Phones)',     cat:'EVs', size:'large', region:'asia',
+    emoji:'📱', bg:'rgba(255,107,107,.12)', tier:['aggressive','moderate'],
+    status:'cheap',  metric:'P/E 18x',   valNote:'P/E 18x — cheap for EV+phone dual flywheel',
+    why:'Xiaomi SU7 EV launched to massive demand, leveraging 600M device ecosystem for software monetization. P/E of 18x is cheap for a company growing EV revenue 200%+ annually.',
+    pills:['EV + Ecosystem','P/E 18x','pr','py'] },
+
+  { t:'RIVN',  n:'Rivian Automotive',           cat:'EVs', size:'mid',   region:'us',
+    emoji:'🚗', bg:'rgba(255,107,107,.12)', tier:['aggressive'],
+    status:'fair',   metric:'P/S ~2.5',  valNote:'Sub-$10B market cap, Amazon-backed',
+    why:'Amazon 100k delivery van contract + R2 consumer truck launching. P/S near multi-year floor. High risk but asymmetric upside at current valuation.',
+    pills:['Amazon-Backed','High Risk','pr','pb'] },
+
+  { t:'BIDU',  n:'Baidu Inc.',                  cat:'EVs', size:'large', region:'asia',
+    emoji:'🤖', bg:'rgba(79,163,247,.12)',  tier:['aggressive','moderate'],
+    status:'cheap',  metric:'P/E 12x',   valNote:'P/E 12x vs 5yr avg 22x — decade low',
+    why:'China AI leader + Apollo autonomous driving platform with most robotaxi licenses. P/E of 12x is the lowest in Baidu\'s public market history — maximum fear pricing.',
+    pills:['AI + AV','P/E Decade Low','pg','pb'] },
+
+  { t:'UBER',  n:'Uber Technologies',           cat:'EVs', size:'large', region:'us',
+    emoji:'🚕', bg:'rgba(0,229,160,.12)',  tier:['moderate','aggressive'],
+    status:'fair',   metric:'P/E 28x',   valNote:'Fair for 20%+ EBIT growth mobility platform',
+    why:'World\'s largest mobility network turning highly profitable. AV partnership strategy (Waymo, Cruise) means Uber benefits from autonomy without building it.',
+    pills:['Mobility Platform','AV Partnerships','pg','py'] },
+
+  { t:'CSU',   n:'Cooper-Standard Holdings',    cat:'EVs', size:'small', region:'us',
+    emoji:'🔧', bg:'rgba(79,163,247,.12)',  tier:['aggressive','moderate'],
+    status:'cheap',  metric:'P/S 0.15x', valNote:'P/S 0.15x — deeply discounted EV/hybrid supplier',
+    why:'Makes sealing systems and fuel/brake lines for every major automaker. EV/hybrid transition is a direct tailwind. Trading at P/S 0.15x — one of the most discounted auto-tech names.',
+    pills:['EV Supplier','P/S 0.15x','pb','pg'] },
+
+  { t:'AAP',   n:'Advance Auto Parts',          cat:'EVs', size:'large', region:'us',
+    emoji:'🔩', bg:'rgba(79,163,247,.12)',  tier:['moderate','conservative'],
+    status:'cheap',  metric:'P/E 14x',   valNote:'P/E 14x — near decade low, EV parts transition',
+    why:'Auto parts retailer at decade-low valuations after restructuring. $40 stock from $240 peak. EV/hybrid service complexity is a long-term tailwind for aftermarket parts demand. Turnaround in progress with new management.',
+    pills:['Auto Parts','Turnaround Play','pb','py'] },
+
+  // ═══════════════════════════════════════════════════════
+  // 2. AI & SEMICONDUCTORS
+  // ═══════════════════════════════════════════════════════
+  { t:'NVDA',  n:'Nvidia Corporation',          cat:'AI/Semis', size:'large', region:'us',
+    emoji:'🖥️', bg:'rgba(0,229,160,.12)',  tier:['aggressive','moderate'],
+    status:'fair',   metric:'PEG 1.8',   valNote:'PEG 1.8 justified by 120%+ EPS growth',
+    why:'Dominant AI infrastructure — every major AI company runs on Nvidia GPUs. Data center revenue accelerating with H100/H200/B200 demand far exceeding supply.',
+    pills:['AI Infrastructure','PEG 1.8','pg','py'] },
+
+  { t:'AMD',   n:'Advanced Micro Devices',      cat:'AI/Semis', size:'large', region:'us',
+    emoji:'💻', bg:'rgba(79,163,247,.12)',  tier:['aggressive','moderate'],
+    status:'cheap',  metric:'PEG 1.4',   valNote:'$227→$100. Cheapest large-cap AI semi on PEG',
+    why:'AMD peaked at $227 and corrected to ~$100 — a 56% drawdown pricing in a permanent loss. MI300X data center GPU revenue is doubling annually. PEG 1.4 is the cheapest major AI semiconductor.',
+    pills:['PEG 1.4 Cheapest','56% Off Peak','pg','pb'] },
+
+  { t:'AVGO',  n:'Broadcom Inc.',               cat:'AI/Semis', size:'large', region:'us',
+    emoji:'📡', bg:'rgba(167,139,250,.12)', tier:['moderate','conservative'],
+    status:'fair',   metric:'P/E 26x',   valNote:'P/E 26x below 5yr avg 28x',
+    why:'Custom AI ASIC chips for Google, Meta, Apple — plus VMware recurring software revenue. P/E slightly below 5yr average for a high-margin, wide-moat business.',
+    pills:['Custom AI Chips','High Margin','pp','py'] },
+
+  { t:'ASML',  n:'ASML Holding N.V.',           cat:'AI/Semis', size:'large', region:'europe',
+    emoji:'🔬', bg:'rgba(0,229,160,.12)',  tier:['conservative','moderate'],
+    status:'cheap',  metric:'P/E 30x',   valNote:'€900→€600. P/E 30x vs 5yr avg 45x — rare value',
+    why:'Global monopoly on EUV lithography machines — every advanced chip requires ASML. Peaked at €900, now ~€600. P/E of 30x is historically cheap vs 45x average.',
+    pills:['EUV Monopoly','30% Below Avg P/E','pg','pp'] },
+
+  { t:'MU',    n:'Micron Technology',           cat:'AI/Semis', size:'large', region:'us',
+    emoji:'🧠', bg:'rgba(79,163,247,.12)',  tier:['aggressive','moderate'],
+    status:'cheap',  metric:'P/E 13x',   valNote:'$157→$75. HBM AI memory cycle just beginning',
+    why:'HBM3E memory is structurally essential for AI training — Micron is a key beneficiary. Peaked at $157, now $75. P/E 13x is 50% below historical average while AI memory demand is structural.',
+    pills:['HBM AI Memory','50% Below Hist P/E','pb','pg'] },
+
+  { t:'LRCX',  n:'Lam Research Corporation',   cat:'AI/Semis', size:'large', region:'us',
+    emoji:'⚗️', bg:'rgba(0,229,160,.12)',  tier:['moderate','aggressive'],
+    status:'cheap',  metric:'P/E 22x',   valNote:'P/E 22x below 5yr avg 28x — semi equipment buy',
+    why:'Makes etch and deposition equipment essential for every advanced chip fab. P/E 22x below 5yr average of 28x. Every dollar spent building AI chip fabs flows through Lam.',
+    pills:['Semi Equipment','P/E Below Avg','pg','pb'] },
+
+  { t:'KLAC',  n:'KLA Corporation',            cat:'AI/Semis', size:'large', region:'us',
+    emoji:'🔭', bg:'rgba(79,163,247,.12)',  tier:['moderate','conservative'],
+    status:'fair',   metric:'P/E 28x',   valNote:'Fair — process control monopoly for chip fabs',
+    why:'Dominant process control and inspection equipment — catches defects in chip manufacturing. Near-monopoly position. P/E of 28x is fair for this recurring, sticky business.',
+    pills:['Process Control','Near-Monopoly','pb','py'] },
+
+  { t:'ALAB',  n:'Astera Labs Inc.',            cat:'AI/Semis', size:'mid',   region:'us',
+    emoji:'🔗', bg:'rgba(167,139,250,.12)', tier:['aggressive'],
+    status:'fair',   metric:'P/S 18x',   valNote:'Premium P/S justified by 80%+ revenue growth',
+    why:'AI interconnect chips — the high-speed "plumbing" connecting GPUs in data centers. Only pure-play AI connectivity stock. Revenue growing 80%+ with hyperscaler customers.',
+    pills:['AI Interconnects','High Growth','pp','pr'] },
+
+  { t:'CDNS',  n:'Cadence Design Systems',      cat:'AI/Semis', size:'large', region:'us',
+    emoji:'📐', bg:'rgba(0,229,160,.12)',  tier:['moderate','conservative'],
+    status:'fair',   metric:'P/E 64x',   valNote:'Premium — EDA duopoly, every chip designed here',
+    why:'Electronic design automation — every AI chip (NVDA, AMD, Apple) is designed using Cadence software. Duopoly with Synopsys. Extremely high switching costs and recurring revenue.',
+    pills:['EDA Duopoly','Chip Design','pg','py'] },
+
+  { t:'SNPS',  n:'Synopsys Inc.',               cat:'AI/Semis', size:'large', region:'us',
+    emoji:'🔩', bg:'rgba(79,163,247,.12)',  tier:['moderate','conservative'],
+    status:'fair',   metric:'P/E 58x',   valNote:'Premium justified by AI chip design TAM expansion',
+    why:'Co-duopolist with Cadence in chip design software. AI is dramatically increasing chip complexity, requiring more EDA software. Synopsys acquisition of Ansys broadens simulation moat.',
+    pills:['EDA Software','AI Chip Design','pb','pp'] },
+
+  { t:'GOOGL', n:'Alphabet Inc.',               cat:'AI/Semis', size:'large', region:'us',
+    emoji:'🔍', bg:'rgba(0,229,160,.12)',  tier:['moderate','conservative'],
+    status:'cheap',  metric:'P/E 20x',   valNote:'P/E 20x below 5yr avg 25x',
+    why:'Search monopoly + YouTube + Google Cloud + Gemini AI + Waymo. P/E of 20x is below 5yr avg — one of the cheapest mega-cap tech stocks relative to quality right now.',
+    pills:['Mega Cap','P/E Below Avg','pg','pb'] },
+
+  { t:'AMZN',  n:'Amazon.com Inc.',             cat:'AI/Semis', size:'large', region:'us',
+    emoji:'📦', bg:'rgba(245,197,66,.12)',  tier:['moderate','conservative'],
+    status:'fair',   metric:'P/E 34x',   valNote:'34x P/E fair — AWS + Bedrock AI monetization',
+    why:'AWS is the #1 cloud platform. Amazon Bedrock is the enterprise AI deployment layer of choice. P/E of 34x reasonable for the combined consumer + cloud + AI business.',
+    pills:['Cloud + AI','AWS Leader','py','pb'] },
+
+  { t:'EWY',   n:'iShares MSCI South Korea ETF',cat:'AI/Semis', size:'large', region:'asia',
+    emoji:'🇰🇷', bg:'rgba(79,163,247,.12)',  tier:['aggressive','moderate'],
+    status:'cheap',  metric:'P/E 9x',    valNote:'Samsung+SK Hynix exposure at P/E 9x — decade low',
+    why:'Single ETF owning Samsung (world\'s largest memory maker) and SK Hynix (Nvidia\'s HBM3E supplier). South Korea trades at P/E 9x — one of the cheapest developed markets. Corporate governance reforms adding re-rating catalyst.',
+    pills:['SK Hynix+Samsung','P/E 9x','pb','pg'] },
+
+  { t:'INTC',  n:'Intel Corporation',           cat:'AI/Semis', size:'large', region:'us',
+    emoji:'🔵', bg:'rgba(79,163,247,.12)',  tier:['moderate','conservative'],
+    status:'cheap',  metric:'P/B 0.9x',  valNote:'P/B below 1 — trading below book value',
+    why:'Intel is trading below book value for the first time in decades — pricing in permanent decline. But 18A process node has potential and foundry services could re-rate. High risk turnaround story.',
+    pills:['Below Book Value','Turnaround','pb','pr'] },
+
+  { t:'MCHP',  n:'Microchip Technology',        cat:'AI/Semis', size:'large', region:'us',
+    emoji:'🔌', bg:'rgba(0,229,160,.12)',  tier:['moderate','conservative'],
+    status:'cheap',  metric:'P/E 20x',   valNote:'P/E 20x — near 5yr low, 2.3% dividend',
+    why:'Microcontrollers for industrial and automotive — deeply embedded in global supply chains. P/E near 5yr low due to inventory correction that is now clearing. High free cash flow + 2.3% dividend.',
+    pills:['Industrial IoT','P/E Near 5yr Low','pg','py'] },
+
+  // ═══════════════════════════════════════════════════════
+  // 3. CYBERSECURITY
+  // ═══════════════════════════════════════════════════════
+  { t:'CRWD',  n:'CrowdStrike Holdings',        cat:'Cybersecurity', size:'large', region:'us',
+    emoji:'🛡️', bg:'rgba(255,107,107,.12)', tier:['aggressive','moderate'],
+    status:'fair',   metric:'PEG 2.0',   valNote:'PEG 2.0 for 30%+ ARR growth',
+    why:'AI-native endpoint security platform. Every major enterprise breach makes CRWD more essential. 30%+ ARR growth with high net retention. PEG of 2.0 is fair for this growth quality.',
+    pills:['AI Security','30% ARR','pr','pb'] },
+
+  { t:'PANW',  n:'Palo Alto Networks',          cat:'Cybersecurity', size:'large', region:'us',
+    emoji:'🔒', bg:'rgba(79,163,247,.12)',  tier:['moderate','conservative'],
+    status:'fair',   metric:'P/E 48x',   valNote:'Premium justified by 25%+ FCF margins',
+    why:'Largest pure-play cybersecurity platform. Platform consolidation trend benefits PANW as enterprises reduce vendor count. 25%+ free cash flow margins with high customer stickiness.',
+    pills:['Platform Leader','25% FCF','pb','pp'] },
+
+  { t:'NET',   n:'Cloudflare Inc.',             cat:'Cybersecurity', size:'large', region:'us',
+    emoji:'☁️', bg:'rgba(0,229,160,.12)',  tier:['aggressive','moderate'],
+    status:'fair',   metric:'P/S 18x',   valNote:'P/S 18x below 3yr avg 30x',
+    why:'Zero-trust network security + CDN + AI inference at the edge. P/S of 18x significantly below 3yr average of 30x. Cloudflare Workers AI is a new revenue vector starting to scale.',
+    pills:['Zero-Trust','P/S Discounted','pg','pb'] },
+
+  { t:'ZS',    n:'Zscaler Inc.',                cat:'Cybersecurity', size:'large', region:'us',
+    emoji:'🌐', bg:'rgba(245,197,66,.12)',  tier:['moderate','aggressive'],
+    status:'cheap',  metric:'P/S 12x',   valNote:'$376→$170. P/S 12x vs 3yr avg 20x',
+    why:'ZS peaked at $376, now ~$170. Zero-trust cloud security. P/S of 12x well below 3yr avg of 20x. Federal zero-trust mandates are accelerating adoption post-SolarWinds and Colonial Pipeline.',
+    pills:['Zero-Trust','P/S Cheapest','py','pg'] },
+
+  { t:'RBRK',  n:'Rubrik Inc.',                 cat:'Cybersecurity', size:'mid',   region:'us',
+    emoji:'💾', bg:'rgba(167,139,250,.12)', tier:['aggressive'],
+    status:'fair',   metric:'P/S 12x',   valNote:'Recent IPO — P/S 12x for 40%+ ARR',
+    why:'Cloud data security and ransomware recovery. 40%+ ARR growth. Recently IPO\'d — P/S looks high but growth rate and Microsoft partnership support current valuation.',
+    pills:['Data Security','40% ARR','pp','pr'] },
+
+  { t:'S',     n:'SentinelOne Inc.',            cat:'Cybersecurity', size:'mid',   region:'us',
+    emoji:'🤖', bg:'rgba(0,229,160,.12)',  tier:['aggressive','moderate'],
+    status:'cheap',  metric:'P/S 7x',    valNote:'P/S 7x — below 3yr avg 18x. AI SOC catalyst',
+    why:'AI-powered endpoint detection and response. P/S of 7x is well below 3yr average of 18x. Purple AI (autonomous SOC) is closing large enterprise deals that were previously unwinnable.',
+    pills:['AI SOC','P/S 7x','pg','pb'] },
+
+  { t:'CYBR',  n:'CyberArk Software',           cat:'Cybersecurity', size:'mid',   region:'us',
+    emoji:'🔑', bg:'rgba(79,163,247,.12)',  tier:['moderate','aggressive'],
+    status:'fair',   metric:'P/S 14x',   valNote:'P/S 14x — fair for identity security leader',
+    why:'Privileged access management — protects the most sensitive credentials. Increasingly mandated by regulators and cyber insurers. Acquisition of Venafi adds machine identity layer.',
+    pills:['Identity Security','PAM Leader','pb','py'] },
+
+  // ═══════════════════════════════════════════════════════
+  // 4. CLOUD / SAAS
+  // ═══════════════════════════════════════════════════════
+  { t:'CRM',   n:'Salesforce Inc.',             cat:'Cloud/SaaS', size:'large', region:'us',
+    emoji:'💼', bg:'rgba(0,229,160,.12)',  tier:['moderate','conservative'],
+    status:'cheap',  metric:'P/E 26x',   valNote:'$311→$126 crash, recovered. P/E 26x vs avg 35x',
+    why:'CRM crashed from $311 to $126, now recovered. P/E 26x below 5yr avg 35x. Agentforce AI is showing real enterprise traction — could add a second revenue growth engine on top of the core CRM business.',
+    pills:['Agentforce AI','P/E Below Avg','pg','pb'] },
+
+  { t:'NOW',   n:'ServiceNow Inc.',             cat:'Cloud/SaaS', size:'large', region:'us',
+    emoji:'⚙️', bg:'rgba(167,139,250,.12)', tier:['moderate','conservative'],
+    status:'fair',   metric:'P/E 60x',   valNote:'Premium justified by AI workflow automation moat',
+    why:'Every Fortune 500 IT department runs ServiceNow. AI Now platform automates workflows that previously required humans. Premium P/E but near-impossible to displace once embedded.',
+    pills:['Enterprise AI','High Retention','pp','py'] },
+
+  { t:'SNOW',  n:'Snowflake Inc.',              cat:'Cloud/SaaS', size:'large', region:'us',
+    emoji:'❄️', bg:'rgba(79,163,247,.12)',  tier:['aggressive','moderate'],
+    status:'cheap',  metric:'P/S 10x',   valNote:'IPO $250+, bottomed $107. P/S 67% below avg',
+    why:'IPO\'d above $250, crashed to $107. Cortex AI is becoming the enterprise AI data layer of choice. P/S of 10x vs 3yr average of 30x is one of the biggest valuation discounts in enterprise software.',
+    pills:['P/S 67% Below Avg','AI Data Layer','pb','pg'] },
+
+  { t:'MDB',   n:'MongoDB Inc.',               cat:'Cloud/SaaS', size:'large', region:'us',
+    emoji:'🍃', bg:'rgba(0,229,160,.12)',  tier:['aggressive','moderate'],
+    status:'cheap',  metric:'P/S 8x',    valNote:'P/S 8x near 3yr low despite 20%+ growth',
+    why:'Developer-first document database for AI applications. P/S of 8x near multi-year lows despite consistent 20%+ revenue growth. Every major AI app team evaluates MongoDB first.',
+    pills:['Dev Database','P/S Near Low','pg','pb'] },
+
+  { t:'ADBE',  n:'Adobe Inc.',                 cat:'Cloud/SaaS', size:'large', region:'us',
+    emoji:'🎨', bg:'rgba(167,139,250,.12)', tier:['moderate','conservative'],
+    status:'cheap',  metric:'P/E 24x',   valNote:'$700→$370. 5yr P/E low. Firefly AI upside',
+    why:'Adobe peaked at $700, now ~$370. P/E of 24x is a 5-year low for one of the most durable software businesses. Firefly generative AI embedded in Creative Cloud adds new monetization layer.',
+    pills:['Creative AI','5yr P/E Low','pp','py'] },
+
+  { t:'TOIV',  n:'Topicus.com Inc. (TOI.V)',   cat:'Cloud/SaaS', size:'mid',   region:'canada',
+    emoji:'🍁', bg:'rgba(0,229,160,.12)',  tier:['moderate','aggressive'],
+    status:'fair',   metric:'P/E 45x',   valNote:'Premium but Constellation-model compounder',
+    why:'Spinoff from Constellation Software — acquires vertical market SaaS businesses in Europe. Constellation-style capital allocation with 25%+ IRR on acquisitions. Still small enough to compound at high rates for years.',
+    pills:['Vertical SaaS','CSI Spinoff','pg','pb'] },
+
+  { t:'CSU',   n:'Constellation Software',     cat:'Cloud/SaaS', size:'large', region:'canada',
+    emoji:'⭐', bg:'rgba(245,197,66,.12)',  tier:['conservative','moderate'],
+    status:'fair',   metric:'P/E 90x',   valNote:'Always premium — best capital allocator in tech',
+    why:'Acquires vertical market software companies at high IRR. Mark Leonard has compounded at 35%+ for 20 years. Premium valuation is structural — the quality of capital allocation is unmatched.',
+    pills:['Best Allocator','Vertical SaaS','py','pg'] },
+
+  { t:'HUBS',  n:'HubSpot Inc.',               cat:'Cloud/SaaS', size:'large', region:'us',
+    emoji:'🧲', bg:'rgba(79,163,247,.12)',  tier:['moderate','aggressive'],
+    status:'cheap',  metric:'P/S 9x',    valNote:'P/S 9x — well below 3yr avg 18x',
+    why:'SMB CRM and marketing platform. P/S of 9x is well below 3yr average of 18x. AI features (Breeze AI) are accelerating upsell within existing customer base. Potential acquisition target.',
+    pills:['SMB CRM','P/S Below Avg','pb','pg'] },
+
+  { t:'DDOG',  n:'Datadog Inc.',               cat:'Cloud/SaaS', size:'large', region:'us',
+    emoji:'🐕', bg:'rgba(255,107,107,.12)', tier:['aggressive','moderate'],
+    status:'fair',   metric:'P/S 16x',   valNote:'P/S 16x below 3yr avg 28x',
+    why:'Cloud infrastructure observability — every DevOps team needs Datadog. P/S of 16x below 3yr average. AI workloads are inherently more complex to monitor, expanding Datadog\'s TAM structurally.',
+    pills:['Cloud Monitoring','P/S Below Avg','pr','pb'] },
+
+  { t:'GLBE',  n:'Global-E Online',            cat:'Cloud/SaaS', size:'mid',   region:'us',
+    emoji:'🌍', bg:'rgba(0,229,160,.12)',  tier:['aggressive','moderate'],
+    status:'cheap',  metric:'P/S 6x',    valNote:'P/S 6x — cheap cross-border e-com infrastructure',
+    why:'The plumbing behind international e-commerce — handles duties, taxes, currency, and compliance for Shopify, Meta, and 1000+ merchants. P/S of 6x is cheap for 30%+ revenue growth.',
+    pills:['Cross-Border Ecom','P/S 6x','pg','pb'] },
+
+  // ═══════════════════════════════════════════════════════
+  // 5. CHINA GROWTH
+  // ═══════════════════════════════════════════════════════
+  { t:'BABA',  n:'Alibaba Group',              cat:'China', size:'large', region:'asia',
+    emoji:'🐉', bg:'rgba(255,107,107,.12)', tier:['aggressive','moderate'],
+    status:'cheap',  metric:'P/E 11x',   valNote:'$300+→$80s. Historic P/E low',
+    why:'Alibaba peaked above $300, now ~$80s. P/E of 11x is the lowest in its public history. Regulatory storm is largely behind it. Cloud growing 15%+. The market is pricing in permanent collapse.',
+    pills:['Deep Value','P/E 11x Historic','pr','py'] },
+
+  { t:'PDD',   n:'PDD Holdings (Temu)',        cat:'China', size:'large', region:'asia',
+    emoji:'🛒', bg:'rgba(0,229,160,.12)',  tier:['aggressive'],
+    status:'cheap',  metric:'P/E 14x',   valNote:'P/E 14x for 60%+ revenue — remarkably cheap',
+    why:'Temu global expansion + Pinduoduo domestic dominance. Revenue growing 60%+ with P/E of only 14x. One of the cheapest high-growth stocks in any market globally.',
+    pills:['60% Revenue Growth','P/E 14x','pg','pr'] },
+
+  { t:'FUTU',  n:'Futu Holdings',              cat:'China', size:'mid',   region:'asia',
+    emoji:'📊', bg:'rgba(79,163,247,.12)',  tier:['aggressive'],
+    status:'cheap',  metric:'P/E 18x',   valNote:'P/E 18x — Chinese digital brokerage 30%+ growth',
+    why:'China\'s Robinhood expanding to Singapore, Malaysia, and Japan. 30%+ user growth. P/E 18x cheap relative to growth rate and international expansion optionality.',
+    pills:['Chinese Fintech','P/E 18x','pb','pg'] },
+
+  { t:'KWEB',  n:'KraneShares China ETF',      cat:'China', size:'large', region:'asia',
+    emoji:'🇨🇳', bg:'rgba(255,107,107,.12)', tier:['aggressive','moderate'],
+    status:'cheap',  metric:'P/E 11x',   valNote:'China tech basket at 11x vs 40x peak',
+    why:'BABA + Tencent + PDD + JD + Meituan basket. P/E of 11x vs 40x peak in 2021. Authorities pivoting from crackdown to stimulus. Single ETF for diversified China tech recovery.',
+    pills:['China Tech Basket','P/E 11x vs 40x','pr','pb'] },
+
+  { t:'JD',    n:'JD.com Inc.',               cat:'China', size:'large', region:'asia',
+    emoji:'📬', bg:'rgba(79,163,247,.12)',  tier:['aggressive','moderate'],
+    status:'cheap',  metric:'P/E 10x',   valNote:'P/E 10x — JD Logistics separating hidden value',
+    why:'China\'s Amazon — largest direct-sales e-commerce platform with own logistics network. JD Logistics is a fast-growing independent business. P/E 10x is historically cheap.',
+    pills:['China Amazon','P/E 10x','pb','pg'] },
+
+  { t:'9988',  n:'Alibaba HK (9988.HK)',       cat:'China', size:'large', region:'asia',
+    emoji:'🏮', bg:'rgba(255,107,107,.12)', tier:['aggressive','moderate'],
+    status:'cheap',  metric:'P/E 11x',   valNote:'HK-listed — same value thesis, local access',
+    why:'Same Alibaba thesis but via Hong Kong listing for those with HK brokerage access. HK listing getting included in Stock Connect programs, adding mainland Chinese investor demand.',
+    pills:['HK Listed','Stock Connect','pr','py'] },
+
+  { t:'DRGN',  n:'DRGN ETF (China Dragons)',   cat:'China', size:'large', region:'asia',
+    emoji:'🐲', bg:'rgba(245,197,66,.12)',  tier:['aggressive'],
+    status:'cheap',  metric:'P/E 12x',   valNote:'Top 7 China tech cos at blended 12x P/E',
+    why:'Concentrated ETF of the largest China tech companies at decade-low valuations. Simple way to own the China tech recovery thesis across multiple names with one ticker.',
+    pills:['China Tech ETF','Blended 12x P/E','py','pr'] },
+
+  // ═══════════════════════════════════════════════════════
+  // 6. LUXURY & SECULAR CONSUMPTION
+  // ═══════════════════════════════════════════════════════
+  { t:'RACE',  n:'Ferrari N.V.',               cat:'Luxury', size:'large', region:'europe',
+    emoji:'🏎️', bg:'rgba(245,197,66,.12)',  tier:['conservative','moderate'],
+    status:'fair',   metric:'P/E 52x',   valNote:'Always premium — secular UHNW demand',
+    why:'Most exclusive brand in the world — never discounts, never overproduces. Personalization revenue (higher-margin) growing rapidly. UHNW demand is secular and resilient across economic cycles.',
+    pills:['Luxury Monopoly','Secular Growth','py','pp'] },
+
+  { t:'HESAY', n:'Hermès International',       cat:'Luxury', size:'large', region:'europe',
+    emoji:'🧣', bg:'rgba(167,139,250,.12)', tier:['conservative','moderate'],
+    status:'fair',   metric:'P/E 54x',   valNote:'Birkin waitlists = demand always exceeds supply',
+    why:'Demand perpetually exceeds supply by design. P/E 54x sounds expensive but Hermès never trades cheap — that is the entire brand promise. Generational wealth transfer tailwind.',
+    pills:['Birkin Brand','Inelastic Demand','pp','py'] },
+
+  { t:'LVMUY', n:'LVMH (Louis Vuitton)',       cat:'Luxury', size:'large', region:'europe',
+    emoji:'👜', bg:'rgba(245,197,66,.12)',  tier:['conservative','moderate'],
+    status:'cheap',  metric:'P/E 20x',   valNote:'€900→€530. Best LVMH entry in a decade',
+    why:'75 luxury brands — LV, Dior, Moët, Bulgari, Tiffany, Hennessy. Peaked €900, now €530. P/E 20x well below 5yr avg 28x. China luxury slowdown is temporary; UHNW demand is structural.',
+    pills:['75 Luxury Brands','P/E Decade Low','py','pg'] },
+
+  { t:'PRDSY', n:'Prada Group',               cat:'Luxury', size:'large', region:'europe',
+    emoji:'👗', bg:'rgba(167,139,250,.12)', tier:['moderate','conservative'],
+    status:'cheap',  metric:'P/E 22x',   valNote:'P/E 22x below peers. Miu Miu +90% growth',
+    why:'Prada + Miu Miu massive Gen Z resurgence. Miu Miu growing 90% YoY while Prada brand stabilizes. P/E 22x below luxury peer group average. Cultural moment is real and building.',
+    pills:['Gen Z Resurgence','Miu Miu Growth','pp','py'] },
+
+  { t:'CFRUY', n:'Compagnie Financière Richemont',cat:'Luxury', size:'large', region:'europe',
+    emoji:'💎', bg:'rgba(245,197,66,.12)',  tier:['conservative','moderate'],
+    status:'cheap',  metric:'P/E 18x',   valNote:'P/E 18x — Cartier parent at multi-year low',
+    why:'Owns Cartier, Van Cleef, IWC, Panerai. Jewellery and watches have the best luxury pricing power. P/E of 18x is a multi-year low for Richemont — cheaper than LVMH on a relative basis.',
+    pills:['Cartier+VCA','P/E Multi-yr Low','py','pg'] },
+
+  { t:'WOW',   n:'Watches of Switzerland',    cat:'Luxury', size:'mid',   region:'europe',
+    emoji:'⌚', bg:'rgba(167,139,250,.12)', tier:['moderate','aggressive'],
+    status:'cheap',  metric:'P/E 12x',   valNote:'P/E 12x — luxury watch retailer at trough',
+    why:'UK luxury watch retailer (Rolex, Patek, AP) hit by watch market downturn. P/E of 12x is near trough. Rolex supply normalization and US expansion are two recovery catalysts.',
+    pills:['Rolex Retailer','Trough Valuation','pp','py'] },
+
+  { t:'RNLSY', n:'Rémy Cointreau',            cat:'Luxury', size:'mid',   region:'europe',
+    emoji:'🥃', bg:'rgba(245,197,66,.12)',  tier:['conservative','moderate'],
+    status:'cheap',  metric:'P/E 22x',   valNote:'P/E 22x — premium cognac at trough demand',
+    why:'Rémy Martin cognac — premium spirits with strongest pricing power in beverages. US and China destocking nearly complete. P/E near decade low as investors wait for demand recovery.',
+    pills:['Premium Cognac','Trough Entry','py','pg'] },
+
+  // ═══════════════════════════════════════════════════════
+  // 7. QUALITY COMPOUNDERS
+  // ═══════════════════════════════════════════════════════
+  { t:'META',  n:'Meta Platforms',            cat:'Quality', size:'large', region:'us',
+    emoji:'👍', bg:'rgba(0,229,160,.12)',  tier:['moderate','conservative','aggressive'],
+    status:'fair',   metric:'P/E 24x',   valNote:'$89 Year of Efficiency bottom → ~10x. Fair now',
+    why:'Hit $89 in 2022 — the Year of Efficiency bottom — and rose ~10x. $50B+ FCF. AI ad tools compound ROAS for advertisers. Ray-Ban AI glasses are a real hardware optionality.',
+    pills:['3B Daily Users','20%+ EPS Growth','pg','py'] },
+
+  { t:'NFLX',  n:'Netflix Inc.',              cat:'Quality', size:'large', region:'us',
+    emoji:'🎬', bg:'rgba(255,107,107,.12)', tier:['moderate','conservative'],
+    status:'fair',   metric:'P/E 38x',   valNote:'$78 in 2022 was bargain. P/E 38x below 5yr avg',
+    why:'Hit $78 in 2022 — a generational buy that most missed. Ad-supported tier + live sports (NFL, boxing) unlocked a second revenue engine. 300M+ subscribers with real pricing power.',
+    pills:['Streaming Leader','Ad Tier Growing','pr','py'] },
+
+  { t:'MSFT',  n:'Microsoft Corp.',           cat:'Quality', size:'large', region:'us',
+    emoji:'🪟', bg:'rgba(167,139,250,.12)', tier:['conservative','moderate'],
+    status:'fair',   metric:'P/E 32x',   valNote:'P/E 32x — slight premium for best enterprise AI',
+    why:'Azure + Copilot AI + Office 365 + Xbox + GitHub. Every enterprise AI project runs on Azure. P/E of 32x is a slight premium but justified for the highest-quality large-cap tech business.',
+    pills:['Enterprise AI','Copilot Revenue','pp','pb'] },
+
+  { t:'AAPL',  n:'Apple Inc.',                cat:'Quality', size:'large', region:'us',
+    emoji:'🍎', bg:'rgba(79,163,247,.12)',  tier:['conservative','moderate'],
+    status:'fair',   metric:'P/E 30x',   valNote:'P/E 30x near 3yr avg — quality anchor',
+    why:'iPhone + Services + Apple Intelligence. Services segment is 25%+ of revenue and growing 15%+. Massive buyback program reducing share count. Ultimate quality anchor for any portfolio.',
+    pills:['Services Growth','Buybacks','pb','py'] },
+
+  { t:'APP',   n:'Applovin Corp.',            cat:'Quality', size:'large', region:'us',
+    emoji:'📱', bg:'rgba(0,229,160,.12)',  tier:['aggressive','moderate'],
+    status:'fair',   metric:'PEG 1.5',   valNote:'PEG 1.5 for 70%+ revenue growth',
+    why:'AI-powered mobile advertising platform. 70%+ revenue growth with PEG of just 1.5. Expanding from mobile games into e-commerce and web advertising — total addressable market 10x larger.',
+    pills:['AI Ad Tech','PEG 1.5','pg','pb'] },
+
+  { t:'CMG',   n:'Chipotle Mexican Grill',    cat:'Quality', size:'large', region:'us',
+    emoji:'🌯', bg:'rgba(245,197,66,.12)',  tier:['conservative','moderate'],
+    status:'fair',   metric:'P/E 52x',   valNote:'Premium — 15% unit growth + pricing power',
+    why:'Best QSR unit economics. 15% annual unit growth + real pricing power + international expansion barely started (Europe, Middle East). Premium P/E consistently earned.',
+    pills:['Unit Growth','Pricing Power','py','pg'] },
+
+
+  { t:'NKE',   n:'Nike Inc.',                 cat:'Quality', size:'large', region:'us',
+    emoji:'👟', bg:'rgba(245,197,66,.12)',  tier:['conservative','moderate'],
+    status:'cheap',  metric:'P/E 22x',   valNote:'P/E 22x — near 10yr low. Turnaround in progress',
+    why:'Nike peaked at $180, now ~$70-80. P/E 22x is near a 10-year low as new CEO Elliott Hill executes a return-to-sport strategy. Wholesale channel reset and product innovation cycle starting.',
+    pills:['Brand Turnaround','P/E 10yr Low','py','pg'] },
+
+  { t:'DIS',   n:'Walt Disney Company',       cat:'Quality', size:'large', region:'us',
+    emoji:'🏰', bg:'rgba(79,163,247,.12)',  tier:['moderate','conservative'],
+    status:'cheap',  metric:'P/E 20x',   valNote:'P/E 20x — below 5yr avg, streaming turning profit',
+    why:'Disney+ reached profitability. Parks business generating record EBITDA. P/E of 20x is below 5yr avg while streaming pivot largely complete. ESPN direct-to-consumer is the next major catalyst.',
+    pills:['Parks + Streaming','Streaming Profitable','pb','py'] },
+
+  // ═══════════════════════════════════════════════════════
+  // 8. CONSUMPTION GROWTH
+  // ═══════════════════════════════════════════════════════
+  { t:'ONON',  n:'On Running AG',             cat:'Consumption', size:'large', region:'europe',
+    emoji:'👟', bg:'rgba(0,229,160,.12)',  tier:['moderate','aggressive'],
+    status:'fair',   metric:'P/E 62x',   valNote:'Premium but 25%+ revenue growth earns it',
+    why:'Swiss athletic brand growing 25%+ revenue globally. Roger Federer-backed. Moving into apparel and expanding in Asia. Athletic luxury positioning drives premium pricing that sticks.',
+    pills:['25% Rev Growth','Athletic Luxury','pg','pb'] },
+
+  { t:'DECK',  n:'Deckers Brands (HOKA)',     cat:'Consumption', size:'large', region:'us',
+    emoji:'🥾', bg:'rgba(79,163,247,.12)',  tier:['moderate','conservative'],
+    status:'cheap',  metric:'P/E 22x',   valNote:'P/E 22x below peer group for HOKA growth',
+    why:'HOKA and UGG brand parent. P/E 22x below athletic footwear peers despite 20%+ HOKA growth. HOKA is in early innings of becoming a running shoe category leader globally.',
+    pills:['HOKA Growth','Cheap P/E','pb','pg'] },
+
+  { t:'HIMS',  n:'Hims & Hers Health',        cat:'Consumption', size:'mid',   region:'us',
+    emoji:'💊', bg:'rgba(167,139,250,.12)', tier:['aggressive','moderate'],
+    status:'fair',   metric:'P/S 4x',    valNote:'P/S 4x fair for 50%+ telehealth growth',
+    why:'GLP-1 compounded weight loss drugs driving explosive growth. 50%+ revenue growth. P/S of 4x is fair for telehealth at this growth rate. Regulatory risk is the key variable to monitor.',
+    pills:['GLP-1 Tailwind','50% Growth','pp','pr'] },
+
+  { t:'CAVA',  n:'CAVA Group Inc.',           cat:'Consumption', size:'mid',   region:'us',
+    emoji:'🥗', bg:'rgba(245,197,66,.12)',  tier:['aggressive','moderate'],
+    status:'fair',   metric:'P/E 120x',  valNote:'Expensive P/E but Chipotle-early-days parallel',
+    why:'Mediterranean QSR with Chipotle-level unit economics. 20%+ comp store growth. Yes, the P/E is high — so was Chipotle at this stage. The unit economics are real and expanding.',
+    pills:['Next Chipotle','Unit Economics','py','pr'] },
+
+  { t:'BROS',  n:'Dutch Bros Inc.',           cat:'Consumption', size:'mid',   region:'us',
+    emoji:'☕', bg:'rgba(0,229,160,.12)',  tier:['aggressive','moderate'],
+    status:'fair',   metric:'P/S 3x',    valNote:'P/S 3x reasonable for 20%+ unit expansion',
+    why:'Drive-thru coffee chain with cult following growing 20%+ new stores annually. Still limited to Western US with massive national expansion opportunity ahead.',
+    pills:['Drive-Thru Cult','Unit Expansion','pg','py'] },
+
+  { t:'PJZZA', n:'Papa John\'s International', cat:'Consumption', size:'mid',   region:'us',
+    emoji:'🍕', bg:'rgba(245,197,66,.12)',  tier:['moderate','conservative'],
+    status:'cheap',  metric:'P/E 18x',   valNote:'P/E 18x — below historical avg, franchise recovery',
+    why:'Pizza delivery franchise undergoing turnaround under new management. P/E of 18x below historical average. Delivery category is resilient. International franchise growth is underappreciated.',
+    pills:['Pizza Recovery','P/E Below Avg','py','pg'] },
+
+  { t:'DPZ',   n:'Domino\'s Pizza',           cat:'Consumption', size:'large', region:'us',
+    emoji:'🍕', bg:'rgba(255,107,107,.12)', tier:['conservative','moderate'],
+    status:'fair',   metric:'P/E 26x',   valNote:'P/E 26x — fair for best QSR tech + delivery moat',
+    why:'Best technology platform in QSR — own delivery, own app, own loyalty. International segment is a compounding machine with 90+ markets. Consistent earnings growth through economic cycles.',
+    pills:['Best QSR Tech','International Compounder','pr','py'] },
+
+  { t:'MAMAEARTH',n:'Mamaearth (Honasa Consumer)',cat:'Consumption', size:'small', region:'asia',
+    emoji:'🌿', bg:'rgba(0,229,160,.12)',  tier:['aggressive','moderate'],
+    status:'cheap',  metric:'P/E 30x',   valNote:'P/E 30x — India D2C personal care at growth stage',
+    why:'India\'s fastest-growing D2C personal care brand. Natural/clean beauty trend tailwind. P/E of 30x is reasonable for 30%+ revenue growth in the world\'s largest emerging consumer market.',
+    pills:['India D2C','Natural Beauty','pg','pp'] },
+
+  { t:'TPVG',  n:'TPB Brands (Turning Point Brands)',cat:'Consumption', size:'small', region:'us',
+    emoji:'🌱', bg:'rgba(79,163,247,.12)',  tier:['aggressive','moderate'],
+    status:'cheap',  metric:'P/E 11x',   valNote:'P/E 11x — alternative tobacco + ZYN competitor',
+    why:'Alternative tobacco, ZYN-competitor nicotine pouches, and smokeless products. P/E of 11x extremely cheap for a profitable, cash-generative consumer brand growing in nicotine alternatives.',
+    pills:['Alt Tobacco','P/E 11x','pb','pg'] },
+
+  { t:'ELF',   n:'e.l.f. Beauty',             cat:'Consumption', size:'mid',   region:'us',
+    emoji:'💄', bg:'rgba(167,139,250,.12)', tier:['moderate','aggressive'],
+    status:'fair',   metric:'P/E 40x',   valNote:'P/E 40x — fair for fastest growing US cosmetics',
+    why:'Fastest growing cosmetics brand in the US — disrupting with affordable dupes of luxury products. TikTok marketing drives viral adoption. International expansion just starting in UK and Europe.',
+    pills:['Gen Z Cosmetics','TikTok Viral','pp','py'] },
+
+  { t:'CELH',  n:'Celsius Holdings',          cat:'Consumption', size:'mid',   region:'us',
+    emoji:'🥤', bg:'rgba(0,229,160,.12)',  tier:['moderate','aggressive'],
+    status:'cheap',  metric:'P/S 4x',    valNote:'P/S 4x — below avg after Pepsi distribution reset',
+    why:'Celsius is the fastest growing energy drink brand distributed through Pepsi. P/S has corrected to 4x after Pepsi normalized its channel inventory. International distribution is the next growth leg.',
+    pills:['Energy Drink Growth','Pepsi Distribution','pg','pb'] },
+
+  // ═══════════════════════════════════════════════════════
+  // 9. FINTECH & STABLECOINS
+  // ═══════════════════════════════════════════════════════
+  { t:'COIN',  n:'Coinbase Global',           cat:'Fintech', size:'large', region:'us',
+    emoji:'₿',  bg:'rgba(255,107,107,.12)', tier:['aggressive'],
+    status:'fair',   metric:'P/E 25x',   valNote:'P/E 25x — fair in crypto upcycle',
+    why:'US regulated crypto exchange + USDC stablecoin custody + Base L2 network. Profitable in bull cycles. Regulatory clarity from crypto-friendly policy environment is a major tailwind.',
+    pills:['Crypto Exchange','USDC Stablecoin','pr','pg'] },
+
+  { t:'HOOD',  n:'Robinhood Markets',         cat:'Fintech', size:'mid',   region:'us',
+    emoji:'🏹', bg:'rgba(0,229,160,.12)',  tier:['aggressive','moderate'],
+    status:'cheap',  metric:'P/E 18x',   valNote:'P/E 18x — crypto + options + retirement growth',
+    why:'Crypto trading + options + Robinhood Retirement adding new revenue streams. P/E of 18x cheap for a platform rapidly adding features. Crypto and options upcycle is a direct tailwind.',
+    pills:['Cheap P/E 18x','Crypto Tailwind','pg','pb'] },
+
+  { t:'SOFI',  n:'SoFi Technologies',         cat:'Fintech', size:'mid',   region:'us',
+    emoji:'🏦', bg:'rgba(79,163,247,.12)',  tier:['moderate','aggressive'],
+    status:'cheap',  metric:'P/B 1.8x',  valNote:'P/B 1.8x below bank peers, 40% deposit growth',
+    why:'Only fintech with a national bank charter. 40%+ deposit growth. P/B of 1.8x below traditional bank peers despite superior growth. Student loan refinancing recovery adds another leg.',
+    pills:['Digital Bank','40% Deposit Growth','pb','pg'] },
+
+  { t:'NU',    n:'Nu Holdings (Nubank)',       cat:'LATAM', size:'large', region:'latam',
+    emoji:'🇧🇷', bg:'rgba(167,139,250,.12)', tier:['aggressive','moderate'],
+    status:'cheap',  metric:'P/E 22x',   valNote:'P/E 22x for 50%+ earnings growth fintech',
+    why:'100M+ customers in Brazil, Mexico, Colombia. Fastest growing bank in history. P/E of 22x extremely cheap for 50%+ earnings growth. LATAM digital banking is barely penetrated.',
+    pills:['100M Customers','50% Earnings Growth','pp','pg'] },
+
+  { t:'MELI',  n:'MercadoLibre Inc.',         cat:'LATAM', size:'large', region:'latam',
+    emoji:'🛍️', bg:'rgba(0,229,160,.12)',  tier:['moderate','aggressive'],
+    status:'fair',   metric:'P/E 58x',   valNote:'P/E 58x — LATAM e-com + fintech at 15% penetration',
+    why:'Amazon + PayPal of Latin America. Mercado Pago fintech growing 30%+. LATAM e-commerce at 15% penetration vs US 20%+. P/E expensive but the TAM runway justifies the premium.',
+    pills:['LATAM Amazon','Fintech + E-Com','pg','py'] },
+
+  { t:'CRCL',  n:'Circle Internet (USDC)',    cat:'Fintech', size:'mid',   region:'us',
+    emoji:'💵', bg:'rgba(245,197,66,.12)',  tier:['aggressive'],
+    status:'fair',   metric:'N/A (IPO)',  valNote:'USDC issuer — stablecoin regulation tailwinds',
+    why:'Issuer of USDC stablecoin — $45B+ in circulation. Stablecoin regulation passing creates massive tailwind. Pre-profitability but dominant position in the institutional stablecoin market.',
+    pills:['USDC Issuer','Stablecoin Bill','py','pr'] },
+
+  { t:'AFRM',  n:'Affirm Holdings',           cat:'Fintech', size:'mid',   region:'us',
+    emoji:'💳', bg:'rgba(79,163,247,.12)',  tier:['aggressive','moderate'],
+    status:'cheap',  metric:'P/S 5x',    valNote:'P/S 5x below 3yr avg — BNPL leader undervalued',
+    why:'Buy Now Pay Later leader with 20M+ active consumers and Amazon + Shopify integrations. P/S of 5x well below 3yr average. Interest rate decline is a direct tailwind for BNPL economics.',
+    pills:['BNPL Leader','P/S Below Avg','pb','pg'] },
+
+  { t:'PYPL',  n:'PayPal Holdings',           cat:'Fintech', size:'large', region:'us',
+    emoji:'💙', bg:'rgba(79,163,247,.12)',  tier:['moderate','conservative'],
+    status:'cheap',  metric:'P/E 14x',   valNote:'P/E 14x — near 5yr low for payments leader',
+    why:'PayPal peaked at $310, now ~$70. P/E of 14x near 5-year low. New CEO Alex Chriss focused on high-value users and Fastlane checkout. Venmo monetization is still in early innings.',
+    pills:['Payments Turnaround','P/E 5yr Low','pb','py'] },
+
+  { t:'BMNR',  n:'Bitmine Immersion (BMNR)',  cat:'Fintech', size:'small', region:'us',
+    emoji:'⛏️', bg:'rgba(255,107,107,.12)', tier:['aggressive'],
+    status:'fair',   metric:'N/A',       valNote:'Speculative BTC miner — immersion cooling edge',
+    why:'Bitcoin miner using immersion cooling technology for higher efficiency. Small-cap speculative position. Only suitable for aggressive portfolios with very small allocation given binary risk.',
+    pills:['BTC Mining','Immersion Tech','pr','pp'] },
+
+  // ═══════════════════════════════════════════════════════
+  // 10. LATAM — Latin America Growth
+  // ═══════════════════════════════════════════════════════
+  { t:'VALE',  n:'Vale S.A.',                 cat:'LATAM', size:'large', region:'latam',
+    emoji:'⛏️', bg:'rgba(245,197,66,.12)',  tier:['moderate','conservative'],
+    status:'cheap',  metric:'P/E 7x',    valNote:'P/E 7x — iron ore + EV nickel deeply cheap',
+    why:'World\'s largest iron ore miner + growing EV nickel production. P/E of 7x is extremely cheap. 8%+ dividend yield. China infrastructure stimulus is a direct catalyst for iron ore demand.',
+    pills:['P/E 7x','8% Dividend','py','pg'] },
+
+  { t:'SE',    n:'Sea Limited',               cat:'LATAM', size:'large', region:'asia',
+    emoji:'🌊', bg:'rgba(79,163,247,.12)',  tier:['aggressive','moderate'],
+    status:'cheap',  metric:'P/S 3x',    valNote:'P/S 3x — Southeast Asia digital economy leader',
+    why:'Shopee e-commerce + SeaMoney fintech + Garena gaming across Southeast Asia and LATAM. P/S of 3x well below its 3yr average of 15x. SE Asia is the fastest growing digital economy region.',
+    pills:['SE Asia Leader','P/S Below Avg','pb','pg'] },
+
+  // ═══════════════════════════════════════════════════════
+  // 11. METALS & MINING
+  // ═══════════════════════════════════════════════════════
+  { t:'GLD',   n:'SPDR Gold Shares ETF',      cat:'Metals', size:'large', region:'global',
+    emoji:'🥇', bg:'rgba(245,197,66,.12)',  tier:['conservative','moderate'],
+    status:'fair',   metric:'Store of Value', valNote:'Central banks buying record gold — inflation hedge',
+    why:'Physical gold ETF. Central banks globally buying record amounts. Inflation hedge and safe haven. De-dollarization trend is a structural tailwind for gold demand.',
+    pills:['Inflation Hedge','Central Bank Buying','py','pg'] },
+
+  { t:'SLV',   n:'iShares Silver Trust',      cat:'Metals', size:'large', region:'global',
+    emoji:'🥈', bg:'rgba(167,139,250,.12)', tier:['moderate','aggressive'],
+    status:'cheap',  metric:'Gold/Silver 90x',valNote:'90:1 ratio — silver historically cheap vs gold',
+    why:'Silver at historic 90:1 discount to gold (historical 60:1). Dual monetary + industrial demand from EVs, solar panels, and electronics. When ratio mean-reverts, silver outperforms gold significantly.',
+    pills:['Historically Cheap','EV+Solar Demand','pp','py'] },
+
+  { t:'GDX',   n:'VanEck Gold Miners ETF',    cat:'Metals', size:'large', region:'global',
+    emoji:'⛰️', bg:'rgba(245,197,66,.12)',  tier:['moderate','aggressive'],
+    status:'cheap',  metric:'P/NAV 0.85x',valNote:'Miners below NAV — leveraged gold play',
+    why:'Gold mining stocks at 0.85x NAV — rare discount to underlying gold. When gold rises, miners historically move 2-3x gold\'s return due to operating leverage. High conviction entry point.',
+    pills:['Leveraged Gold','Below NAV','py','pg'] },
+
+  { t:'SILJ',  n:'ETFMG Junior Silver Miners',cat:'Metals', size:'mid',   region:'global',
+    emoji:'💿', bg:'rgba(167,139,250,.12)', tier:['aggressive'],
+    status:'cheap',  metric:'P/NAV 0.7x', valNote:'Junior miners at extreme discount — high leverage',
+    why:'Small and mid-cap silver miners with 3-5x leverage to silver price. At P/NAV 0.7x, the most extreme discount in the precious metals mining sector. High risk, highest leverage to a silver bull market.',
+    pills:['Junior Miners','3-5x Silver Leverage','pp','pr'] },
+
+  { t:'COPX',  n:'Global X Copper Miners ETF',cat:'Metals', size:'mid',   region:'global',
+    emoji:'🟤', bg:'rgba(245,197,66,.12)',  tier:['moderate','aggressive'],
+    status:'cheap',  metric:'P/E 12x',   valNote:'P/E 12x — copper demand structural from EVs+AI',
+    why:'Copper is the key metal for electrification — EVs use 4x copper, charging infrastructure uses massive amounts. AI data centers need copper for cooling. Miners are cheap while demand is structural.',
+    pills:['EV+AI Copper','P/E 12x','py','pg'] },
+
+  { t:'PAAS',  n:'Pan American Silver',       cat:'Metals', size:'mid',   region:'canada',
+    emoji:'🥈', bg:'rgba(167,139,250,.12)', tier:['moderate','aggressive'],
+    status:'cheap',  metric:'P/NAV 0.9x',valNote:'Below NAV — largest primary silver miner',
+    why:'Largest primary silver miner globally with mines across Mexico, Peru, and Argentina. P/NAV below 1x is rare. Silver industrial demand from EVs and solar panels adds a structural demand floor.',
+    pills:['Silver Miner','P/NAV Below 1x','pp','py'] },
+
+  { t:'WPM',   n:'Wheaton Precious Metals',   cat:'Metals', size:'large', region:'canada',
+    emoji:'🌟', bg:'rgba(245,197,66,.12)',  tier:['conservative','moderate'],
+    status:'fair',   metric:'P/CF 25x',  valNote:'Fair — streaming model, no capex or cost risk',
+    why:'Precious metals streamer — pays upfront for future production at a fixed cost. No capex risk, no cost inflation risk. When gold or silver prices rise, Wheaton captures nearly pure margin expansion.',
+    pills:['Streaming Model','No Capex Risk','py','pg'] },
+
+  // ═══════════════════════════════════════════════════════
+  // 12. DIVIDENDS & INCOME
+  // ═══════════════════════════════════════════════════════
+  { t:'KO',    n:'Coca-Cola Company',         cat:'Dividends', size:'large', region:'us',
+    emoji:'🥤', bg:'rgba(0,229,160,.12)',  tier:['conservative','moderate'],
+    status:'fair',   metric:'P/E 24x',   valNote:'62 consecutive dividend raises, fairly valued',
+    why:'62 consecutive years of dividend increases — the ultimate proof of pricing power. Recession-proof with 200+ country distribution. P/E near historical average with 3.1% yield.',
+    pills:['62yr Div Growth','3.1% Yield','pg','py'] },
+
+  { t:'XOM',   n:'ExxonMobil Corp.',          cat:'Dividends', size:'large', region:'us',
+    emoji:'⛽', bg:'rgba(245,197,66,.12)',  tier:['conservative'],
+    status:'cheap',  metric:'P/E 13x',   valNote:'P/E 13x below 5yr avg, 3.5% and growing',
+    why:'P/E 13x below 5yr average of 16x. 3.5% dividend growing every year. 40+ consecutive years of dividend raises. Pioneer acquisition made Exxon the dominant Permian Basin operator.',
+    pills:['3.5% Yield','P/E Below Avg','py','pg'] },
+
+  { t:'T',     n:'AT&T Inc.',                 cat:'Dividends', size:'large', region:'us',
+    emoji:'📞', bg:'rgba(79,163,247,.12)',  tier:['conservative'],
+    status:'cheap',  metric:'P/E 10x',   valNote:'P/E 10x, 5.7% yield, debt steadily declining',
+    why:'P/E of 10x with 5.7% dividend yield. Debt declining significantly post-Warner spin-off. Telecom infrastructure is utility-like with sticky subscribers. Pure income play.',
+    pills:['5.7% Yield','P/E 10x','pb','py'] },
+
+  { t:'JNJ',   n:'Johnson & Johnson',         cat:'Dividends', size:'large', region:'us',
+    emoji:'💉', bg:'rgba(0,229,160,.12)',  tier:['conservative','moderate'],
+    status:'cheap',  metric:'P/E 14x',   valNote:'P/E 14x below 10yr avg 18x, 3.3% dividend',
+    why:'60+ consecutive years of dividend growth. P/E 14x below 10-year average of 18x. MedTech segment growing 8%+ with robotics and electrophysiology as growth drivers.',
+    pills:['60yr Div Growth','P/E Below 10yr Avg','pg','py'] },
+
+  { t:'VZ',    n:'Verizon Communications',    cat:'Dividends', size:'large', region:'us',
+    emoji:'📡', bg:'rgba(167,139,250,.12)', tier:['conservative'],
+    status:'cheap',  metric:'P/E 9x',    valNote:'P/E 9x decade low, 6.4% yield',
+    why:'P/E of 9x is near a decade low. 6.4% dividend yield with 5G capital investment now largely complete. Fixed wireless internet is an incremental revenue stream with high margins.',
+    pills:['6.4% Yield','P/E 9x','pp','py'] },
+
+  { t:'O',     n:'Realty Income Corp.',       cat:'Dividends', size:'large', region:'us',
+    emoji:'🏪', bg:'rgba(245,197,66,.12)',  tier:['conservative','moderate'],
+    status:'fair',   metric:'P/FFO 15x', valNote:'Monthly dividend REIT — fairly valued',
+    why:'"The Monthly Dividend Company" — pays dividends every month. Net lease REIT with Walmart, Walgreens, 7-Eleven as tenants. 108 consecutive quarterly dividend increases. Excellent for income portfolios.',
+    pills:['Monthly Dividend','108 Increases','py','pg'] },
+
+  { t:'MO',    n:'Altria Group',              cat:'Dividends', size:'large', region:'us',
+    emoji:'🚬', bg:'rgba(245,197,66,.12)',  tier:['conservative'],
+    status:'cheap',  metric:'P/E 9x',    valNote:'P/E 9x, 9% dividend yield — max fear pricing',
+    why:'9% dividend yield with P/E of 9x. Regulatory risk fully priced in. NJOY e-cigarette acquisition is a transition vehicle. One of the highest pure income yields in the large-cap universe.',
+    pills:['9% Yield','P/E 9x','py','pr'] },
+
+  { t:'PM',    n:'Philip Morris International',cat:'Dividends', size:'large', region:'us',
+    emoji:'🌐', bg:'rgba(79,163,247,.12)',  tier:['conservative','moderate'],
+    status:'fair',   metric:'P/E 19x',   valNote:'P/E 19x — IQOS smoke-free transition leader',
+    why:'Philip Morris\'s IQOS heated tobacco product is disrupting cigarettes globally. Smoke-free products now >40% of revenue. P/E of 19x fair for a company transforming its business model with a 5% yield.',
+    pills:['5% Yield','IQOS Growth','pb','py'] },
+
+  { t:'MCD',   n:'McDonald\'s Corporation',   cat:'Dividends', size:'large', region:'us',
+    emoji:'🍟', bg:'rgba(245,197,66,.12)',  tier:['conservative','moderate'],
+    status:'fair',   metric:'P/E 24x',   valNote:'P/E 24x — fair for 48yr dividend streak',
+    why:'48 consecutive years of dividend growth. Franchise model generates high-margin royalties globally. Digital and delivery platform now accounting for >40% of systemwide sales.',
+    pills:['48yr Div Growth','3% Yield','py','pg'] },
+
+  { t:'ABT',   n:'Abbott Laboratories',       cat:'Dividends', size:'large', region:'us',
+    emoji:'🩺', bg:'rgba(0,229,160,.12)',  tier:['conservative','moderate'],
+    status:'fair',   metric:'P/E 24x',   valNote:'P/E 24x — Libre CGM + cardiac devices compounder',
+    why:'FreeStyle Libre continuous glucose monitor is a 20%+ growth business. Cardiac rhythm devices growing 10%+. 52 consecutive years of dividend growth. Best healthcare dividend growth story.',
+    pills:['52yr Div Growth','2% Yield','pg','pb'] },
+
+  // ═══════════════════════════════════════════════════════
+  // 13. INNOVATION / SPACE / DEFENSE TECH
+  // ═══════════════════════════════════════════════════════
+  { t:'MDA',   n:'MDA Space Ltd.',            cat:'Innovation/Space', size:'mid', region:'canada',
+    emoji:'🛸', bg:'rgba(79,163,247,.12)',  tier:['aggressive','moderate'],
+    status:'cheap',  metric:'P/E 28x',   valNote:'P/E 28x — Canadarm3 + satellite servicing',
+    why:'Canadian space technology company building Canadarm3 for NASA Lunar Gateway + commercial satellite servicing robots. P/E 28x is cheap for a defense-adjacent space business with government-contracted revenue.',
+    pills:['Canadarm3','Space Robotics','pb','pg'] },
+
+  { t:'RCM',   n:'Kraken Robotics',           cat:'Robotics/Defense', size:'small', region:'canada',
+    emoji:'🦑', bg:'rgba(0,229,160,.12)',  tier:['aggressive'],
+    status:'cheap',  metric:'P/S 3x',    valNote:'P/S 3x — military sonar and underwater drones',
+    why:'Canadian small-cap making acoustic modems, sonars, and unmanned underwater vehicles for NATO navies. P/S of 3x is cheap for a defense-adjacent company growing revenue 50%+. NATO spending surge is a direct tailwind.',
+    pills:['NATO UUV','50% Revenue Growth','pg','pr'] },
+
+  { t:'RKLB',  n:'Rocket Lab USA',            cat:'Innovation/Space', size:'mid',   region:'us',
+    emoji:'🚀', bg:'rgba(167,139,250,.12)', tier:['aggressive'],
+    status:'fair',   metric:'P/S 14x',   valNote:'P/S 14x — small launch + space systems growth',
+    why:'Most frequent orbital launch provider after SpaceX. Electron rocket + Neutron in development. Space systems (spacecraft manufacturing) growing 50%+ and becoming the larger revenue segment.',
+    pills:['Frequent Launcher','Space Systems','pp','pr'] },
+
+  { t:'ASTS',  n:'AST SpaceMobile',           cat:'Innovation/Space', size:'small', region:'us',
+    emoji:'📡', bg:'rgba(255,107,107,.12)', tier:['aggressive'],
+    status:'fair',   metric:'P/S 40x',   valNote:'Pre-revenue — direct-to-device satellite broadband',
+    why:'Building a direct-to-smartphone satellite broadband network. AT&T and Verizon already signed deals. Pre-revenue but the TAM (5.3B people without broadband) is enormous. High risk, high optionality.',
+    pills:['Direct-to-Device','AT&T+Verizon Deals','pr','pp'] },
+
+  { t:'PLTR',  n:'Palantir Technologies',     cat:'Innovation/Space', size:'large', region:'us',
+    emoji:'🔮', bg:'rgba(0,229,160,.12)',  tier:['aggressive','moderate'],
+    status:'fair',   metric:'P/S 28x',   valNote:'Premium P/S for AIP AI government dominance',
+    why:'AIP (Artificial Intelligence Platform) winning massive US government and commercial contracts. Revenue accelerating to 30%+ growth. Premium P/S but the moat in defense AI is very real.',
+    pills:['AI Platform','Gov Defense','pg','py'] },
+
+  { t:'IRDM',  n:'Iridium Communications',    cat:'Innovation/Space', size:'mid',   region:'us',
+    emoji:'🛰️', bg:'rgba(79,163,247,.12)',  tier:['moderate','conservative'],
+    status:'cheap',  metric:'P/E 22x',   valNote:'P/E 22x — only truly global satellite network',
+    why:'Only satellite constellation covering 100% of the Earth including poles and oceans. Maritime, aviation, IoT connectivity. P/E of 22x reasonable for a mission-critical infrastructure monopoly.',
+    pills:['Global Monopoly','P/E 22x','pb','pg'] },
+
+  { t:'HII',   n:'Huntington Ingalls Industries',cat:'Innovation/Space', size:'large', region:'us',
+    emoji:'⚓', bg:'rgba(79,163,247,.12)',  tier:['conservative','moderate'],
+    status:'cheap',  metric:'P/E 16x',   valNote:'P/E 16x — only US nuclear sub/carrier builder',
+    why:'America\'s only nuclear submarine and aircraft carrier shipbuilder. P/E 16x below historical average. Defense spending is bipartisan. 30+ year backlogs make revenue highly predictable.',
+    pills:['Nuclear Sub Builder','P/E Below Avg','pb','py'] },
+
+  { t:'KTOS',  n:'Kratos Defense & Security',  cat:'Innovation/Space', size:'mid',   region:'us',
+    emoji:'✈️', bg:'rgba(167,139,250,.12)', tier:['aggressive','moderate'],
+    status:'fair',   metric:'P/S 4x',    valNote:'P/S 4x — affordable drone platforms for DoD',
+    why:'Makes affordable unmanned aerial systems and electronic warfare systems for the US DoD. Low-cost attritable drones are the new defense strategy. P/S of 4x fair for 15%+ revenue growth.',
+    pills:['Affordable Drones','DoD Contract','pp','pb'] },
+
+  // ═══════════════════════════════════════════════════════
+  // 14. ROBOTICS & AUTOMATION
+  // ═══════════════════════════════════════════════════════
+  { t:'ISRG',  n:'Intuitive Surgical',        cat:'Robotics/Defense', size:'large', region:'us',
+    emoji:'🤖', bg:'rgba(0,229,160,.12)',  tier:['conservative','moderate'],
+    status:'fair',   metric:'P/E 68x',   valNote:'Premium — robotic surgery monopoly',
+    why:'Da Vinci surgical robot installed in every major hospital globally. 15%+ procedure growth. Premium P/E justified by near-monopoly in robotic-assisted surgery and high switching costs.',
+    pills:['Surgical Monopoly','15% Proc Growth','pg','py'] },
+
+  { t:'FANUY', n:'FANUC Corporation',         cat:'Robotics/Defense', size:'large', region:'asia',
+    emoji:'🦾', bg:'rgba(79,163,247,.12)',  tier:['moderate','conservative'],
+    status:'cheap',  metric:'P/E 22x',   valNote:'P/E 22x — industrial robot leader at trough',
+    why:'World\'s largest industrial robot manufacturer. P/E of 22x is near cycle trough as auto and electronics capex pauses. EV manufacturing buildout is a massive long-term catalyst for industrial robots.',
+    pills:['Industrial Robot Leader','EV Manufacturing','pb','pg'] },
+
+  { t:'ADSK',  n:'Autodesk Inc.',             cat:'Robotics/Defense', size:'large', region:'us',
+    emoji:'📏', bg:'rgba(167,139,250,.12)', tier:['moderate','conservative'],
+    status:'cheap',  metric:'P/E 30x',   valNote:'P/E 30x below 5yr avg — AEC software monopoly',
+    why:'Architecture, Engineering, Construction software monopoly. P/E of 30x below 5yr average. Construction AI and digital twin integration is expanding TAM meaningfully.',
+    pills:['AEC Monopoly','Digital Twins','pp','py'] },
+
+  { t:'BLDP',  n:'Ballard Power Systems',     cat:'Robotics/Defense', size:'small', region:'canada',
+    emoji:'⚡', bg:'rgba(0,229,160,.12)',  tier:['aggressive'],
+    status:'fair',   metric:'P/S 6x',    valNote:'P/S 6x — fuel cell technology for heavy transport',
+    why:'Canadian hydrogen fuel cell leader for buses, trucks, and trains. P/S 6x is reasonable at the inflection of commercial scaling. Heavy transport electrification is one area where hydrogen wins over battery.',
+    pills:['Hydrogen Fuel Cell','Heavy Transport','pg','pr'] },
+
+  { t:'TER',   n:'Teradyne Inc.',             cat:'Robotics/Defense', size:'large', region:'us',
+    emoji:'🔬', bg:'rgba(79,163,247,.12)',  tier:['moderate','aggressive'],
+    status:'cheap',  metric:'P/E 28x',   valNote:'P/E 28x below 5yr avg — AI chip testing leader',
+    why:'Tests every major AI chip (NVDA, AMD, Apple Silicon) before it ships. P/E of 28x below 5yr average. Universal Robots division is the collaborative robot market leader.',
+    pills:['AI Chip Testing','Cobot Leader','pb','pg'] },
+
+  // ═══════════════════════════════════════════════════════
+  // 15. GLP-1 & HEALTHCARE
+  // ═══════════════════════════════════════════════════════
+  { t:'NVO',   n:'Novo Nordisk A/S',         cat:'GLP1', size:'large', region:'europe',
+    emoji:'💉', bg:'rgba(0,229,160,.12)',  tier:['aggressive','moderate'],
+    status:'cheap',  metric:'P/E 20x',   valNote:'DKK 900→450. P/E 20x — GLP-1 pioneer re-rated',
+    why:'Ozempic and Wegovy inventor. Peaked near DKK 900, now ~DKK 450 after CagriSema trial miss. P/E 20x is historically cheap for the company that created the GLP-1 category with $20B+ annual revenue.',
+    pills:['Ozempic Pioneer','P/E 20x','pg','pb'] },
+
+  { t:'LLY',   n:'Eli Lilly & Company',      cat:'GLP1', size:'large', region:'us',
+    emoji:'🔬', bg:'rgba(79,163,247,.12)',  tier:['aggressive','moderate'],
+    status:'fair',   metric:'P/E 38x',   valNote:'P/E 38x — below 2024 peak of 60x',
+    why:'Mounjaro and Zepbound are the fastest-growing drugs in pharma history. P/E 38x below 2024 peak of 60x. Tirzepatide cardiovascular outcomes data adds long-term upside beyond weight loss.',
+    pills:['Mounjaro Leader','P/E Below Peak','pb','py'] },
+
+  { t:'VKTX',  n:'Viking Therapeutics',      cat:'GLP1', size:'small', region:'us',
+    emoji:'⚗️', bg:'rgba(255,107,107,.12)', tier:['aggressive'],
+    status:'fair',   metric:'P/S 25x',   valNote:'Clinical stage — oral GLP-1 pill binary catalyst',
+    why:'Oral GLP-1 pill in Phase 2 — could replace injections entirely. Binary risk but enormous TAM. Only for aggressive portfolios with very small allocation.',
+    pills:['Oral GLP-1','Binary Catalyst','pr','pp'] },
+
+  // ── NKE (replaces LULU in Quality) ──────────────────────────────────
+  { t:'NKE',   n:'Nike Inc.',                cat:'Quality', size:'large', region:'us',
+    emoji:'👟', bg:'rgba(245,197,66,.12)',  tier:['conservative','moderate'],
+    status:'cheap',  metric:'P/E 22x',   valNote:'$180→$75. P/E near 10yr low — turnaround starting',
+    why:'Nike peaked at $180, now ~$75. P/E 22x near a 10-year low as new CEO Elliott Hill executes a return-to-sport strategy. Product innovation cycle and wholesale channel rebuild just beginning.',
+    pills:['Brand Turnaround','P/E 10yr Low','py','pg'] },
+
+];
+
+
+/* ═══════════════════════════════════════════════════════
+   PRE-COMPUTED INTEREST → CATEGORY/TICKER MAPPINGS
+   Built at parse time — zero runtime delay.
+   Each interest key maps to: bonus categories + bonus tickers.
+   The engine adds these as extra weight when scoring picks.
+═══════════════════════════════════════════════════════ */
+const INTEREST_MAP = {
+  innovation:      { cats:['Innovation/Space','Robotics/Defense'], tickers:['MDA','RCM','RKLB','PLTR','IRDM'] },
+  evs:             { cats:['EVs'], tickers:['TSLA','XIACF','RIVN','BIDU','UBER','CSU'] },
+  ai_cloud:        { cats:['AI/Semis','Cloud/SaaS','Cybersecurity'], tickers:['NVDA','AMD','ASML','MU','SNOW','CRM','CRWD','NET'] },
+  humanoids:       { cats:['Robotics/Defense','EVs','AI/Semis'], tickers:['TSLA','ISRG','FANUY','TER','NVDA'] },
+  china_india:     { cats:['China'], tickers:['BABA','PDD','KWEB','JD','FUTU','DRGN','MAMAEARTH'] },
+  em:              { cats:['LATAM','China'], tickers:['NU','MELI','SE','VALE','EWY','KWEB'] },
+  glp1:            { cats:['GLP1','Consumption'], tickers:['NVO','LLY','HIMS','VKTX'] },
+  luxury:          { cats:['Luxury'], tickers:['RACE','LVMUY','HESAY','PRDSY','CFRUY','WOW'] },
+  emerging_brands: { cats:['Consumption'], tickers:['ONON','HIMS','TPVG','CAVA','ELF','CELH','DECK','BROS','MAMAEARTH'] },
+  cybersecurity:   { cats:['Cybersecurity'], tickers:['CRWD','ZS','PANW','NET','S','CYBR'] },
+};
+
+/* ═══════════════════════════════════════════════════════
+   AGE BRACKET PROFILES
+   Each bracket defines catTargets and allocation weights.
+   Brackets: 18-25, 26-35, 36-45, 46-55, 56-65, 66+
+═══════════════════════════════════════════════════════ */
+function getAgeBracket(age) {
+  if (age <= 25) return 'young';      // 18-25: max growth, long horizon
+  if (age <= 35) return 'early';      // 26-35: growth-tilted, some quality
+  if (age <= 45) return 'mid';        // 36-45: balanced growth + quality
+  if (age <= 55) return 'prime';      // 46-55: quality-tilt, selective growth
+  if (age <= 65) return 'senior';     // 56-65: conservative+quality
+  return 'elder';                     // 66+: income-first
+}
+
+const AGE_BRACKET_LABELS = {
+  young:  'Age 18–25 · Max growth horizon',
+  early:  'Age 26–35 · Growth-tilted',
+  mid:    'Age 36–45 · Balanced growth + quality',
+  prime:  'Age 46–55 · Quality-tilt + selective growth',
+  senior: 'Age 56–65 · Conservative + quality',
+  elder:  'Age 66+ · Income-first',
+};
+
+// Returns catTargets for a given bracket + tier combination
+function getCatTargets(bracket, tier) {
+  const T = {
+    young: {
+      conservative: { Quality:3, 'AI/Semis':3, Luxury:2, Dividends:2, Metals:2, Consumption:2, LATAM:1 },
+      moderate:     { 'AI/Semis':4, China:2, Fintech:2, 'Cloud/SaaS':2, Quality:2, LATAM:1, Consumption:1, 'Innovation/Space':1 },
+      aggressive:   { 'AI/Semis':4, EVs:2, Fintech:2, China:2, LATAM:2, 'Cloud/SaaS':1, 'Innovation/Space':1, 'Robotics/Defense':1 },
+    },
+    early: {
+      conservative: { Quality:4, Luxury:2, Dividends:2, 'AI/Semis':3, Metals:2, Consumption:1, LATAM:1 },
+      moderate:     { 'AI/Semis':3, China:2, Fintech:2, 'Cloud/SaaS':2, Quality:2, Consumption:1, LATAM:1, Dividends:1, 'Innovation/Space':1 },
+      aggressive:   { 'AI/Semis':3, EVs:2, Fintech:2, China:2, LATAM:2, Cybersecurity:1, 'Cloud/SaaS':1, 'Innovation/Space':1, 'Robotics/Defense':1 },
+    },
+    mid: {
+      conservative: { Quality:4, Luxury:3, Dividends:3, 'AI/Semis':2, Metals:2, Consumption:1 },
+      moderate:     { Quality:3, 'AI/Semis':2, 'Cloud/SaaS':2, Consumption:2, Fintech:2, China:2, Metals:1, Cybersecurity:1 },
+      aggressive:   { 'AI/Semis':3, EVs:2, Fintech:2, China:2, LATAM:2, 'Cloud/SaaS':1, Cybersecurity:1, 'Innovation/Space':1, Consumption:1 },
+    },
+    prime: {
+      conservative: { Quality:5, Dividends:4, Luxury:2, 'AI/Semis':2, Metals:2 },
+      moderate:     { Quality:4, Dividends:3, 'AI/Semis':2, Luxury:2, 'Cloud/SaaS':2, Metals:1, Fintech:1 },
+      aggressive:   { Quality:3, 'AI/Semis':3, China:2, Fintech:2, 'Cloud/SaaS':2, Dividends:2, LATAM:1 },
+    },
+    senior: {
+      conservative: { Quality:5, Dividends:5, Luxury:2, 'AI/Semis':1, Metals:2 },
+      moderate:     { Quality:4, Dividends:4, 'AI/Semis':2, Luxury:2, Metals:2, Fintech:1 },
+      aggressive:   { Quality:4, Dividends:3, 'AI/Semis':2, Luxury:2, 'Cloud/SaaS':2, Metals:2 },
+    },
+    elder: {
+      conservative: { Dividends:8, Quality:4, Metals:2, 'Robotics/Defense':1 },
+      moderate:     { Dividends:7, Quality:5, 'AI/Semis':2, Metals:1 },
+      aggressive:   { Dividends:6, Quality:4, 'AI/Semis':3, Metals:2 },
+    },
+  };
+  return T[bracket][tier] || T.mid.moderate;
+}
+
+// Returns allocation bars for bracket + tier
+function getAllocations(bracket, tier) {
+  if (bracket === 'elder') return [
+    { name:'Dividend Income',         pct:55, color:'var(--gold)'   },
+    { name:'Quality Compounders',     pct:28, color:'var(--accent)' },
+    { name:'AI / Growth (Selective)', pct:12, color:'var(--blue)'   },
+    { name:'Metals / Safe Haven',     pct:5,  color:'var(--muted)'  },
+  ];
+  if (bracket === 'senior') return tier === 'conservative' ? [
+    { name:'Quality Compounders',     pct:35, color:'var(--accent)' },
+    { name:'Dividend Income',         pct:33, color:'var(--gold)'   },
+    { name:'Luxury / Secular',        pct:17, color:'var(--purple)' },
+    { name:'Metals / Hedges',         pct:10, color:'var(--muted)'  },
+    { name:'AI (Selective)',          pct:5,  color:'var(--blue)'   },
+  ] : [
+    { name:'Quality Compounders',     pct:30, color:'var(--accent)' },
+    { name:'Dividend Income',         pct:28, color:'var(--gold)'   },
+    { name:'AI / Cloud',              pct:22, color:'var(--blue)'   },
+    { name:'Luxury / Defensive',      pct:13, color:'var(--purple)' },
+    { name:'Metals',                  pct:7,  color:'var(--muted)'  },
+  ];
+  if (bracket === 'prime') return tier === 'conservative' ? [
+    { name:'Quality Compounders',     pct:38, color:'var(--accent)' },
+    { name:'Dividend Income',         pct:28, color:'var(--gold)'   },
+    { name:'Luxury / Secular',        pct:18, color:'var(--purple)' },
+    { name:'AI (Selective)',          pct:10, color:'var(--blue)'   },
+    { name:'Metals',                  pct:6,  color:'var(--muted)'  },
+  ] : tier === 'moderate' ? [
+    { name:'Quality Compounders',     pct:30, color:'var(--accent)' },
+    { name:'Dividend Income',         pct:22, color:'var(--gold)'   },
+    { name:'AI / Cloud',              pct:25, color:'var(--blue)'   },
+    { name:'Luxury / Defensive',      pct:16, color:'var(--purple)' },
+    { name:'Fintech / LATAM',         pct:7,  color:'var(--red)'    },
+  ] : [
+    { name:'Quality Compounders',     pct:22, color:'var(--accent)' },
+    { name:'AI / Semis',              pct:25, color:'var(--blue)'   },
+    { name:'China Growth',            pct:18, color:'var(--red)'    },
+    { name:'Fintech + Cloud',         pct:20, color:'var(--purple)' },
+    { name:'Dividend Income',         pct:15, color:'var(--gold)'   },
+  ];
+  if (bracket === 'young' || bracket === 'early') {
+    if (tier === 'conservative') return [
+      { name:'Quality Compounders',   pct:25, color:'var(--accent)' },
+      { name:'AI / Semis',            pct:22, color:'var(--blue)'   },
+      { name:'Luxury / Secular',      pct:18, color:'var(--purple)' },
+      { name:'Dividend Income',       pct:20, color:'var(--gold)'   },
+      { name:'LATAM + Emerging',      pct:15, color:'var(--red)'    },
+    ];
+    if (tier === 'moderate') return [
+      { name:'AI + Cloud + Cyber',    pct:40, color:'var(--accent)' },
+      { name:'China + LATAM',         pct:20, color:'var(--red)'    },
+      { name:'Quality Compounders',   pct:20, color:'var(--blue)'   },
+      { name:'Fintech',               pct:13, color:'var(--purple)' },
+      { name:'Dividend',              pct:7,  color:'var(--gold)'   },
+    ];
+    return [
+      { name:'AI / Semiconductors',   pct:32, color:'var(--accent)' },
+      { name:'EV + Disruptive',       pct:18, color:'var(--blue)'   },
+      { name:'China + LATAM',         pct:25, color:'var(--red)'    },
+      { name:'Fintech / Crypto',      pct:15, color:'var(--purple)' },
+      { name:'Space / Robotics',      pct:10, color:'var(--gold)'   },
+    ];
+  }
+  // mid bracket default
+  if (tier === 'conservative') return [
+    { name:'Quality Compounders',     pct:30, color:'var(--accent)' },
+    { name:'Luxury / Secular',        pct:20, color:'var(--purple)' },
+    { name:'Dividend Income',         pct:25, color:'var(--gold)'   },
+    { name:'AI / Semis',              pct:15, color:'var(--blue)'   },
+    { name:'Metals / Hedges',         pct:10, color:'var(--muted)'  },
+  ];
+  if (tier === 'moderate') return [
+    { name:'Growth (AI+Fintech)',     pct:40, color:'var(--accent)' },
+    { name:'Quality Compounders',     pct:20, color:'var(--blue)'   },
+    { name:'China + LATAM',           pct:20, color:'var(--red)'    },
+    { name:'Dividend Income',         pct:12, color:'var(--gold)'   },
+    { name:'Metals',                  pct:8,  color:'var(--muted)'  },
+  ];
+  return [
+    { name:'AI / Semiconductors',     pct:30, color:'var(--accent)' },
+    { name:'EV / Disruptive',         pct:18, color:'var(--blue)'   },
+    { name:'Fintech / Crypto',        pct:18, color:'var(--gold)'   },
+    { name:'China Growth',            pct:18, color:'var(--red)'    },
+    { name:'LATAM Emerging',          pct:10, color:'var(--purple)' },
+    { name:'Space / Robotics',        pct:6,  color:'var(--muted)'  },
+  ];
+}
+
+/* ═══════════════════════════════════════════════════════
+   CONFIG + STATE
+═══════════════════════════════════════════════════════ */
+const STORAGE_KEY  = 'investai_profile';
+let selectedTier   = null;
+let selectedInterests = [];   // array of interest keys
+let userProfile    = {};
+let valuationCache = {};
+
+/* ── Utils ── */
+function fmt(n) { return '$' + Math.round(n).toLocaleString(); }
+
+/* ── Cache ── */
+async function loadValuationCache() {
+  try {
+    const res = await fetch('/api/stock-cache');
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.stocks && Object.keys(data.stocks).length > 0) {
+      valuationCache = data.stocks;
+      if (data.marketNote) {
+        const el = document.getElementById('market-note');
+        if (el) { el.textContent = '📰 ' + data.marketNote; el.style.display = 'block'; }
+      }
+    }
+  } catch(e) {}
+}
+function mergeCache(s) {
+  const c = valuationCache[s.t];
+  if (!c) return s;
+  return { ...s, status:c.status||s.status, metric:c.metric||s.metric, valNote:c.valNote||s.valNote, why:c.why||s.why };
+}
+
+/* ── Interest toggle ── */
+function toggleInterest(el) {
+  const key = el.dataset.key;
+  if (el.classList.contains('selected')) {
+    el.classList.remove('selected');
+    selectedInterests = selectedInterests.filter(k => k !== key);
+  } else {
+    if (selectedInterests.length >= 3) {
+      // deselect oldest
+      const oldest = document.querySelector('.int-btn.selected');
+      if (oldest) {
+        oldest.classList.remove('selected');
+        selectedInterests = selectedInterests.filter(k => k !== oldest.dataset.key);
+      }
+    }
+    el.classList.add('selected');
+    selectedInterests.push(key);
+  }
+  const countEl = document.getElementById('int-count');
+  if (countEl) countEl.textContent = selectedInterests.length
+    ? `${selectedInterests.length} area${selectedInterests.length>1?'s':''} selected — portfolio will be weighted toward these themes`
+    : 'No areas selected — portfolio uses age + risk profile only';
+}
+
+/* ── Tier selection ── */
+function selectTier(tier) {
+  selectedTier = tier;
+  ['conservative','moderate','aggressive'].forEach(t => {
+    document.getElementById('btn-' + t).className = 'tier-btn' + (t === tier ? ' active-' + t : '');
+    const d = document.getElementById('detail-' + t);
+    if (d) d.className = 'tier-detail td-' + t[0] + (t === tier ? ' show' : '');
+  });
+  const btn = document.getElementById('gen-btn');
+  btn.disabled = false;
+  btn.textContent = 'Build AI Simulated Portfolio — ' + tier.charAt(0).toUpperCase() + tier.slice(1) + ' →';
+}
+
+/* ── Generate picks — INSTANT ── */
+function generatePicks() {
+  if (!selectedTier) return;
+  const data = buildPortfolio(selectedTier, userProfile, selectedInterests);
+  document.getElementById('selector-section').style.display = 'none';
+  document.getElementById('ai-loading').style.display       = 'none';
+  document.getElementById('results').style.display          = 'block';
+  renderResults(data);
+}
+
+function resetToSelector() {
+  document.getElementById('results').style.display          = 'none';
+  document.getElementById('selector-section').style.display = 'block';
+  document.getElementById('risk-fill').style.width = '0%';
+}
+
+/* ═══════════════════════════════════════════════════════
+   PORTFOLIO BUILDER ENGINE
+═══════════════════════════════════════════════════════ */
+function buildPortfolio(tier, p, interests) {
+  interests = interests || [];
+  const income   = parseFloat(p.income)   || 3000;
+  const expenses = parseFloat(p.expenses) || 2000;
+  const savings  = parseFloat(p.savings)  || 5000;
+  const age      = parseInt(p.age)        || 30;
+  const free     = Math.max(0, income - expenses);
+  const savRate  = income > 0 ? Math.round((free / income) * 100) : 15;
+  const emMos    = expenses > 0 ? Math.round(savings / expenses) : 2;
+  const goal1    = p.goal1 || 'build wealth';
+  const goal2    = p.goal2 || 'retire comfortably';
+  const bracket  = getAgeBracket(age);
+  const monthlyInvest = Math.round(free * (tier === 'conservative' ? 0.20 : tier === 'moderate' ? 0.25 : 0.30));
+
+  // Risk score
+  const riskBase  = { conservative:22, moderate:52, aggressive:78 }[tier];
+  const riskAdj   = Math.min(8, savRate/5) + (emMos>=6?5:0) + (age<30?5:age>55?-8:0);
+  const riskScore = Math.min(92, Math.max(10, riskBase + riskAdj));
+  const riskDesc  = {
+    conservative: `Conservative · ${AGE_BRACKET_LABELS[bracket]} — capital safety first. Quality + dividends + luxury. All names screened for P/E below historical avg or PEG < 2.`,
+    moderate:     `Moderate · ${AGE_BRACKET_LABELS[bracket]} — balanced growth and quality. PEG < 2 for growth names, P/E below 5yr avg for mature names.`,
+    aggressive:   `Aggressive · ${AGE_BRACKET_LABELS[bracket]} — maximum growth. PEG < 3 for hyper-growth, P/S below 3yr avg for early-stage names.`,
+  }[tier];
+
+  // Get age-appropriate category targets
+  let catTargets = getCatTargets(bracket, tier);
+
+  // Inject interest-area bonus categories (add 1 extra slot per selected interest)
+  if (interests.length > 0) {
+    interests.forEach(key => {
+      const mapping = INTEREST_MAP[key];
+      if (!mapping) return;
+      mapping.cats.forEach((cat, i) => {
+        if (i === 0) {
+          // Add 1-2 extra slots for primary category
+          catTargets = { ...catTargets, [cat]: (catTargets[cat] || 0) + 1 };
+        }
+      });
+      // If GLP1 is an interest, always include it
+      if (key === 'glp1') catTargets['GLP1'] = (catTargets['GLP1'] || 0) + 2;
+    });
+  }
+
+  // Build interest bonus ticker set for scoring
+  const interestTickers = new Set();
+  interests.forEach(key => {
+    const m = INTEREST_MAP[key];
+    if (m) m.tickers.forEach(t => interestTickers.add(t));
+  });
+
+  // Allocations
+  const allocations = getAllocations(bracket, tier);
+
+  // Pick stocks
+  const eligible = UNIVERSE.map(s => mergeCache(s))
+    .filter(s => s.tier.includes(tier) && s.status !== 'expensive');
+  const sorted = [...eligible].sort((a,b) =>
+    a.status==='cheap' && b.status!=='cheap' ? -1 :
+    b.status==='cheap' && a.status!=='cheap' ? 1 : 0
+  );
+
+  const picks = [], used = new Set();
+  for (const [cat, count] of Object.entries(catTargets)) {
+    sorted.filter(s => s.cat===cat && !used.has(s.t))
+      .slice(0, count)
+      .forEach(s => { used.add(s.t); picks.push(s); });
+  }
+
+  // Score picks — interest area bonus + age + goal alignment
+  const goalText = (goal1 + ' ' + goal2).toLowerCase();
+  const scored = picks.map(s => {
+    let base = s.status === 'cheap' ? 88 : 78;
+    // Interest area bonus — biggest weight in the engine
+    if (interestTickers.has(s.t)) base += 10;
+    interests.forEach(key => {
+      if ((INTEREST_MAP[key]?.cats || []).includes(s.cat)) base += 5;
+    });
+    // Goal alignment
+    if (goalText.includes('retire') && ['Quality','Dividends','Metals'].includes(s.cat)) base += 5;
+    if (goalText.includes('passive') && s.cat === 'Dividends') base += 7;
+    if ((goalText.includes('tech') || goalText.includes('ai')) && s.cat === 'AI/Semis') base += 6;
+    if (goalText.includes('million') && tier === 'aggressive' && s.cat === 'AI/Semis') base += 5;
+    // Age bracket bonuses
+    if (bracket === 'elder') {
+      if (s.cat === 'Dividends') base += 10;
+      if (['EVs','Fintech','China'].includes(s.cat)) base -= 6;
+    } else if (bracket === 'senior' || bracket === 'prime') {
+      if (s.cat === 'Quality')   base += 6;
+      if (s.cat === 'Dividends') base += 4;
+    } else if (bracket === 'young') {
+      if (['AI/Semis','EVs','Fintech','China','LATAM'].includes(s.cat)) base += 5;
+    }
+    base += Math.floor(s.t.charCodeAt(0) % 6);
+    return { ...s, fit: Math.min(98, base) };
+  }).sort((a,b) => b.fit - a.fit).slice(0, 15);
+
+  // Strategy text
+  const cheapCount = scored.filter(s => s.status === 'cheap').length;
+  const topTix     = scored.slice(0,3).map(s => s.t).join(', ');
+  const interestLabel = interests.length
+    ? ` Interest areas weighted in: ${interests.map(k=>k.replace('_',' ')).join(', ')}.`
+    : '';
+  const strategy = tier === 'conservative'
+    ? `Defensive portfolio for ${AGE_BRACKET_LABELS[bracket]}. Quality compounders + luxury secular growers + dividend income. ${cheapCount}/${scored.length} picks below historical valuations.${interestLabel} Monthly target: ${fmt(monthlyInvest)}.`
+    : tier === 'moderate'
+    ? `Balanced portfolio for ${AGE_BRACKET_LABELS[bracket]}. Growth themes + quality + income.${interestLabel} ${cheapCount}/${scored.length} picks cheap vs historical averages. Leads: ${topTix}. Monthly: ${fmt(monthlyInvest)}.`
+    : `Aggressive growth for ${AGE_BRACKET_LABELS[bracket]}. High-conviction growth themes.${interestLabel} ${cheapCount}/${scored.length} picks below historical benchmarks. Core: ${topTix}. Monthly: ${fmt(monthlyInvest)}.`;
+
+  const catSummary = {};
+  scored.forEach(s => { if (!catSummary[s.cat]) catSummary[s.cat]=[]; catSummary[s.cat].push(s.t); });
+
+  const top1 = scored[0]?.t || 'VOO';
+  const brokerRec = age < 30 ? 'Robinhood or Fidelity' : savings > 50000 ? 'Fidelity or Schwab' : 'Fidelity';
+  const steps = [
+    { title:`Open a ${brokerRec} account today`, desc:`Free, 10 minutes. No minimums, no commissions. Have your SSN and bank info ready.` },
+    { title:`Auto-invest ${fmt(Math.round(monthlyInvest*0.4))}/mo into ${top1}`, desc:`Your top-ranked pick based on age, risk, and interests. Set a recurring monthly purchase — automation beats timing.` },
+    { title:`Add your second and third picks over the next two weeks`, desc:`Don't buy everything at once. Layer in over 2–3 weeks so you're not fully exposed to one day's market price.` },
+    { title:`Review in 6 months — leave it alone until then`, desc:`Next check: ${new Date(Date.now()+1000*60*60*24*180).toLocaleDateString('en-US',{month:'long',year:'numeric'})}. Emotional trading is the #1 portfolio killer.` },
+  ];
+
+  return { strategy, riskScore, riskDesc, allocation:allocations, picks:scored, catSummary, steps, monthlyInvest, bracket };
+}
+
+/* ═══════════════════════════════════════════════════════
+   RENDER RESULTS
+═══════════════════════════════════════════════════════ */
+/* ── Live price cache ── */
+const _priceCache = {};
+async function fetchPrice(ticker) {
+  if (_priceCache[ticker]) return _priceCache[ticker];
+  try {
+    const url   = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=1d`;
+    const proxy = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+    const res   = await fetch(proxy);
+    const data  = await res.json();
+    const price = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
+    const prev  = data?.chart?.result?.[0]?.meta?.chartPreviousClose;
+    if (price) {
+      const change = prev ? ((price - prev) / prev * 100) : 0;
+      _priceCache[ticker] = { price, change };
+      return _priceCache[ticker];
+    }
+  } catch(e) {}
+  return null;
+}
+
+async function fetchAllPrices(picks) {
+  await Promise.allSettled(picks.map(async s => {
+    const p = await fetchPrice(s.t);
+    const el = document.getElementById(`price-${s.t}`);
+    if (p && el) {
+      const sign = p.change >= 0 ? '+' : '';
+      const col  = p.change >= 0 ? '#00e5a0' : '#ff6b6b';
+      el.innerHTML = `<span style="color:#00e5a0;font-weight:700">$${p.price.toFixed(2)}</span>&nbsp;<span style="font-size:9px;color:${col}">${sign}${p.change.toFixed(2)}%</span>`;
+    } else if (el) {
+      el.textContent = '';
+    }
+  }));
+}
+
+/* ── Stock analysis modal ── */
+function buildAnalysisData(s) {
+  const catScores = {
+    'AI/Semis':         { growth:88, moat:85, earnings:78, risk:55 },
+    'EVs':              { growth:85, moat:62, earnings:55, risk:42 },
+    'Cybersecurity':    { growth:80, moat:82, earnings:75, risk:60 },
+    'Cloud/SaaS':       { growth:82, moat:78, earnings:72, risk:58 },
+    'China':            { growth:78, moat:65, earnings:60, risk:38 },
+    'Luxury':           { growth:65, moat:92, earnings:82, risk:72 },
+    'Quality':          { growth:68, moat:85, earnings:85, risk:75 },
+    'Consumption':      { growth:75, moat:68, earnings:65, risk:60 },
+    'Fintech':          { growth:82, moat:72, earnings:62, risk:50 },
+    'LATAM':            { growth:80, moat:65, earnings:60, risk:45 },
+    'Metals':           { growth:55, moat:60, earnings:58, risk:52 },
+    'Dividends':        { growth:45, moat:80, earnings:88, risk:82 },
+    'GLP1':             { growth:90, moat:75, earnings:55, risk:40 },
+    'Innovation/Space': { growth:82, moat:72, earnings:52, risk:42 },
+    'Robotics/Defense': { growth:78, moat:80, earnings:65, risk:55 },
+  };
+  const cs = catScores[s.cat] || { growth:65, moat:65, earnings:65, risk:60 };
+  const valScore = s.status==='cheap' ? 88 : s.status==='fair' ? 62 : 32;
+  const scores = {
+    'Valuation attractiveness': valScore,
+    'Growth runway':            cs.growth,
+    'Competitive moat':         cs.moat,
+    'Earnings quality':         cs.earnings,
+    'Risk-adjusted return':     cs.risk,
+  };
+
+  const strengthsMap = {
+    'AI/Semis':         ['Structural AI infrastructure demand','High fab switching costs','Government capex support'],
+    'EVs':              ['EV adoption still early innings','Software monetisation upside','Energy storage optionality'],
+    'Cybersecurity':    ['Non-discretionary enterprise spend','Net retention >120%','Platform consolidation winner'],
+    'Cloud/SaaS':       ['Recurring revenue model','Land-and-expand motion','AI integration revenue lift'],
+    'China':            ['Decade-low valuations','Domestic stimulus tailwind','Tech sector re-rating potential'],
+    'Luxury':           ['Pricing power across all cycles','UHNW demand structural','Brand moat irreplaceable'],
+    'Quality':          ['Consistent earnings compounder','Strong free cash flow','Proven management track record'],
+    'Consumption':      ['Brand momentum accelerating','Pricing power demonstrated','International expansion early'],
+    'Fintech':          ['TAM still largely unaddressed','Network effects compounding','Regulatory clarity improving'],
+    'LATAM':            ['Fastest growing digital economy','Very low banking penetration','Demographic tailwind'],
+    'Metals':           ['Inflation and currency hedge','Central bank buying at record','EV+AI industrial demand'],
+    'Dividends':        ['Decades of consecutive dividend growth','Recession-proof revenues','Predictable capital returns'],
+    'GLP1':             ['Largest new drug category in decades','CV data expanding TAM','Global obesity epidemic'],
+    'Innovation/Space': ['Government contract backlog','First-mover advantage','Dual-use defence application'],
+    'Robotics/Defense': ['NATO spending surge','Autonomous systems demand early','Mission-critical differentiation'],
+  };
+  const risksMap = {
+    'AI/Semis':         ['AI capex slowdown risk','China export restrictions','Memory cyclicality'],
+    'EVs':              ['Competition intensifying globally','Consumer adoption pace','Regulatory uncertainty'],
+    'Cybersecurity':    ['Crowded vendor market','Sales cycle lengthening','Platform bundling pressure'],
+    'Cloud/SaaS':       ['Growth deceleration scrutiny','Path to profitability','Customer concentration risk'],
+    'China':            ['Geopolitical risk elevated','Regulatory unpredictability','Currency + capital controls'],
+    'Luxury':           ['China consumer slowdown','Aspirational buyer pullback','FX translation headwinds'],
+    'Quality':          ['Premium valuation limits upside','Competition from disruptors','Macro sensitivity'],
+    'Consumption':      ['Consumer spending slowdown','Brand fatigue risk','Inventory cycle risk'],
+    'Fintech':          ['Credit cycle sensitivity','Regulatory crackdown risk','Big bank competition'],
+    'LATAM':            ['Currency devaluation risk','Political instability','Sovereign credit risk'],
+    'Metals':           ['Commodity price cyclicality','Mining operational risk','Dollar strength headwind'],
+    'Dividends':        ['Interest rate sensitivity','Dividend cut risk in downturn','Sector disruption'],
+    'GLP1':             ['Clinical trial failure risk','Regulatory approval uncertain','High price limits access'],
+    'Innovation/Space': ['Long development timelines','Contract dependency','Heavy cash burn'],
+    'Robotics/Defense': ['Budget cycle dependency','Long procurement cycles','Geopolitical dependency'],
+  };
+
+  return {
+    scores,
+    strengths: strengthsMap[s.cat] || ['Strong competitive position','Growing market share','Experienced management'],
+    risks:     risksMap[s.cat]     || ['Market competition','Macro sensitivity','Execution risk'],
+  };
+}
+
+let _currentModalStock = null;
+async function openStockModal(stock) {
+  _currentModalStock = stock;
+  const modal = document.getElementById('stock-modal');
+  modal.style.display = 'block';
+  document.body.style.overflow = 'hidden';
+
+  document.getElementById('modal-logo').style.background = stock.bg;
+  document.getElementById('modal-logo').textContent = stock.emoji;
+  document.getElementById('modal-ticker').textContent = stock.t;
+  document.getElementById('modal-name').textContent = stock.n;
+  document.getElementById('modal-cat').textContent = stock.cat;
+  document.getElementById('modal-fit').textContent = stock.fit + '%';
+  document.getElementById('modal-why').textContent = stock.why;
+
+  const priceEl  = document.getElementById('modal-price');
+  const changeEl = document.getElementById('modal-change');
+  priceEl.textContent  = '…';
+  changeEl.textContent = '';
+
+  const p = await fetchPrice(stock.t);
+  if (p) {
+    priceEl.textContent = '$' + p.price.toFixed(2);
+    const sign = p.change >= 0 ? '+' : '';
+    const col  = p.change >= 0 ? '#00e5a0' : '#ff6b6b';
+    changeEl.innerHTML = `<span style="color:${col}">${sign}${p.change.toFixed(2)}% today</span>`;
+  } else {
+    priceEl.textContent  = '';
+    changeEl.textContent = 'Live price unavailable';
+  }
+
+  document.getElementById('modal-val-row').innerHTML = `
+    <span style="background:${stock.status==='cheap'?'rgba(0,229,160,.15)':'rgba(245,197,66,.15)'};
+                 color:${stock.status==='cheap'?'#00e5a0':'#f5c542'};
+                 font-size:10px;padding:3px 10px;border-radius:6px;font-weight:700;margin-right:8px">
+      ${stock.status==='cheap'?'✓ CHEAP':'~ FAIR VALUE'}
+    </span>
+    <span style="font-size:0.76rem;color:#8a8fa8">${stock.metric} — ${stock.valNote}</span>`;
+
+  const analysis = buildAnalysisData(stock);
+  const scoreColors = ['#00e5a0','#4fa3f7','#a78bfa','#f5c542','#ff6b6b'];
+  document.getElementById('modal-scores').innerHTML =
+    Object.entries(analysis.scores).map(([label,val],i) => `
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:${i<4?'8px':'0'}">
+        <span style="font-size:11px;color:#8a8fa8;width:170px;flex-shrink:0">${label}</span>
+        <div style="flex:1;height:7px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden">
+          <div style="width:${val}%;height:100%;background:${scoreColors[i]};border-radius:4px"></div>
+        </div>
+        <span style="font-size:11px;font-weight:700;color:${scoreColors[i]};width:30px;text-align:right">${val}%</span>
+      </div>`).join('');
+
+  document.getElementById('modal-stats').innerHTML = [
+    { label:'METRIC',    val: stock.metric },
+    { label:'STATUS',    val: stock.status==='cheap'?'🟢 Cheap':'🟡 Fair' },
+    { label:'CATEGORY',  val: stock.cat },
+    { label:'GOAL FIT',  val: stock.fit + '%' },
+  ].map(s => `
+    <div style="background:#0a0c10;border-radius:9px;padding:10px 12px">
+      <div style="font-size:9px;letter-spacing:.8px;text-transform:uppercase;color:#8a8fa8;margin-bottom:4px">${s.label}</div>
+      <div style="font-size:0.88rem;font-weight:700">${s.val}</div>
+    </div>`).join('');
+
+  document.getElementById('modal-strengths').innerHTML = analysis.strengths.map(s=>`• ${s}`).join('<br>');
+  document.getElementById('modal-risks').innerHTML     = analysis.risks.map(s=>`• ${s}`).join('<br>');
+
+  const pillCls = ['pg','pb','py','pp','pr'];
+  const cp = (stock.pills||[]).filter(p=>!['pg','pb','py','pp','pr'].includes(p));
+  const cc = (stock.pills||[]).filter(p=>['pg','pb','py','pp','pr'].includes(p));
+  document.getElementById('modal-pills').innerHTML = cp.map((txt,j)=>
+    `<span class="pill ${cc[j]||pillCls[j%5]}">${txt}</span>`).join('');
+}
+
+function closeModal() {
+  document.getElementById('stock-modal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeModal(); });
+
+function renderResults(data) {
+  document.getElementById('strategy-text').textContent = data.strategy;
+
+  const ageBadgeEl = document.getElementById('age-bracket-badge');
+  if (ageBadgeEl) ageBadgeEl.textContent = AGE_BRACKET_LABELS[data.bracket] || '';
+
+  setTimeout(() => { document.getElementById('risk-fill').style.width = data.riskScore + '%'; }, 80);
+  document.getElementById('risk-desc').textContent = data.riskDesc;
+
+  // Allocation bars
+  document.getElementById('alloc-bars').innerHTML = data.allocation.map((a,i) => `
+    <div class="alloc-row">
+      <span class="alloc-name">${a.name}</span>
+      <div class="alloc-track"><div class="alloc-fill" style="width:0%;background:${a.color}" data-w="${a.pct}"></div></div>
+      <span class="alloc-pct" style="color:${a.color}">${a.pct}%</span>
+    </div>`).join('');
+  setTimeout(() => {
+    document.querySelectorAll('.alloc-fill').forEach(el => { el.style.width = el.dataset.w + '%'; });
+  }, 120);
+
+  // Stock cards — clickable, with live price slot
+  const pillCls = ['pg','pb','py','pp','pr'];
+  const picksJson = JSON.stringify(data.picks).replace(/'/g,"\\'");
+  document.getElementById('stock-cards').innerHTML = data.picks.map((s,idx) => {
+    const cp = (s.pills||[]).filter(p=>!['pg','pb','py','pp','pr'].includes(p));
+    const cc = (s.pills||[]).filter(p=>['pg','pb','py','pp','pr'].includes(p));
+    const rPills = cp.map((txt,j)=>`<span class="pill ${cc[j]||pillCls[j%5]}">${txt}</span>`).join('');
+    return `
+    <div class="stock-card" onclick="openStockModal(${JSON.stringify(s).replace(/"/g,'&quot;')})" style="cursor:pointer" title="Click for detailed analysis">
+      <div class="stock-top">
+        <div class="stock-left">
+          <div class="stock-logo" style="background:${s.bg}">${s.emoji}</div>
+          <div>
+            <div style="display:flex;align-items:baseline;gap:6px">
+              <div class="ticker">${s.t}</div>
+              <div id="price-${s.t}" style="font-size:11px;color:#8a8fa8">…</div>
+            </div>
+            <div class="sname">${s.n}</div>
+            <div class="scategory">${s.cat}</div>
+          </div>
+        </div>
+        <div class="stock-right">
+          <div class="fit-pct">${s.fit}%</div>
+          <div class="fit-lbl">GOAL FIT</div>
+          <div style="font-size:9px;color:#8a8fa8;margin-top:3px">tap for analysis</div>
+        </div>
+      </div>
+      <div class="stock-valuation">
+        <span class="val-badge ${s.status==='cheap'?'val-cheap':'val-fair'}">${s.status==='cheap'?'✓ CHEAP':'~ FAIR VALUE'}</span>
+        <span class="val-metric">${s.metric} — ${s.valNote}</span>
+      </div>
+      <div class="stock-why">${s.why}</div>
+      <div class="pills">${rPills}</div>
+    </div>`;
+  }).join('');
+
+  // Fetch live prices async (non-blocking)
+  fetchAllPrices(data.picks);
+
+  // Category breakdown
+  document.getElementById('cat-breakdown').innerHTML = Object.entries(data.catSummary).map(([cat,tix]) =>
+    `<div class="cat-row"><span class="cat-row-name">${cat}</span><span class="cat-row-stocks">${tix.join(', ')}</span></div>`
+  ).join('');
+
+  // Action steps
+  document.getElementById('action-steps').innerHTML = data.steps.map((s,i) => `
+    <div class="action-step">
+      <div class="step-num">${i+1}</div>
+      <div class="step-body"><strong>${s.title}</strong><span>${s.desc}</span></div>
+    </div>`).join('');
+
+  const cheapCount = data.picks.filter(s=>s.status==='cheap').length;
+  document.getElementById('picks-subhead').textContent =
+    `${cheapCount} cheap + ${data.picks.length-cheapCount} fair value · Tap any stock for analysis`;
+}
+
+/* ═══════════════════════════════════════════════════════
+   PREVIEW MODE
+═══════════════════════════════════════════════════════ */
+const PREVIEW_PROFILES = [
+  { label:'Age 22 · Aggressive · Tech focus',   income:4500,  expenses:2800, savings:8000,   age:22, goal1:'Build $100K portfolio in 3 years',                   goal2:'Retire at 40 with $3M in AI and tech stocks' },
+  { label:'Age 30 · Moderate · Growth investor', income:6500,  expenses:3800, savings:22000,  age:30, goal1:'Build $50K in savings and start investing',           goal2:'Retire at 55 with $2M and passive income' },
+  { label:'Age 38 · Moderate · Balanced',        income:10000, expenses:6200, savings:65000,  age:38, goal1:'Pay off mortgage in 10 years',                        goal2:'Build $1.5M portfolio by retirement' },
+  { label:'Age 47 · Conservative · Quality',     income:14000, expenses:8500, savings:180000, age:47, goal1:'Grow savings safely and generate some income',        goal2:'Retire at 62 with $2.5M and dividends' },
+  { label:'Age 58 · Senior · Preservation',      income:9000,  expenses:5500, savings:320000, age:58, goal1:'Protect my savings and generate stable income',      goal2:'Retire at 65 with dividends covering expenses' },
+  { label:'Age 72 · Elder · Income first',       income:4500,  expenses:3200, savings:580000, age:72, goal1:'Generate steady monthly income from my portfolio',   goal2:'Preserve capital and leave wealth for children' },
+];
+
+function showPreviewBar(idx) {
+  const bar = document.createElement('div');
+  bar.style.cssText = 'background:rgba(245,197,66,.1);border-bottom:1px solid rgba(245,197,66,.25);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:11px;font-family:var(--font-body)';
+  bar.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;color:var(--gold)">
+      <span style="font-weight:700;letter-spacing:1px">🧪 PREVIEW MODE</span>
+      <span style="color:var(--muted)">Testing: <strong style="color:var(--text)">${PREVIEW_PROFILES[idx].label}</strong></span>
+    </div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap">
+      ${PREVIEW_PROFILES.map((p,i)=>`
+        <a href="?preview=true&profile=${i}" style="padding:3px 9px;border-radius:6px;font-size:10px;text-decoration:none;
+           background:${i===idx?'rgba(245,197,66,.2)':'rgba(255,255,255,.06)'};
+           color:${i===idx?'var(--gold)':'var(--muted)'};
+           border:1px solid ${i===idx?'rgba(245,197,66,.4)':'rgba(255,255,255,.1)'}">
+          Age ${p.age}
+        </a>`).join('')}
+    </div>`;
+  document.body.insertBefore(bar, document.body.firstChild);
+}
+
+/* ═══════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════ */
+window.addEventListener('DOMContentLoaded', () => {
+  const params    = new URLSearchParams(window.location.search);
+  const isPreview = params.get('preview') === 'true';
+  const profIdx   = Math.min(parseInt(params.get('profile') || '0'), PREVIEW_PROFILES.length - 1);
+
+  // Add interest count label
+  const intGrid = document.getElementById('interest-grid');
+  if (intGrid) {
+    const countDiv = document.createElement('div');
+    countDiv.id = 'int-count';
+    countDiv.className = 'int-count';
+    countDiv.textContent = 'No areas selected — portfolio uses age + risk profile only';
+    intGrid.insertAdjacentElement('afterend', countDiv);
+  }
+
+  if (isPreview) {
+    showPreviewBar(profIdx);
+    userProfile = PREVIEW_PROFILES[profIdx];
+    showProfileBar(userProfile);
+    loadValuationCache();
+    return;
+  }
+
+  let profile = null;
+  try { const r = localStorage.getItem(STORAGE_KEY); profile = r ? JSON.parse(r) : null; } catch(e) {}
+
+  // Fallback: read profile from URL param (passed through Stripe success_url)
+  if (!profile || !profile.income) {
+    try {
+      const pParam = params.get('p');
+      if (pParam) {
+        profile = JSON.parse(atob(decodeURIComponent(pParam)));
+        // Save to localStorage for future visits
+        if (profile && profile.income) {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
+        }
+      }
+    } catch(e) { console.warn('Profile URL param parse failed:', e.message); }
+  }
+
+  if (!profile || !profile.income) {
+    document.getElementById('selector-section').style.display = 'none';
+    document.getElementById('no-profile').style.display = 'block';
+    return;
+  }
+  userProfile = profile;
+  showProfileBar(userProfile);
+  loadValuationCache();
+});
+
+function showProfileBar(p) {
+  const income   = parseFloat(p.income)   || 0;
+  const expenses = parseFloat(p.expenses) || 0;
+  const savings  = parseFloat(p.savings)  || 0;
+  document.getElementById('pb-income').textContent  = fmt(income)  + '/mo';
+  document.getElementById('pb-free').textContent    = fmt(Math.max(0, income - expenses)) + '/mo';
+  document.getElementById('pb-savings').textContent = fmt(savings);
+  document.getElementById('profile-bar').style.display = 'grid';
+  const age     = parseInt(p.age) || 30;
+  const bracket = getAgeBracket(age);
+  const subEl   = document.getElementById('welcome-sub');
+  if (subEl) subEl.textContent =
+    `${AGE_BRACKET_LABELS[bracket]} — pick your interest areas, then your risk tier.`;
+}
+
+</script>
+</body>
+</html>
