@@ -450,13 +450,13 @@ function saveCacheToDisk() {
 async function runValuationBatch() {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) { console.error('❌ No ANTHROPIC_API_KEY'); return; }
-  console.log('🔄 Starting nightly valuation batch...');
+  console.log('🔄 Starting nightly valuation + bull/bear batch...');
 
-  // Small chunks of 15 to stay well within token limits
+  // Chunks of 10 (smaller to fit bull/bear in token budget)
   const allTickers = UNIVERSE.map(s => s.t);
   const chunks = [];
-  for (let i = 0; i < allTickers.length; i += 15) {
-    chunks.push(allTickers.slice(i, i + 15));
+  for (let i = 0; i < allTickers.length; i += 10) {
+    chunks.push(allTickers.slice(i, i + 10));
   }
 
   const allStocks = {};
@@ -466,21 +466,23 @@ async function runValuationBatch() {
     const chunk = chunks[i];
     console.log(`🔄 Chunk ${i+1}/${chunks.length}: ${chunk.join(', ')}`);
 
-    const prompt = `Valuation analyst. Date: ${new Date().toLocaleDateString()}.
+    const prompt = `You are a senior equity analyst at a top-tier hedge fund. Date: ${new Date().toLocaleDateString()}.
 
-For each ticker, return current valuation status. Use today's approximate market prices.
+Analyze these tickers with COMPLETELY BALANCED bull and bear cases. Be specific and data-driven. The bear case must be as compelling as the bull case — no promotional bias.
 
 Tickers: ${chunk.join(', ')}
 
 Rules:
 - status: "cheap" if >15% below 5yr avg multiple, "fair" if within 15%, "expensive" if >20% above
-- metric: current multiple e.g. "P/E 14x" or "PEG 1.4"
+- metric: current multiple e.g. "P/E 14x" or "PEG 1.4" or "EV/EBITDA 8x"
 - valNote: max 8 words explaining valuation
-- why: max 20 words investment thesis
+- why: max 25 words balanced investment thesis (not one-sided)
+- bull: exactly 3 specific bullish points WITH data/numbers (not vague)
+- bear: exactly 3 specific bearish risks WITH data/numbers (brutally honest)
 - pills: exactly 4 items alternating [label, colorClass, label, colorClass]. Colors: pg=green pb=blue py=gold pp=purple pr=red
 
-Return ONLY this JSON, nothing else:
-{"marketNote":"one sentence","stocks":{"TICKER":{"status":"cheap|fair|expensive","metric":"X","valNote":"X","why":"X","pills":["l1","pg","l2","pb"]}}}`;
+Return ONLY this JSON (no other text, no markdown):
+{"marketNote":"one sentence on current market","stocks":{"TICKER":{"status":"cheap|fair|expensive","metric":"X","valNote":"X","why":"X","bull":["point1","point2","point3"],"bear":["risk1","risk2","risk3"],"pills":["l1","pg","l2","pb"]}}}`;
 
     try {
       const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -492,7 +494,7 @@ Return ONLY this JSON, nothing else:
         },
         body: JSON.stringify({
           model:      'claude-sonnet-4-20250514',
-          max_tokens: 4000,
+          max_tokens: 6000,
           messages:   [{ role: 'user', content: prompt }],
         }),
       });
@@ -514,13 +516,18 @@ Return ONLY this JSON, nothing else:
       }
 
       const parsed = JSON.parse(jsonMatch[0]);
-      Object.assign(allStocks, parsed.stocks || {});
+      // Add updatedAt timestamp to each stock
+      const stocks = parsed.stocks || {};
+      Object.keys(stocks).forEach(t => {
+        stocks[t].updatedAt = new Date().toISOString();
+      });
+      Object.assign(allStocks, stocks);
       if (!marketNote && parsed.marketNote) marketNote = parsed.marketNote;
 
-      console.log(`✅ Chunk ${i+1} done — ${Object.keys(parsed.stocks||{}).length} stocks`);
+      console.log(`✅ Chunk ${i+1} done — ${Object.keys(stocks).length} stocks`);
 
-      // 1.5s delay between chunks
-      if (i < chunks.length - 1) await new Promise(r => setTimeout(r, 1500));
+      // 2s delay between chunks to avoid rate limits
+      if (i < chunks.length - 1) await new Promise(r => setTimeout(r, 2000));
 
     } catch (err) {
       console.error(`❌ Chunk ${i+1} failed:`, err.message);
