@@ -300,10 +300,10 @@ app.get('/api/stripe-key', (req, res) => {
 
 app.post('/api/create-checkout-session', requireAuth, async (req, res) => {
   const priceId = req.body.priceId || process.env.STRIPE_PRICE_ID;
-  const domain  = process.env.YOUR_DOMAIN || `http://localhost:${PORT}`;
+  const domain  = 'https://atharv248-stock.github.io/Invest-AI';
+  const profile = req.body.profile || {};
 
   try {
-    // Get or create Stripe customer linked to this user
     let customerId;
     const { data: sub } = await supabaseAdmin
       .from('subscriptions')
@@ -321,12 +321,17 @@ app.post('/api/create-checkout-session', requireAuth, async (req, res) => {
       customerId = customer.id;
     }
 
+    // Encode profile in success URL so it survives cross-browser redirects
+    const profileParam = profile.income
+      ? '&p=' + encodeURIComponent(btoa(JSON.stringify(profile)))
+      : '';
+
     const session = await stripe.checkout.sessions.create({
       customer:              customerId,
       mode:                  'subscription',
       line_items:            [{ price: priceId, quantity: 1 }],
-      success_url:           `https://atharv248-stock.github.io/Invest-AI/success.html?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url:            `https://atharv248-stock.github.io/Invest-AI/index.html`,
+      success_url:           `${domain}/success.html?session_id={CHECKOUT_SESSION_ID}${profileParam}`,
+      cancel_url:            `${domain}/index.html`,
       allow_promotion_codes: true,
       subscription_data:     {},
     });
