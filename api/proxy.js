@@ -40,13 +40,40 @@
 
 require('dotenv').config();
 const express   = require('express');
-const cors      = require('cors');
 const path      = require('path');
 const fs        = require('fs');
 const cron      = require('node-cron');
 const Stripe    = require('stripe');
 const { createClient } = require('@supabase/supabase-js');
-const { UNIVERSE } = require('../src/universe.js');
+// Universe tickers for nightly cache — all 272 stocks
+const UNIVERSE_TICKERS = [
+  'TSLA','XIACF','RIVN','BIDU','UBER','LI','NIO','LCID','GOOS',
+  'NVDA','AMD','ASML','MU','TSM','INTC','ARM','AVGO','QCOM','TXN','LRCX','KLAC','AMAT','ON','WOLF','SMCI','AMBA','ACLS','AEHR','ACMR',
+  'CRWD','ZS','PANW','NET','S','CYBR','RBRK','QLYS','TENB',
+  'NOW','CRM','SNOW','DDOG','MDB','HUBS','VEEV','WDAY','TTD','ZI','DOCN','AI','GTLB','MNDY','ASAN','FRSH','ZM','OKTA','BILL','PCTY','PAYC','ADSK','ANSS','INTU','TEAM','APPF','CWAN','BRZE','DOMO','CSGP','NCNO','PATH','CFLT','SUMO',
+  'BABA','JD','FUTU','PDD','DRGN',
+  'LVMUY','RACE','HESAY','PRDSY','CFRUY','WOW','TPR','RL','BRBY','EL','GOOS',
+  'AAPL','MSFT','GOOGL','AMZN','META','V','MA','JPM','UNH','PG','KO','PEP','COST','IDXX','WST','ROP','MCO','SPGI','MSCI','ICE','NKE',
+  'SBUX','MCD','YUM','DKNG','ELF','CELH','BROS','ONON','RBLX','ODD',
+  'NU','AFRM','SOFI','HOOD','COIN','PYPL','SQ','FICO','CRCL','BMNR','IBKR','TOST','SKWD','RELY','FLUT',
+  'VALE','GLD','SLV','FCX','NEM','WPM','RGLD','AG','RIO','AA','MP',
+  'O','EPD','WPC','NNN','MAIN','ARCC','VZ','T','EPD',
+  'NVO','LLY','HIMS','VKTX','AMGN','RYTM',
+  'HROW','NTRA','PME','RXRX','GRAL','ISRG','ELV','UNH','DXCM','ABBV','EXAS','DOCS','PCVX',
+  'MELI','GLOB','STNE','VIST',
+  'GLD','SLV','NEM','WPM','RGLD',
+  'PLTR','APP','CAVA','NFLX','DUOL','MNDY',
+  'INTC','MU','WBD','CVS','PARA','OPEN','QXO','VFC','PTON','BIIB','PFE',
+  'MSFT','GOOGL','AMZN','NOW','ADBE','CRM','ZS','PANW','BX','APO','KKR',
+  'CRDO','ALAB','ANET','MRVL','CIEN','INFN',
+  'LITE','COHR','GLW','AAOI','TSEM','PI',
+  'ORCL','CRWV','APLD','CIFR','IREN','NBIS','CORZ',
+  'GEV','VST','VRT','CEG','PWR','FSLR','NEE','AES','ENPH','PLUG','BKR',
+  'META','RDDT','SNAP','PINS','SPOT',
+  'SHOP','CPNG','PDD','GLBE','ETSY','SE','MELI',
+  'V','MA','FIS','GPN','FOUR','PAYO','FISV','SQ','TOST',
+  'ASTS','LUNR','RKLB','HII','LMT','RTX','NOC','KTOS','ACHR',
+].filter((t, i, arr) => arr.indexOf(t) === i); // dedupe
 
 const app    = express();
 const PORT   = process.env.PORT || 3000;
@@ -59,18 +86,31 @@ const supabaseAdmin = createClient(
   { auth: { autoRefreshToken: false, persistSession: false } }
 );
 
-// ─── Stripe webhook needs raw body ───────────────────────────────────────────
-app.use('/api/stripe-webhook', express.raw({ type: 'application/json' }));
+// ─── Stripe webhook needs raw body BEFORE any other middleware ───────────────
+app.use('/api/stripe-webhook', express.raw({ type: '*/*' }));
+
 app.use(express.json());
-app.use(cors({
-  origin: [
+
+// CORS — must be before all routes
+app.use((req, res, next) => {
+  const allowed = [
     'https://atharv248-stock.github.io',
     'http://localhost:3000',
     'http://localhost:5500',
     process.env.YOUR_DOMAIN,
-  ].filter(Boolean),
-  credentials: true,
-}));
+  ].filter(Boolean);
+  const origin = req.headers.origin;
+  if (!origin || allowed.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin || '*');
+  } else {
+    res.setHeader('Access-Control-Allow-Origin', 'https://atharv248-stock.github.io');
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  if (req.method === 'OPTIONS') return res.sendStatus(200);
+  next();
+});
 app.use(express.static(path.join(__dirname, '..')));
 
 /* ═══════════════════════════════════════════════════════════
@@ -646,7 +686,7 @@ async function runValuationBatch() {
   console.log('🔄 Starting nightly valuation + bull/bear batch...');
 
   // Chunks of 10 (smaller to fit bull/bear in token budget)
-  const allTickers = UNIVERSE.map(s => s.t);
+  const allTickers = UNIVERSE_TICKERS;
   const chunks = [];
   for (let i = 0; i < allTickers.length; i += 10) {
     chunks.push(allTickers.slice(i, i + 10));
