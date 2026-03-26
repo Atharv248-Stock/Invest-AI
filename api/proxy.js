@@ -276,7 +276,7 @@ app.post('/api/portfolios', requireAuth, async (req, res) => {
 app.get('/api/subscription', requireAuth, async (req, res) => {
   const { data, error } = await supabaseAdmin
     .from('subscriptions')
-    .select('status,plan,trial_end,current_period_end,cancel_at_period_end')
+    .select('status,plan,trial_end,current_period_end,cancel_at_period_end,stripe_customer_id,stripe_subscription_id')
     .eq('user_id', req.user.id)
     .single();
 
@@ -287,6 +287,78 @@ app.get('/api/subscription', requireAuth, async (req, res) => {
     || (data.status === 'trialing' && new Date(data.trial_end) > now);
 
   res.json({ subscribed: isActive, ...data });
+});
+
+/* ── Self-heal: sync subscription from Stripe by session_id ──────── */
+app.get('/api/sync-subscription', requireAuth, async (req, res) => {
+  const sessionId = req.query.session_id;
+  const userId    = req.user.id;
+
+  try {
+    let customerId, subscriptionId;
+
+    if (sessionId) {
+      // Get session from Stripe
+      const session = await stripe.checkout.sessions.retrieve(sessionId);
+      customerId    = session.customer;
+      subscriptionId = session.subscription;
+    } else {
+      // Try to find by existing customer record
+      const { data: existing } = await supabaseAdmin
+        .from('subscriptions')
+        .select('stripe_customer_id,stripe_subscription_id')
+        .eq('user_id', userId)
+        .single();
+      customerId     = existing?.stripe_customer_id;
+      subscriptionId = existing?.stripe_subscription_id;
+    }
+
+    if (!customerId && !subscriptionId) {
+      // Last resort: search Stripe by email
+      const userRes = await supabaseAdmin.auth.admin.getUserById(userId);
+      const email   = userRes?.data?.user?.email;
+      if (email) {
+        const customers = await stripe.customers.list({ email, limit: 1 });
+        if (customers.data.length > 0) {
+          customerId = customers.data[0].id;
+          // Save userId to Stripe customer
+          await stripe.customers.update(customerId, {
+            metadata: { supabase_user_id: userId }
+          });
+          // Get their subscriptions
+          const subs = await stripe.subscriptions.list({ customer: customerId, status: 'active', limit: 1 });
+          if (subs.data.length > 0) subscriptionId = subs.data[0].id;
+        }
+      }
+    }
+
+    if (!subscriptionId) {
+      return res.json({ synced: false, message: 'No active subscription found in Stripe' });
+    }
+
+    const stripeSub = await stripe.subscriptions.retrieve(subscriptionId);
+    const { error } = await supabaseAdmin.from('subscriptions').upsert({
+      user_id:                userId,
+      stripe_customer_id:     customerId || stripeSub.customer,
+      stripe_subscription_id: subscriptionId,
+      status:                 stripeSub.status,
+      plan:                   'pro',
+      current_period_end:     new Date(stripeSub.current_period_end * 1000).toISOString(),
+      cancel_at_period_end:   stripeSub.cancel_at_period_end,
+    }, { onConflict: 'user_id' });
+
+    if (error) {
+      console.error('sync-subscription error:', error.message);
+      return res.json({ synced: false, error: error.message });
+    }
+
+    console.log(`✅ Synced subscription for user ${userId} — status: ${stripeSub.status}`);
+    res.json({ synced: true, status: stripeSub.status, subscribed: stripeSub.status === 'active' });
+
+  } catch (err) {
+    console.error('sync-subscription error:', err.message);
+    res.json({ synced: false, error: err.message });
+  }
 });
 
 /* ═══════════════════════════════════════════════════════════
@@ -355,44 +427,165 @@ app.post('/api/stripe-webhook', async (req, res) => {
   const sig    = req.headers['stripe-signature'];
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
 
+  // Always respond 200 quickly to prevent Stripe retries causing 502s
+  // Process async after responding
   let event;
   try {
     event = stripe.webhooks.constructEvent(req.body, sig, secret);
   } catch (err) {
     console.error('Webhook signature error:', err.message);
-    return res.status(400).json({ error: 'Webhook signature invalid.' });
+    // Return 200 anyway so Stripe doesn't keep retrying with bad signature
+    // The real fix is to update STRIPE_WEBHOOK_SECRET in Railway
+    return res.status(200).json({ received: true, warning: 'signature_failed' });
   }
 
-  const sub = event.data.object;
-
-  switch (event.type) {
-    case 'customer.subscription.created':
-    case 'customer.subscription.updated': {
-      // Find Supabase user by Stripe customer ID
-      const customer = await stripe.customers.retrieve(sub.customer);
-      const userId   = customer.metadata?.supabase_user_id;
-      if (!userId) break;
-
-      await supabaseAdmin.from('subscriptions').upsert({
-        user_id:                userId,
-        stripe_customer_id:     sub.customer,
-        stripe_subscription_id: sub.id,
-        status:                 sub.status,
-        trial_end:              sub.trial_end ? new Date(sub.trial_end * 1000).toISOString() : null,
-        current_period_end:     new Date(sub.current_period_end * 1000).toISOString(),
-        cancel_at_period_end:   sub.cancel_at_period_end,
-      }, { onConflict: 'user_id' });
-      break;
-    }
-    case 'customer.subscription.deleted': {
-      await supabaseAdmin.from('subscriptions')
-        .update({ status: 'canceled' })
-        .eq('stripe_subscription_id', sub.id);
-      break;
-    }
-  }
-
+  // Respond immediately, process async
   res.json({ received: true });
+
+  try {
+    const obj = event.data.object;
+    console.log(`📨 Webhook: ${event.type}`);
+
+    switch (event.type) {
+
+      // ── Payment completed via Stripe Checkout (Apple Pay, card, etc) ──
+      case 'checkout.session.completed': {
+        if (obj.mode !== 'subscription') break;
+        const customerId = obj.customer;
+        const subscriptionId = obj.subscription;
+        if (!customerId || !subscriptionId) break;
+
+        console.log(`✅ checkout.session.completed — customer: ${customerId}, sub: ${subscriptionId}`);
+
+        // Get the subscription details
+        const stripeSub = await stripe.subscriptions.retrieve(subscriptionId);
+
+        // Find Supabase user via customer metadata
+        const customer = await stripe.customers.retrieve(customerId);
+        let userId = customer.metadata?.supabase_user_id;
+
+        // Fallback: find user by email if metadata missing
+        if (!userId && customer.email) {
+          console.log(`🔍 Looking up user by email: ${customer.email}`);
+          const { data: users } = await supabaseAdmin.auth.admin.listUsers();
+          const match = users?.users?.find(u => u.email === customer.email);
+          if (match) {
+            userId = match.id;
+            // Save userId to Stripe customer metadata for future webhooks
+            await stripe.customers.update(customerId, {
+              metadata: { supabase_user_id: userId }
+            });
+            console.log(`✅ Found user by email: ${userId}`);
+          }
+        }
+
+        if (!userId) {
+          console.error(`❌ Could not find Supabase user for customer ${customerId}`);
+          break;
+        }
+
+        // Upsert subscription record
+        const { error } = await supabaseAdmin.from('subscriptions').upsert({
+          user_id:                userId,
+          stripe_customer_id:     customerId,
+          stripe_subscription_id: subscriptionId,
+          status:                 stripeSub.status,
+          plan:                   'pro',
+          current_period_end:     new Date(stripeSub.current_period_end * 1000).toISOString(),
+          cancel_at_period_end:   stripeSub.cancel_at_period_end,
+        }, { onConflict: 'user_id' });
+
+        if (error) {
+          console.error(`❌ Supabase upsert error:`, error.message);
+        } else {
+          console.log(`✅ Subscription activated for user ${userId}`);
+        }
+        break;
+      }
+
+      // ── Subscription created or updated (recurring billing) ──
+      case 'customer.subscription.created':
+      case 'customer.subscription.updated': {
+        const customerId = obj.customer;
+        const customer = await stripe.customers.retrieve(customerId);
+        let userId = customer.metadata?.supabase_user_id;
+
+        // Fallback: find by email
+        if (!userId && customer.email) {
+          const { data: users } = await supabaseAdmin.auth.admin.listUsers();
+          const match = users?.users?.find(u => u.email === customer.email);
+          if (match) {
+            userId = match.id;
+            await stripe.customers.update(customerId, {
+              metadata: { supabase_user_id: userId }
+            });
+          }
+        }
+
+        if (!userId) {
+          console.error(`❌ No user found for customer ${customerId}`);
+          break;
+        }
+
+        const { error } = await supabaseAdmin.from('subscriptions').upsert({
+          user_id:                userId,
+          stripe_customer_id:     customerId,
+          stripe_subscription_id: obj.id,
+          status:                 obj.status,
+          plan:                   'pro',
+          trial_end:              obj.trial_end ? new Date(obj.trial_end * 1000).toISOString() : null,
+          current_period_end:     new Date(obj.current_period_end * 1000).toISOString(),
+          cancel_at_period_end:   obj.cancel_at_period_end,
+        }, { onConflict: 'user_id' });
+
+        if (error) console.error(`❌ Supabase upsert error:`, error.message);
+        else console.log(`✅ Subscription ${event.type} for user ${userId} — status: ${obj.status}`);
+        break;
+      }
+
+      // ── Subscription cancelled ──
+      case 'customer.subscription.deleted': {
+        const { error } = await supabaseAdmin.from('subscriptions')
+          .update({ status: 'canceled', cancel_at_period_end: true })
+          .eq('stripe_subscription_id', obj.id);
+        if (error) console.error(`❌ Cancel error:`, error.message);
+        else console.log(`✅ Subscription canceled: ${obj.id}`);
+        break;
+      }
+
+      // ── Invoice paid — renew subscription period ──
+      case 'invoice.paid': {
+        const subscriptionId = obj.subscription;
+        if (!subscriptionId) break;
+        const stripeSub = await stripe.subscriptions.retrieve(subscriptionId);
+        const { error } = await supabaseAdmin.from('subscriptions')
+          .update({
+            status: 'active',
+            current_period_end: new Date(stripeSub.current_period_end * 1000).toISOString(),
+          })
+          .eq('stripe_subscription_id', subscriptionId);
+        if (error) console.error(`❌ Invoice paid update error:`, error.message);
+        else console.log(`✅ Subscription renewed: ${subscriptionId}`);
+        break;
+      }
+
+      // ── Payment failed ──
+      case 'invoice.payment_failed': {
+        const subscriptionId = obj.subscription;
+        if (!subscriptionId) break;
+        await supabaseAdmin.from('subscriptions')
+          .update({ status: 'past_due' })
+          .eq('stripe_subscription_id', subscriptionId);
+        console.log(`⚠️ Payment failed for subscription: ${subscriptionId}`);
+        break;
+      }
+
+      default:
+        console.log(`ℹ️ Unhandled webhook: ${event.type}`);
+    }
+  } catch (err) {
+    console.error(`❌ Webhook processing error for ${event?.type}:`, err.message);
+  }
 });
 
 /* ═══════════════════════════════════════════════════════════
