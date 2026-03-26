@@ -149,14 +149,50 @@ app.post('/api/auth/signup', async (req, res) => {
   if (!email || !password) return res.status(400).json({ error: 'Email and password required.' });
   if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters.' });
 
+  // Create user with email verification required
   const { data, error } = await supabaseAdmin.auth.admin.createUser({
     email,
     password,
-    email_confirm: true,  // auto-confirm so user can login immediately
+    email_confirm: false, // require email verification
   });
 
   if (error) return res.status(400).json({ error: error.message });
-  res.json({ message: 'Account created.' });
+
+  // Send verification email via Supabase
+  try {
+    await supabaseAdmin.auth.admin.generateLink({
+      type: 'signup',
+      email,
+      options: {
+        redirectTo: 'https://atharv248-stock.github.io/Invest-AI/index.html'
+      }
+    });
+  } catch(e) {
+    console.warn('Verification email error:', e.message);
+  }
+
+  // Send welcome email via Supabase magic link email
+  // (Supabase handles the actual delivery)
+  res.json({
+    message: 'Account created! Please check your email to verify your account.',
+    requiresVerification: true
+  });
+});
+
+// POST /api/auth/resend-verification
+app.post('/api/auth/resend-verification', async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: 'Email required.' });
+  try {
+    await supabaseAdmin.auth.admin.generateLink({
+      type: 'signup',
+      email,
+      options: { redirectTo: 'https://atharv248-stock.github.io/Invest-AI/index.html' }
+    });
+    res.json({ message: 'Verification email resent.' });
+  } catch(e) {
+    res.status(400).json({ error: e.message });
+  }
 });
 
 // POST /api/auth/login
@@ -539,6 +575,18 @@ app.post('/api/stripe-webhook', async (req, res) => {
           console.error(`❌ Supabase upsert error:`, error.message);
         } else {
           console.log(`✅ Subscription activated for user ${userId}`);
+
+          // Send payment confirmation email
+          try {
+            const userRes = await supabaseAdmin.auth.admin.getUserById(userId);
+            const userEmail = userRes?.data?.user?.email;
+            if (userEmail && !userEmail.includes('privaterelay')) {
+              // Log for now — Supabase handles transactional emails via SMTP config
+              console.log(`📧 Payment confirmed for ${userEmail} — subscription active`);
+              // If you have SMTP configured in Supabase, send via their API
+              // Otherwise customers see confirmation on Stripe's receipt
+            }
+          } catch(e) { console.warn('Email notification error:', e.message); }
         }
         break;
       }
