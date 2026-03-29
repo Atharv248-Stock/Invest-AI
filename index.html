@@ -1286,12 +1286,18 @@ function resolveField(field) {
    ════════════════════════════════════ */
 function showFormError(msg) {
   const el = document.getElementById('form-error');
-  if (el) {
-    el.textContent = msg;
-    el.style.display = 'block';
-    // Scroll to the error
-    setTimeout(() => el.scrollIntoView({behavior:'smooth', block:'center'}), 100);
-  }
+  if (!el) return;
+  el.innerHTML = '⚠️ ' + msg;
+  el.style.display = 'block';
+  el.style.background = 'rgba(255,107,107,.12)';
+  el.style.border = '1px solid rgba(255,107,107,.4)';
+  el.style.padding = '12px 16px';
+  el.style.borderRadius = '10px';
+  el.style.color = '#ff6b6b';
+  el.style.fontSize = '0.88rem';
+  el.style.marginTop = '1rem';
+  setTimeout(() => el.scrollIntoView({behavior:'smooth', block:'center'}), 50);
+}
 }
 function clearFormError() {
   const el = document.getElementById('form-error');
