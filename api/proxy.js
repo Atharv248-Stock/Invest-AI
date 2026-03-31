@@ -576,17 +576,24 @@ app.post('/api/stripe-webhook', async (req, res) => {
         } else {
           console.log(`✅ Subscription activated for user ${userId}`);
 
-          // Send payment confirmation email
+          // Send password setup email so user can log in later
           try {
             const userRes = await supabaseAdmin.auth.admin.getUserById(userId);
             const userEmail = userRes?.data?.user?.email;
+            const emailConfirmed = userRes?.data?.user?.email_confirmed_at;
+
             if (userEmail && !userEmail.includes('privaterelay')) {
-              // Log for now — Supabase handles transactional emails via SMTP config
-              console.log(`📧 Payment confirmed for ${userEmail} — subscription active`);
-              // If you have SMTP configured in Supabase, send via their API
-              // Otherwise customers see confirmation on Stripe's receipt
+              // Send magic link / password reset so they can set a real password
+              await supabaseAdmin.auth.admin.generateLink({
+                type: 'recovery',
+                email: userEmail,
+                options: {
+                  redirectTo: 'https://atharv248-stock.github.io/Invest-AI/index.html'
+                }
+              });
+              console.log(`📧 Password setup email sent to ${userEmail}`);
             }
-          } catch(e) { console.warn('Email notification error:', e.message); }
+          } catch(e) { console.warn('Post-payment email error:', e.message); }
         }
         break;
       }
