@@ -346,6 +346,36 @@ app.post('/api/portfolios', requireAuth, async (req, res) => {
   res.json({ portfolio: data });
 });
 
+
+/* ── Check subscription by email (no auth — for paywall email check) ── */
+app.get('/api/check-email-subscription', async (req, res) => {
+  const email = req.query.email;
+  if (!email) return res.json({ subscribed: false });
+  try {
+    // Find user by email
+    const { data: users } = await supabaseAdmin.auth.admin.listUsers();
+    const user = users?.users?.find(u => u.email === email);
+    if (!user) return res.json({ subscribed: false, exists: false });
+
+    // Check subscription
+    const { data, error } = await supabaseAdmin
+      .from('subscriptions')
+      .select('status,current_period_end')
+      .eq('user_id', user.id)
+      .single();
+
+    if (error || !data) return res.json({ subscribed: false, exists: true });
+
+    const isActive = data.status === 'active' ||
+      (data.status === 'trialing' && new Date(data.current_period_end) > new Date());
+
+    res.json({ subscribed: isActive, exists: true, status: data.status });
+  } catch(e) {
+    console.error('check-email-subscription error:', e.message);
+    res.json({ subscribed: false });
+  }
+});
+
 /* ═══════════════════════════════════════════════════════════
    SUBSCRIPTION CHECK
 ═══════════════════════════════════════════════════════════ */
