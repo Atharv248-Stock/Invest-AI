@@ -606,22 +606,27 @@ app.post('/api/stripe-webhook', async (req, res) => {
         } else {
           console.log(`✅ Subscription activated for user ${userId}`);
 
-          // Send password setup email so user can log in later
+          // Send welcome email with password setup link
           try {
             const userRes = await supabaseAdmin.auth.admin.getUserById(userId);
             const userEmail = userRes?.data?.user?.email;
-            const emailConfirmed = userRes?.data?.user?.email_confirmed_at;
 
             if (userEmail && !userEmail.includes('privaterelay')) {
-              // Send magic link / password reset so they can set a real password
-              await supabaseAdmin.auth.admin.generateLink({
-                type: 'recovery',
-                email: userEmail,
-                options: {
-                  redirectTo: 'https://atharv248-stock.github.io/Invest-AI/index.html'
-                }
+              // Use Supabase client (not admin) to send password reset email
+              // This actually delivers the email through Supabase's SMTP
+              const { createClient } = require('@supabase/supabase-js');
+              const supabaseClient = createClient(
+                process.env.SUPABASE_URL,
+                process.env.SUPABASE_ANON_KEY
+              );
+              const { error: emailError } = await supabaseClient.auth.resetPasswordForEmail(userEmail, {
+                redirectTo: 'https://atharv248-stock.github.io/Invest-AI/index.html',
               });
-              console.log(`📧 Password setup email sent to ${userEmail}`);
+              if (emailError) {
+                console.warn('Password email error:', emailError.message);
+              } else {
+                console.log(`📧 Welcome + password setup email sent to ${userEmail}`);
+              }
             }
           } catch(e) { console.warn('Post-payment email error:', e.message); }
         }
