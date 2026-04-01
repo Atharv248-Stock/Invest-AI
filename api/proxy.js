@@ -557,41 +557,60 @@ app.post('/api/stripe-webhook', async (req, res) => {
       // ── Payment completed via Stripe Checkout (Apple Pay, card, etc) ──
       case 'checkout.session.completed': {
         if (obj.mode !== 'subscription') break;
-        const customerId = obj.customer;
+        const customerId    = obj.customer;
         const subscriptionId = obj.subscription;
+        const customerEmail  = obj.customer_details?.email || obj.customer_email;
         if (!customerId || !subscriptionId) break;
 
-        console.log(`✅ checkout.session.completed — customer: ${customerId}, sub: ${subscriptionId}`);
+        console.log(`✅ checkout.session.completed — customer: ${customerId}, sub: ${subscriptionId}, email: ${customerEmail}`);
 
-        // Get the subscription details
-        const stripeSub = await stripe.subscriptions.retrieve(subscriptionId);
+        const stripeSub  = await stripe.subscriptions.retrieve(subscriptionId);
+        const customer   = await stripe.customers.retrieve(customerId);
+        const email      = customerEmail || customer.email;
+        let userId       = customer.metadata?.supabase_user_id;
+        let isNewUser    = false;
 
-        // Find Supabase user via customer metadata
-        const customer = await stripe.customers.retrieve(customerId);
-        let userId = customer.metadata?.supabase_user_id;
+        // Step 1: Find or create Supabase user by email
+        if (!userId && email) {
+          console.log(`🔍 Looking up Supabase user by email: ${email}`);
+          const { data: userList } = await supabaseAdmin.auth.admin.listUsers();
+          const existing = userList?.users?.find(u => u.email === email);
 
-        // Fallback: find user by email if metadata missing
-        if (!userId && customer.email) {
-          console.log(`🔍 Looking up user by email: ${customer.email}`);
-          const { data: users } = await supabaseAdmin.auth.admin.listUsers();
-          const match = users?.users?.find(u => u.email === customer.email);
-          if (match) {
-            userId = match.id;
-            // Save userId to Stripe customer metadata for future webhooks
+          if (existing) {
+            userId = existing.id;
+            console.log(`✅ Found existing user: ${userId}`);
+          } else {
+            isNewUser = true;
+            // New user — create Supabase account with temp password
+            const tempPw = 'InvAI_' + Math.random().toString(36).slice(2, 12) + '!';
+            const { data: newUser, error: createErr } = await supabaseAdmin.auth.admin.createUser({
+              email,
+              password: tempPw,
+              email_confirm: true,
+            });
+            if (createErr) {
+              console.error(`❌ Failed to create user for ${email}:`, createErr.message);
+            } else {
+              userId = newUser.user.id;
+              console.log(`✅ Created new Supabase user: ${userId} for ${email}`);
+            }
+          }
+
+          // Save userId to Stripe customer metadata
+          if (userId) {
             await stripe.customers.update(customerId, {
               metadata: { supabase_user_id: userId }
             });
-            console.log(`✅ Found user by email: ${userId}`);
           }
         }
 
         if (!userId) {
-          console.error(`❌ Could not find Supabase user for customer ${customerId}`);
+          console.error(`❌ Could not resolve Supabase user for ${email}`);
           break;
         }
 
-        // Upsert subscription record
-        const { error } = await supabaseAdmin.from('subscriptions').upsert({
+        // Step 2: Write subscription to DB
+        const { error: upsertErr } = await supabaseAdmin.from('subscriptions').upsert({
           user_id:                userId,
           stripe_customer_id:     customerId,
           stripe_subscription_id: subscriptionId,
@@ -601,34 +620,35 @@ app.post('/api/stripe-webhook', async (req, res) => {
           cancel_at_period_end:   stripeSub.cancel_at_period_end,
         }, { onConflict: 'user_id' });
 
-        if (error) {
-          console.error(`❌ Supabase upsert error:`, error.message);
+        if (upsertErr) {
+          console.error(`❌ Supabase upsert error:`, upsertErr.message);
         } else {
-          console.log(`✅ Subscription activated for user ${userId}`);
+          console.log(`✅ Subscription written to DB for user ${userId}`);
+        }
 
-          // Send welcome email with password setup link
+        // Step 3: Send correct email based on whether user is new or existing
+        if (email && !email.includes('privaterelay')) {
           try {
-            const userRes = await supabaseAdmin.auth.admin.getUserById(userId);
-            const userEmail = userRes?.data?.user?.email;
+            const isNewUser = !userList?.users?.find(u => u.email === email); // was new before we created them
+            const { createClient } = require('@supabase/supabase-js');
+            const supabaseClient = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 
-            if (userEmail && !userEmail.includes('privaterelay')) {
-              // Use Supabase client (not admin) to send password reset email
-              // This actually delivers the email through Supabase's SMTP
-              const { createClient } = require('@supabase/supabase-js');
-              const supabaseClient = createClient(
-                process.env.SUPABASE_URL,
-                process.env.SUPABASE_ANON_KEY
-              );
-              const { error: emailError } = await supabaseClient.auth.resetPasswordForEmail(userEmail, {
+            if (isNewUser) {
+              // New user who paid — use inviteUserByEmail → triggers "Invite user" template
+              const { error: inviteErr } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
                 redirectTo: 'https://atharv248-stock.github.io/Invest-AI/index.html',
               });
-              if (emailError) {
-                console.warn('Password email error:', emailError.message);
-              } else {
-                console.log(`📧 Welcome + password setup email sent to ${userEmail}`);
-              }
+              if (inviteErr) console.warn(`⚠️ Invite email failed for ${email}:`, inviteErr.message);
+              else console.log(`📧 Invite (payment welcome) email sent to ${email}`);
+            } else {
+              // Existing user who paid — send password reset → triggers "Reset password" template
+              const { error: emailErr } = await supabaseClient.auth.resetPasswordForEmail(email, {
+                redirectTo: 'https://atharv248-stock.github.io/Invest-AI/index.html',
+              });
+              if (emailErr) console.warn(`⚠️ Reset email failed for ${email}:`, emailErr.message);
+              else console.log(`📧 Password reset email sent to existing user ${email}`);
             }
-          } catch(e) { console.warn('Post-payment email error:', e.message); }
+          } catch(e) { console.warn('Email send error:', e.message); }
         }
         break;
       }
@@ -895,9 +915,72 @@ app.post('/api/run-cache', async (req, res) => {
   runValuationBatch();
 });
 
-/* ═══════════════════════════════════════════════════════════
-   STARTUP
-═══════════════════════════════════════════════════════════ */
+/* ── Admin: manually fix subscription for a user by email ── */
+app.post('/api/admin/fix-subscription', async (req, res) => {
+  const secret = req.headers['x-admin-secret'] || req.query.secret;
+  if (secret !== process.env.CACHE_ADMIN_SECRET) return res.status(401).json({ error: 'Unauthorized.' });
+
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: 'email required' });
+
+  try {
+    // Find Supabase user
+    const { data: userList } = await supabaseAdmin.auth.admin.listUsers();
+    let user = userList?.users?.find(u => u.email === email);
+
+    // Create if not found
+    if (!user) {
+      const tempPw = 'InvAI_' + Math.random().toString(36).slice(2, 12) + '!';
+      const { data: newUser, error: createErr } = await supabaseAdmin.auth.admin.createUser({
+        email, password: tempPw, email_confirm: true,
+      });
+      if (createErr) return res.status(500).json({ error: createErr.message });
+      user = newUser.user;
+      console.log(`✅ Created user for ${email}: ${user.id}`);
+    }
+
+    // Find Stripe customer by email
+    const customers = await stripe.customers.list({ email, limit: 1 });
+    const customer  = customers.data[0];
+    if (!customer) return res.status(404).json({ error: `No Stripe customer found for ${email}` });
+
+    // Find their subscription
+    const subs = await stripe.subscriptions.list({ customer: customer.id, limit: 1 });
+    const sub  = subs.data[0];
+    if (!sub) return res.status(404).json({ error: `No Stripe subscription found for ${email}` });
+
+    // Write to Supabase
+    const { error: upsertErr } = await supabaseAdmin.from('subscriptions').upsert({
+      user_id:                user.id,
+      stripe_customer_id:     customer.id,
+      stripe_subscription_id: sub.id,
+      status:                 sub.status,
+      plan:                   'pro',
+      current_period_end:     new Date(sub.current_period_end * 1000).toISOString(),
+      cancel_at_period_end:   sub.cancel_at_period_end,
+    }, { onConflict: 'user_id' });
+
+    if (upsertErr) return res.status(500).json({ error: upsertErr.message });
+
+    // Update Stripe metadata
+    await stripe.customers.update(customer.id, { metadata: { supabase_user_id: user.id } });
+
+    // Send password setup email
+    const { createClient } = require('@supabase/supabase-js');
+    const supabaseClient = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+    await supabaseClient.auth.resetPasswordForEmail(email, {
+      redirectTo: 'https://atharv248-stock.github.io/Invest-AI/index.html',
+    });
+
+    console.log(`✅ Admin fix complete for ${email}`);
+    res.json({ success: true, userId: user.id, status: sub.status, message: `Password email sent to ${email}` });
+  } catch(e) {
+    console.error('Admin fix error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+
 app.listen(PORT, () => {
   console.log(`✅ Invest AI running at http://localhost:${PORT}`);
   loadCacheFromDisk();
