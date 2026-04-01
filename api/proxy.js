@@ -149,32 +149,21 @@ app.post('/api/auth/signup', async (req, res) => {
   if (!email || !password) return res.status(400).json({ error: 'Email and password required.' });
   if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters.' });
 
-  // Create user with email verification required
-  const { data, error } = await supabaseAdmin.auth.admin.createUser({
+  // Use Supabase CLIENT (not admin) so it auto-sends the "Confirm signup" email template
+  const supabaseClient = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+  const { data, error } = await supabaseClient.auth.signUp({
     email,
     password,
-    email_confirm: false, // require email verification
+    options: {
+      emailRedirectTo: 'https://atharv248-stock.github.io/Invest-AI/index.html',
+    }
   });
 
   if (error) return res.status(400).json({ error: error.message });
 
-  // Send verification email via Supabase
-  try {
-    await supabaseAdmin.auth.admin.generateLink({
-      type: 'signup',
-      email,
-      options: {
-        redirectTo: 'https://atharv248-stock.github.io/Invest-AI/index.html'
-      }
-    });
-  } catch(e) {
-    console.warn('Verification email error:', e.message);
-  }
-
-  // Send welcome email via Supabase magic link email
-  // (Supabase handles the actual delivery)
+  // Account created — email confirmation required before they can log in
   res.json({
-    message: 'Account created! Please check your email to verify your account.',
+    message: 'Account created! Please check your email to confirm your address before signing in.',
     requiresVerification: true
   });
 });
@@ -629,24 +618,39 @@ app.post('/api/stripe-webhook', async (req, res) => {
         // Step 3: Send correct email based on whether user is new or existing
         if (email && !email.includes('privaterelay')) {
           try {
-            const isNewUser = !userList?.users?.find(u => u.email === email); // was new before we created them
-            const { createClient } = require('@supabase/supabase-js');
-            const supabaseClient = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
-
             if (isNewUser) {
-              // New user who paid — use inviteUserByEmail → triggers "Invite user" template
+              // Case 3: Brand new user paid without signing up
+              // inviteUserByEmail → triggers "Invite user" Supabase template → set password link
               const { error: inviteErr } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
                 redirectTo: 'https://atharv248-stock.github.io/Invest-AI/index.html',
               });
-              if (inviteErr) console.warn(`⚠️ Invite email failed for ${email}:`, inviteErr.message);
-              else console.log(`📧 Invite (payment welcome) email sent to ${email}`);
+              if (inviteErr) {
+                console.warn(`⚠️ Invite email failed for ${email}:`, inviteErr.message);
+              } else {
+                console.log(`📧 [Case 3] Invite + set-password email sent to new paid user: ${email}`);
+              }
             } else {
-              // Existing user who paid — send password reset → triggers "Reset password" template
-              const { error: emailErr } = await supabaseClient.auth.resetPasswordForEmail(email, {
-                redirectTo: 'https://atharv248-stock.github.io/Invest-AI/index.html',
+              // Case 2: Existing signed-up user paid
+              // Send them a plain payment confirmation pointing to login page
+              // Use generateLink type 'magiclink' to trigger the "Magic link" email template
+              const { error: mlErr } = await supabaseAdmin.auth.admin.generateLink({
+                type: 'magiclink',
+                email,
+                options: {
+                  redirectTo: 'https://atharv248-stock.github.io/Invest-AI/index.html',
+                }
               });
-              if (emailErr) console.warn(`⚠️ Reset email failed for ${email}:`, emailErr.message);
-              else console.log(`📧 Password reset email sent to existing user ${email}`);
+              if (mlErr) {
+                // Fallback: resetPasswordForEmail triggers "Reset password" template
+                const { createClient } = require('@supabase/supabase-js');
+                const sc = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+                await sc.auth.resetPasswordForEmail(email, {
+                  redirectTo: 'https://atharv248-stock.github.io/Invest-AI/index.html',
+                });
+                console.log(`📧 [Case 2 fallback] Reset email sent to existing user: ${email}`);
+              } else {
+                console.log(`📧 [Case 2] Payment welcome email sent to existing user: ${email}`);
+              }
             }
           } catch(e) { console.warn('Email send error:', e.message); }
         }
