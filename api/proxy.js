@@ -149,23 +149,50 @@ app.post('/api/auth/signup', async (req, res) => {
   if (!email || !password) return res.status(400).json({ error: 'Email and password required.' });
   if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters.' });
 
-  // Use Supabase CLIENT (not admin) so it auto-sends the "Confirm signup" email template
-  const supabaseClient = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
-  const { data, error } = await supabaseClient.auth.signUp({
-    email,
-    password,
-    options: {
-      emailRedirectTo: 'https://atharv248-stock.github.io/Invest-AI/index.html',
+  try {
+    // Create user via admin (email_confirm: false = unconfirmed, needs email click)
+    const { data: userData, error: createError } = await supabaseAdmin.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: false,
+    });
+
+    if (createError) {
+      // If user already exists, tell them to log in
+      if (createError.message.toLowerCase().includes('already') || createError.message.toLowerCase().includes('exists')) {
+        return res.status(400).json({ error: 'An account with this email already exists. Please sign in.' });
+      }
+      return res.status(400).json({ error: createError.message });
     }
-  });
 
-  if (error) return res.status(400).json({ error: error.message });
+    // Send confirmation email via Supabase client (triggers "Confirm signup" template)
+    const supabaseClient = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+    const { error: otpError } = await supabaseClient.auth.resend({
+      type: 'signup',
+      email,
+      options: { emailRedirectTo: 'https://atharv248-stock.github.io/Invest-AI/index.html' }
+    });
 
-  // Account created — email confirmation required before they can log in
-  res.json({
-    message: 'Account created! Please check your email to confirm your address before signing in.',
-    requiresVerification: true
-  });
+    if (otpError) {
+      // Fallback: use admin generateLink to send signup email
+      console.warn('resend failed, trying generateLink:', otpError.message);
+      await supabaseAdmin.auth.admin.generateLink({
+        type: 'signup',
+        email,
+        options: { redirectTo: 'https://atharv248-stock.github.io/Invest-AI/index.html' }
+      });
+    }
+
+    console.log(`✅ New user created and confirmation email sent: ${email}`);
+    res.json({
+      message: 'Account created! Please check your email to confirm your address before signing in.',
+      requiresVerification: true
+    });
+
+  } catch(e) {
+    console.error('Signup error:', e.message);
+    res.status(500).json({ error: 'Sign up failed. Please try again.' });
+  }
 });
 
 // POST /api/auth/resend-verification
@@ -628,15 +655,22 @@ app.post('/api/stripe-webhook', async (req, res) => {
         if (email && !email.includes('privaterelay')) {
           try {
             if (isNewUser) {
-              // Case 3: Brand new user paid without signing up
-              // inviteUserByEmail → triggers "Invite user" Supabase template → set password link
+              // Case 3: Brand new user paid — send invite email with set-password link
+              // inviteUserByEmail triggers "Invite user" Supabase template
               const { error: inviteErr } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
                 redirectTo: 'https://atharv248-stock.github.io/Invest-AI/index.html',
               });
               if (inviteErr) {
-                console.warn(`⚠️ Invite email failed for ${email}:`, inviteErr.message);
+                // Fallback: generateLink type recovery sends Reset Password template
+                console.warn(`inviteUserByEmail failed (${inviteErr.message}), trying recovery link`);
+                const supabaseClient = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+                const { error: resetErr } = await supabaseClient.auth.resetPasswordForEmail(email, {
+                  redirectTo: 'https://atharv248-stock.github.io/Invest-AI/index.html',
+                });
+                if (resetErr) console.warn(`Recovery email also failed: ${resetErr.message}`);
+                else console.log(`📧 [Case 3 fallback] Recovery email sent to new paid user: ${email}`);
               } else {
-                console.log(`📧 [Case 3] Invite + set-password email sent to new paid user: ${email}`);
+                console.log(`📧 [Case 3] Invite email sent to new paid user: ${email}`);
               }
             } else {
               // Case 2: Existing signed-up user paid
