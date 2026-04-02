@@ -548,16 +548,25 @@ app.post('/api/stripe-webhook', async (req, res) => {
         if (obj.mode !== 'subscription') break;
         const customerId    = obj.customer;
         const subscriptionId = obj.subscription;
-        const customerEmail  = obj.customer_details?.email || obj.customer_email;
+        // Try all possible email fields — Apple Pay populates differently
+        const customerEmail = obj.customer_details?.email
+                           || obj.customer_email
+                           || obj.customer_details?.name; // sometimes name has email
         if (!customerId || !subscriptionId) break;
-
-        console.log(`✅ checkout.session.completed — customer: ${customerId}, sub: ${subscriptionId}, email: ${customerEmail}`);
 
         const stripeSub  = await stripe.subscriptions.retrieve(subscriptionId);
         const customer   = await stripe.customers.retrieve(customerId);
+        // Get email from customer object as final fallback
         const email      = customerEmail || customer.email;
-        let userId       = customer.metadata?.supabase_user_id;
-        let isNewUser    = false;
+
+        console.log(`✅ checkout.session.completed
+  customer:  ${customerId}
+  sub:       ${subscriptionId}
+  email src: customer_details=${obj.customer_details?.email} | customer_email=${obj.customer_email} | customer.email=${customer.email}
+  resolved:  ${email}`);
+
+        let userId    = customer.metadata?.supabase_user_id;
+        let isNewUser = false;
 
         // Step 1: Find or create Supabase user by email
         if (!userId && email) {
