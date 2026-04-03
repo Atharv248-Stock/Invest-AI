@@ -556,7 +556,93 @@ app.get('/api/subscription', requireAuth, async (req, res) => {
   res.json({ subscribed: isActive, ...data });
 });
 
-/* ── Self-heal: sync subscription from Stripe by session_id ──────── */
+/* ── Direct subscription creation (used by checkout.html) ──────────── */
+app.post('/api/create-subscription', async (req, res) => {
+  const { paymentMethodId, email } = req.body;
+  if (!paymentMethodId || !email) return res.status(400).json({ error: 'paymentMethodId and email required.' });
+
+  try {
+    // Get or create Stripe customer
+    let customerId;
+    const existing = await stripe.customers.list({ email, limit: 1 });
+    if (existing.data.length > 0) {
+      customerId = existing.data[0].id;
+    } else {
+      // Get user ID from auth header if present
+      let supabaseUserId = null;
+      const authHeader = req.headers.authorization;
+      if (authHeader) {
+        try {
+          const token = authHeader.replace('Bearer ', '');
+          const { data } = await supabaseAdmin.auth.getUser(token);
+          supabaseUserId = data?.user?.id;
+        } catch(e) {}
+      }
+      const customer = await stripe.customers.create({
+        email,
+        metadata: supabaseUserId ? { supabase_user_id: supabaseUserId } : {}
+      });
+      customerId = customer.id;
+    }
+
+    // Attach payment method to customer
+    await stripe.paymentMethods.attach(paymentMethodId, { customer: customerId });
+    await stripe.customers.update(customerId, { invoice_settings: { default_payment_method: paymentMethodId } });
+
+    // Create subscription
+    const subscription = await stripe.subscriptions.create({
+      customer:   customerId,
+      items:      [{ price: process.env.STRIPE_PRICE_ID }],
+      expand:     ['latest_invoice.payment_intent'],
+      payment_settings: { payment_method_types: ['card'], save_default_payment_method: 'on_subscription' },
+    });
+
+    const invoice       = subscription.latest_invoice;
+    const paymentIntent = invoice.payment_intent;
+
+    // If requires 3D Secure
+    if (paymentIntent?.status === 'requires_action') {
+      return res.json({ requiresAction: true, clientSecret: paymentIntent.client_secret });
+    }
+
+    // Payment succeeded — webhook will write to DB and send email
+    // But also write immediately as fallback
+    if (paymentIntent?.status === 'succeeded' || subscription.status === 'active') {
+      let userId = null;
+      const authHeader = req.headers.authorization;
+      if (authHeader) {
+        try {
+          const token = authHeader.replace('Bearer ', '');
+          const { data } = await supabaseAdmin.auth.getUser(token);
+          userId = data?.user?.id;
+        } catch(e) {}
+      }
+      if (!userId) {
+        const { data: users } = await supabaseAdmin.auth.admin.listUsers();
+        userId = users?.users?.find(u => u.email === email)?.id;
+      }
+      if (userId) {
+        await supabaseAdmin.from('subscriptions').upsert({
+          user_id: userId, stripe_customer_id: customerId,
+          stripe_subscription_id: subscription.id,
+          status: subscription.status, plan: 'pro',
+          current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+          cancel_at_period_end: subscription.cancel_at_period_end,
+        }, { onConflict: 'user_id' });
+        await stripe.customers.update(customerId, { metadata: { supabase_user_id: userId } });
+        console.log(`✅ Direct subscription created for ${email} (${userId})`);
+      }
+    }
+
+    res.json({ success: true, subscriptionId: subscription.id, status: subscription.status });
+
+  } catch(e) {
+    console.error('create-subscription error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+
 app.get('/api/sync-subscription', requireAuth, async (req, res) => {
   const sessionId = req.query.session_id;
   const userId    = req.user.id;
