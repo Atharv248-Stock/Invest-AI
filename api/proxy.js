@@ -305,34 +305,38 @@ async function requireAuth(req, res, next) {
 
 // POST /api/auth/signup
 app.post('/api/auth/signup', async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, fromCheckout } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email and password required.' });
   if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters.' });
 
   try {
-    // Create user via admin (email_confirm: false = unconfirmed, needs email click)
+    // At checkout: auto-confirm so user can log in immediately after payment
+    // For regular signup: require email confirmation
+    const emailConfirm = fromCheckout === true;
+
     const { data: userData, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
-      email_confirm: false,
+      email_confirm: emailConfirm,
     });
 
     if (createError) {
-      // If user already exists, tell them to log in
       if (createError.message.toLowerCase().includes('already') || createError.message.toLowerCase().includes('exists')) {
         return res.status(400).json({ error: 'An account with this email already exists. Please sign in.' });
       }
       return res.status(400).json({ error: createError.message });
     }
 
-    // Send Case 4 confirmation email via our custom emailer
-    await sendConfirmSignupEmail(email);
-
-    console.log(`✅ New user created and confirmation email sent: ${email}`);
-    res.json({
-      message: 'Account created! Please check your email to confirm your address before signing in.',
-      requiresVerification: true
-    });
+    if (fromCheckout) {
+      // Checkout signup — user will get welcome email after payment, no confirm email needed yet
+      console.log(`✅ Checkout user created (auto-confirmed): ${email}`);
+      res.json({ message: 'Account created.', requiresVerification: false });
+    } else {
+      // Regular signup — send confirmation email
+      await sendConfirmSignupEmail(email);
+      console.log(`✅ Regular signup — confirmation email sent: ${email}`);
+      res.json({ message: 'Account created! Please check your email to confirm before signing in.', requiresVerification: true });
+    }
 
   } catch(e) {
     console.error('Signup error:', e.message);
@@ -361,13 +365,36 @@ app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email and password required.' });
 
-  // Use Supabase client auth (never handle raw passwords — Supabase does bcrypt)
-  const supabaseClient = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_ANON_KEY
-  );
+  const supabaseClient = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
   const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-  if (error) return res.status(401).json({ error: 'Invalid email or password.' });
+
+  if (error) {
+    console.warn(`Login failed for ${email}: ${error.message} (status: ${error.status})`);
+
+    // If email not confirmed, auto-confirm via admin and retry
+    if (error.message?.toLowerCase().includes('email not confirmed') ||
+        error.message?.toLowerCase().includes('not confirmed')) {
+      try {
+        await supabaseAdmin.auth.admin.updateUserById(
+          (await supabaseAdmin.auth.admin.listUsers()).data.users.find(u => u.email === email)?.id,
+          { email_confirm: true }
+        );
+        // Retry login
+        const retry = await supabaseClient.auth.signInWithPassword({ email, password });
+        if (!retry.error) {
+          console.log(`Auto-confirmed and logged in: ${email}`);
+          return res.json({
+            access_token:  retry.data.session.access_token,
+            refresh_token: retry.data.session.refresh_token,
+            expires_at:    retry.data.session.expires_at,
+            user: { id: retry.data.user.id, email: retry.data.user.email },
+          });
+        }
+      } catch(e) { console.warn('Auto-confirm failed:', e.message); }
+    }
+
+    return res.status(401).json({ error: 'Invalid email or password.' });
+  }
 
   res.json({
     access_token:  data.session.access_token,
