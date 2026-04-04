@@ -408,7 +408,41 @@ app.post('/api/auth/login', async (req, res) => {
   });
 });
 
-// POST /api/auth/refresh
+// POST /api/auth/update-password  (called with recovery token from reset email)
+app.post('/api/auth/update-password', async (req, res) => {
+  const { password } = req.body;
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (!token) return res.status(401).json({ error: 'No token provided.' });
+  if (!password || password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters.' });
+
+  try {
+    // Use the recovery token to create a Supabase client session
+    const { createClient } = require('@supabase/supabase-js');
+    const supabaseClient = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY, {
+      global: { headers: { Authorization: `Bearer ${token}` } }
+    });
+
+    // Update the user's password
+    const { data, error } = await supabaseClient.auth.updateUser({ password });
+    if (error) {
+      console.warn('Update password error:', error.message);
+      return res.status(400).json({ error: error.message });
+    }
+
+    console.log(`✅ Password updated for user: ${data.user?.email}`);
+
+    // Return a fresh session so the user is logged in
+    res.json({
+      access_token:  token,
+      user: { id: data.user?.id, email: data.user?.email }
+    });
+  } catch(e) {
+    console.error('Update password error:', e.message);
+    res.status(500).json({ error: 'Failed to update password.' });
+  }
+});
+
+
 app.post('/api/auth/refresh', async (req, res) => {
   const { refresh_token } = req.body;
   if (!refresh_token) return res.status(400).json({ error: 'refresh_token required.' });
