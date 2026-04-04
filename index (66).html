@@ -1,0 +1,2869 @@
+<!DOCTYPE html>
+<!-- v2.6 -->
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0" />
+<title>Invest AI — Invest with AI</title>
+<meta name="description" content="Get a personalized AI-powered investment portfolio in minutes." />
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0a0c10;
+  --surface: #111318;
+  --surface2: #181b22;
+  --border: rgba(255,255,255,0.08);
+  --border2: rgba(255,255,255,0.14);
+  --text: #f0f2f7;
+  --muted: #8a8fa8;
+  --accent: #00e5a0;
+  --gold: #f5c542;
+  --blue: #4fa3f7;
+  --red: #ff6b6b;
+  --font-display: 'Syne', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+}
+
+html, body { background: var(--bg); color: var(--text); font-family: var(--font-body); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+
+.screen { display: none; min-height: 100vh; flex-direction: column; }
+.screen.active { display: flex; }
+
+/* ══ SCREEN 1 — INPUT ══ */
+#s-input { padding: 2rem 1.5rem 3rem; max-width: 600px; margin: 0 auto; width: 100%; }
+
+.brand { display: flex; align-items: center; gap: 10px; margin-bottom: 2.5rem; }
+.brand-icon { width: 40px; height: 40px; background: linear-gradient(135deg, #00e5a0, #4fa3f7); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.brand-name { font-family: var(--font-display); font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+.brand-tag { font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
+
+.badge { display: inline-block; border: 1px solid var(--accent); color: var(--accent); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; padding: 5px 14px; border-radius: 20px; margin-bottom: 1.2rem; }
+
+h1 { font-family: var(--font-display); font-size: 2rem; font-weight: 800; line-height: 1.15; margin-bottom: 0.8rem; }
+h1 span { color: var(--accent); }
+.subtitle { color: var(--muted); font-size: 0.92rem; line-height: 1.6; margin-bottom: 2rem; }
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+.home-int-btn { background: var(--surface); border: 1.5px solid var(--border); border-radius: 20px; padding: 7px 14px; font-size: 0.78rem; font-family: var(--font-body); color: var(--text); cursor: pointer; transition: all .15s; white-space: nowrap; }
+.home-int-btn:hover { border-color: var(--accent); color: var(--accent); }
+.home-int-btn.selected { border-color: var(--accent); background: rgba(0,229,160,0.1); color: var(--accent); font-weight: 600; }
+.full { grid-column: 1 / -1; }
+
+.field label { display: block; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.field input, .field textarea { width: 100%; background: var(--surface2); border: 1px solid var(--border2); border-radius: 10px; padding: 12px 14px; color: var(--text); font-family: var(--font-body); font-size: 0.9rem; outline: none; transition: border-color 0.2s; resize: none; }
+.field input::placeholder, .field textarea::placeholder { color: #454a5c; }
+.field input:focus, .field textarea:focus { border-color: var(--accent); }
+
+.prefix { position: relative; }
+.prefix > span { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 0.9rem; pointer-events: none; }
+.prefix input { padding-left: 24px; }
+
+.btn-main { width: 100%; margin-top: 1.5rem; background: var(--accent); color: #051a10; font-family: var(--font-display); font-size: 1rem; font-weight: 700; padding: 16px; border: none; border-radius: 12px; cursor: pointer; letter-spacing: 0.5px; transition: opacity 0.2s, transform 0.1s; }
+.btn-main:hover { opacity: 0.9; }
+.btn-main:active { transform: scale(0.98); }
+
+/* ══ SAVE INFO ROW ══ */
+.save-row { display: flex; align-items: center; justify-content: space-between; margin-top: 1.2rem; padding: 0.9rem 1rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; gap: 12px; }
+.save-row-left { display: flex; align-items: center; gap: 10px; }
+.save-toggle { position: relative; width: 42px; height: 24px; flex-shrink: 0; }
+.save-toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-track { position: absolute; inset: 0; background: var(--border2); border-radius: 24px; cursor: pointer; transition: background 0.2s; }
+.toggle-track::after { content: ''; position: absolute; left: 3px; top: 3px; width: 18px; height: 18px; background: var(--muted); border-radius: 50%; transition: transform 0.2s, background 0.2s; }
+.save-toggle input:checked + .toggle-track { background: rgba(0,229,160,0.25); }
+.save-toggle input:checked + .toggle-track::after { transform: translateX(18px); background: var(--accent); }
+.save-label { font-size: 0.85rem; color: var(--text); font-weight: 500; }
+.save-label span { display: block; font-size: 0.72rem; color: var(--muted); font-weight: 400; margin-top: 1px; }
+.save-clear { background: none; border: none; color: var(--muted); font-size: 0.75rem; cursor: pointer; font-family: var(--font-body); padding: 4px 8px; border-radius: 6px; transition: color 0.2s, background 0.2s; white-space: nowrap; display: none; }
+.save-clear:hover { color: var(--red); background: rgba(255,107,107,0.1); }
+.save-clear.visible { display: block; }
+
+/* ══ SAVED BANNER ══ */
+.saved-banner { display: none; align-items: center; gap: 10px; background: rgba(0,229,160,0.08); border: 1px solid rgba(0,229,160,0.2); border-radius: 12px; padding: 0.85rem 1rem; margin-bottom: 1.2rem; }
+.saved-banner.visible { display: flex; }
+.saved-banner-icon { font-size: 18px; flex-shrink: 0; }
+.saved-banner-text { flex: 1; }
+.saved-banner-text strong { display: block; font-size: 0.88rem; color: var(--accent); }
+.saved-banner-text span { font-size: 0.76rem; color: var(--muted); }
+.saved-banner-edit { background: none; border: 1px solid var(--border2); color: var(--muted); font-size: 0.75rem; padding: 5px 10px; border-radius: 8px; cursor: pointer; font-family: var(--font-body); transition: border-color 0.2s, color 0.2s; white-space: nowrap; }
+.saved-banner-edit:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ══ SCREEN 2 — PLAN ══ */
+#s-plan { padding: 0; max-width: 600px; margin: 0 auto; width: 100%; }
+
+.plan-header { padding: 2rem 1.5rem 1.5rem; border-bottom: 1px solid var(--border); }
+.back-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-family: var(--font-body); font-size: 0.85rem; display: flex; align-items: center; gap: 6px; margin-bottom: 1.2rem; padding: 0; }
+.back-btn:hover { color: var(--text); }
+.plan-header h2 { font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; }
+.plan-header p { color: var(--muted); font-size: 0.85rem; margin-top: 4px; }
+
+.steps-nav { display: flex; border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; }
+.steps-nav::-webkit-scrollbar { display: none; }
+.step-tab { flex: 1; padding: 14px 8px; text-align: center; font-size: 0.75rem; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; font-family: var(--font-body); background: none; border-top: none; border-left: none; border-right: none; min-width: 100px; }
+.step-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.step-tab:hover:not(.active) { color: var(--text); }
+
+.step-content { flex: 1; overflow-y: auto; }
+.step-panel { display: none; padding: 1.5rem; }
+.step-panel.active { display: block; }
+
+/* ══ STEP 1 ══ */
+.summary-bar { background: var(--surface2); border-radius: 12px; padding: 1rem 1.2rem; margin-bottom: 1.5rem; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.s-item { text-align: center; }
+.s-label { font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; display: block; margin-bottom: 3px; }
+.s-val { font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; }
+.s-val.green { color: var(--accent); }
+.s-val.red { color: var(--red); }
+
+.ai-plan-box { background: var(--surface); border: 1px solid var(--border2); border-radius: 14px; padding: 1.2rem; margin-bottom: 1rem; }
+.ai-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+.ai-dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; display: inline-block; }
+.ai-plan-box p { font-size: 0.88rem; color: var(--text); line-height: 1.65; }
+
+.tip-card { background: var(--surface2); border-left: 3px solid var(--blue); border-radius: 0 10px 10px 0; padding: 10px 14px; margin-bottom: 10px; font-size: 0.85rem; line-height: 1.5; color: var(--muted); }
+.tip-card strong { color: var(--text); display: block; margin-bottom: 2px; font-size: 0.88rem; }
+
+.loader { text-align: center; padding: 3rem 1rem; color: var(--muted); }
+.spin { width: 32px; height: 32px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 1rem; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ══ STEP 2 — COMPOUNDING ══ */
+.result-hero { text-align: center; background: linear-gradient(135deg, rgba(0,229,160,0.08), rgba(79,163,247,0.08)); border: 1px solid rgba(0,229,160,0.2); border-radius: 16px; padding: 1.5rem; margin-bottom: 1.2rem; }
+.rh-label { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.rh-val { font-family: var(--font-display); font-size: 2.2rem; font-weight: 800; color: var(--accent); }
+.rh-sub { font-size: 0.8rem; color: var(--muted); margin-top: 4px; }
+
+.calc-card { background: var(--surface2); border-radius: 14px; padding: 1.2rem; margin-bottom: 1.2rem; }
+.calc-card label { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; margin-bottom: 8px; }
+.calc-card label span { color: var(--accent); font-weight: 600; font-size: 13px; }
+input[type="range"] { width: 100%; accent-color: var(--accent); height: 4px; cursor: pointer; }
+
+.bar-chart { margin-top: 1rem; }
+.bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 0.78rem; }
+.bar-label { width: 40px; color: var(--muted); text-align: right; flex-shrink: 0; }
+.bar-track { flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 4px; transition: width 0.3s ease; }
+.bar-fill.contrib { background: var(--blue); }
+.bar-fill.growth { background: var(--accent); }
+.bar-amount { width: 70px; color: var(--text); font-size: 0.75rem; text-align: right; flex-shrink: 0; }
+
+.legend { display: flex; gap: 16px; margin-top: 10px; }
+.leg-item { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; color: var(--muted); }
+.leg-dot { width: 8px; height: 8px; border-radius: 2px; }
+
+.section-heading { font-family: var(--font-display); font-size: 1rem; margin: 1.5rem 0 0.4rem; font-weight: 700; }
+.section-sub { font-size: 0.78rem; color: var(--muted); margin-bottom: 1rem; }
+
+/* ══ OPTION CARDS — CLICKABLE ══ */
+.option-card {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 0.9rem 1rem;
+  margin-bottom: 10px; cursor: pointer;
+  transition: border-color 0.2s, transform 0.15s, background 0.2s;
+  display: flex; align-items: center; gap: 12px;
+}
+.option-card:hover { border-color: var(--accent); background: rgba(0,229,160,0.04); transform: translateY(-1px); }
+.option-card:active { transform: scale(0.99); }
+
+.option-icon { width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+.icon-green { background: rgba(0,229,160,0.12); }
+.icon-blue  { background: rgba(79,163,247,0.12); }
+.icon-gold  { background: rgba(245,197,66,0.12); }
+.icon-red   { background: rgba(255,107,107,0.12); }
+
+.option-body { flex: 1; min-width: 0; }
+.oc-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; gap: 8px; }
+.oc-name { font-weight: 600; font-size: 0.88rem; }
+.oc-badge { font-size: 10px; padding: 3px 8px; border-radius: 6px; flex-shrink: 0; }
+.badge-low  { background: rgba(0,229,160,0.15); color: var(--accent); }
+.badge-med  { background: rgba(245,197,66,0.15); color: var(--gold); }
+.badge-high { background: rgba(255,107,107,0.15); color: var(--red); }
+.oc-tagline { font-size: 0.76rem; color: var(--muted); line-height: 1.4; }
+
+.oc-arrow { color: var(--muted); font-size: 1.1rem; flex-shrink: 0; transition: color 0.2s, transform 0.2s; }
+.option-card:hover .oc-arrow { color: var(--accent); transform: translateX(3px); }
+
+/* ══ SCREEN 3 — DETAIL ══ */
+#s-detail { padding: 0; max-width: 600px; margin: 0 auto; width: 100%; }
+
+.detail-header { padding: 1.5rem 1.5rem 1.2rem; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg); z-index: 10; }
+.detail-back { background: none; border: none; color: var(--muted); cursor: pointer; font-family: var(--font-body); font-size: 0.85rem; display: flex; align-items: center; gap: 6px; margin-bottom: 1rem; padding: 0; }
+.detail-back:hover { color: var(--text); }
+
+.detail-hero { display: flex; align-items: center; gap: 14px; }
+.detail-icon { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0; }
+.detail-hero-text h2 { font-family: var(--font-display); font-size: 1.3rem; font-weight: 800; line-height: 1.2; }
+.detail-hero-text .d-badge { display: inline-block; font-size: 10px; padding: 3px 10px; border-radius: 6px; margin-top: 5px; }
+
+.detail-body { padding: 1.5rem; }
+
+.detail-eli5 { background: linear-gradient(135deg, rgba(0,229,160,0.06), rgba(79,163,247,0.06)); border: 1px solid rgba(0,229,160,0.15); border-radius: 14px; padding: 1.2rem; margin-bottom: 1.2rem; }
+.eli5-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+.detail-eli5 p { font-size: 0.9rem; line-height: 1.7; color: var(--text); }
+
+.detail-analogy { background: var(--surface2); border-radius: 12px; padding: 1rem 1.2rem; margin-bottom: 1.2rem; border-left: 3px solid var(--gold); }
+.analogy-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold); margin-bottom: 6px; }
+.detail-analogy p { font-size: 0.87rem; line-height: 1.65; color: var(--muted); }
+.detail-analogy p em { color: var(--text); font-style: normal; font-weight: 500; }
+
+.detail-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1.2rem; }
+.stat-card { background: var(--surface2); border-radius: 10px; padding: 0.9rem; text-align: center; }
+.stat-label { font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; display: block; margin-bottom: 4px; }
+.stat-val { font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; }
+.stat-val.green { color: var(--accent); }
+.stat-val.gold  { color: var(--gold); }
+.stat-val.blue  { color: var(--blue); }
+.stat-val.red   { color: var(--red); }
+
+.pros-cons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1.5rem; }
+.pro-box, .con-box { background: var(--surface2); border-radius: 10px; padding: 0.9rem; }
+.pro-box { border-top: 2px solid var(--accent); }
+.con-box { border-top: 2px solid var(--red); }
+.pc-label { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; font-weight: 600; }
+.pro-box .pc-label { color: var(--accent); }
+.con-box .pc-label { color: var(--red); }
+.pc-item { font-size: 0.78rem; color: var(--muted); line-height: 1.45; margin-bottom: 6px; display: flex; gap: 6px; }
+.pro-box .pc-item::before { content: '✓'; color: var(--accent); flex-shrink: 0; }
+.con-box .pc-item::before { content: '✗'; color: var(--red); flex-shrink: 0; }
+
+.beginner-steps { margin-bottom: 1.5rem; }
+.bs-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--blue); margin-bottom: 10px; }
+.bs-step { display: flex; gap: 12px; margin-bottom: 12px; align-items: flex-start; }
+.bs-num { width: 26px; height: 26px; background: rgba(79,163,247,0.15); color: var(--blue); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+.bs-text strong { display: block; font-size: 0.88rem; color: var(--text); margin-bottom: 2px; }
+.bs-text span { font-size: 0.8rem; color: var(--muted); line-height: 1.4; }
+
+.btn-back-calc { width: 100%; background: var(--surface2); color: var(--text); border: 1px solid var(--border2); font-family: var(--font-display); font-size: 0.95rem; font-weight: 700; padding: 15px; border-radius: 12px; cursor: pointer; transition: border-color 0.2s, background 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.btn-back-calc:hover { border-color: var(--accent); background: rgba(0,229,160,0.06); color: var(--accent); }
+
+/* ══ STEP 3 — PAYWALL ══ */
+.paywall-wrapper { position: relative; min-height: 520px; }
+.paywall-preview { filter: blur(3px); pointer-events: none; user-select: none; opacity: 0.4; }
+.paywall-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.5rem; text-align: center; }
+.lock-icon { width: 56px; height: 56px; background: var(--surface2); border: 1px solid var(--border2); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 26px; margin: 0 auto 1rem; }
+.paywall-overlay h3 { font-family: var(--font-display); font-size: 1.3rem; font-weight: 800; margin-bottom: 8px; }
+.paywall-overlay > p { color: var(--muted); font-size: 0.85rem; line-height: 1.6; margin-bottom: 1.5rem; }
+.perks { margin: 0 0 1.2rem; text-align: left; width: 100%; }
+.perk { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; font-size: 0.85rem; }
+.perk-icon { color: var(--accent); flex-shrink: 0; margin-top: 1px; }
+.perk-text { color: var(--muted); line-height: 1.4; }
+.perk-text strong { color: var(--text); }
+.btn-unlock { background: linear-gradient(135deg, var(--accent), var(--blue)); color: #051a10; font-family: var(--font-display); font-weight: 700; font-size: 0.95rem; padding: 14px 28px; border: none; border-radius: 12px; cursor: pointer; width: 100%; transition: opacity 0.2s, transform 0.1s; }
+.btn-unlock:hover { opacity: 0.9; }
+.btn-unlock:active { transform: scale(0.98); }
+.price-note { font-size: 0.78rem; color: var(--muted); margin-top: 10px; }
+.stock-mock { background: var(--surface2); border-radius: 12px; padding: 1rem; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+.sm-left .sm-ticker { font-family: var(--font-display); font-weight: 700; font-size: 1rem; }
+.sm-left .sm-name { font-size: 0.75rem; color: var(--muted); }
+.sm-right .sm-chg { font-size: 0.9rem; font-weight: 600; color: var(--accent); text-align: right; }
+.sm-right .sm-fit { font-size: 0.7rem; color: var(--muted); text-align: right; }
+
+/* ══ RANGE FIELD ══ */
+.field-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.field-header label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 0; }
+.range-toggle-btn { background: none; border: 1px solid var(--border2); color: var(--muted); font-size: 10px; padding: 3px 8px; border-radius: 6px; cursor: pointer; font-family: var(--font-body); letter-spacing: 0.5px; transition: border-color 0.2s, color 0.2s; white-space: nowrap; }
+.range-toggle-btn:hover { border-color: var(--accent); color: var(--accent); }
+.range-toggle-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(0,229,160,0.08); }
+
+.exact-input { display: block; }
+.range-input  { display: none; }
+.field.is-range .exact-input { display: none; }
+.field.is-range .range-input  { display: block; }
+
+.range-wrap { display: flex; gap: 6px; align-items: center; }
+.range-wrap .prefix { flex: 1; }
+.range-sep { color: var(--muted); font-size: 0.8rem; flex-shrink: 0; }
+
+.range-hint { font-size: 0.72rem; color: var(--accent); margin-top: 5px; font-style: italic; }
+
+/* ── GLOBAL MOBILE FIX ── */
+html, body { overflow-x: hidden; }
+* { box-sizing: border-box; }
+
+@media (max-width: 480px) {
+  #s-input { padding: 1.5rem 1rem 2.5rem; }
+  .grid2 { grid-template-columns: 1fr; }
+  .full { grid-column: 1; }
+  .rh-val { font-size: 1.6rem; }
+  .pros-cons { grid-template-columns: 1fr; }
+
+  /* Switch Syne → system font on mobile to prevent width overflow */
+  :root { --font-display: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+
+  /* Tighten all headings */
+  h1 { font-size: 1.4rem !important; line-height: 1.25 !important; letter-spacing: -0.3px !important; }
+  h2 { font-size: 1.15rem !important; }
+  .proof-h { font-size: 1.3rem !important; line-height: 1.25 !important; }
+  .plan-header h2 { font-size: 1.2rem !important; }
+  .paywall-overlay h3 { font-size: 1.1rem !important; }
+
+  /* Prevent any element from exceeding screen width */
+  .screen, #s-input, #s-plan, #s-proof1, #s-proof2, #s-interests, #s-detail {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+    overflow-x: hidden;
+  }
+  .paywall-wrapper { min-height: auto; }
+  .paywall-overlay { position: relative; padding: 1.2rem 1rem; }
+  .theme-cards { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
+  .theme-card { padding: 0.9rem 0.7rem !important; }
+  .tc-ret { font-size: 1.2rem !important; }
+  .compare-table { font-size: 0.75rem; }
+  .compare-table th, .compare-table td { padding: 6px 8px !important; }
+}
+
+/* ── NEXT BUTTON ── */
+.btn-next { width:100%; padding:16px; background:var(--accent); color:#051a10; font-family:var(--font-display); font-weight:700; font-size:1rem; border:none; border-radius:12px; cursor:pointer; margin-top:1.5rem; transition:opacity .15s,transform .1s; letter-spacing:.3px; }
+.btn-next:hover { opacity:.9; }
+.btn-next:active { transform:scale(.98); }
+
+/* ── PROGRESS BAR ── */
+.progress-bar { display:flex; align-items:center; gap:6px; padding:1rem 1.5rem .5rem; max-width:600px; margin:0 auto; }
+.prog-step { flex:1; height:4px; border-radius:4px; background:var(--border); transition:background .3s; }
+.prog-step.done { background:var(--accent); }
+.prog-step.active { background:rgba(0,229,160,.4); }
+.prog-label { font-size:10px; color:var(--muted); letter-spacing:.5px; }
+
+/* ── PROOF SCREENS ── */
+#s-proof1, #s-proof2 { padding:2rem 1.5rem 4rem; max-width:600px; margin:0 auto; width:100%; }
+.proof-back { background:none; border:none; color:var(--muted); font-size:.82rem; cursor:pointer; margin-bottom:1.5rem; display:flex; align-items:center; gap:5px; }
+.proof-back:hover { color:var(--text); }
+.proof-badge { display:inline-block; border:1px solid var(--accent); color:var(--accent); font-size:9px; letter-spacing:2px; text-transform:uppercase; padding:4px 14px; border-radius:20px; margin-bottom:1rem; }
+.proof-h { font-family:var(--font-display); font-size:1.6rem; font-weight:800; line-height:1.2; margin-bottom:.6rem; }
+.proof-h span { color:var(--accent); }
+.proof-sub { font-size:.85rem; color:var(--muted); line-height:1.6; margin-bottom:1.8rem; }
+
+/* comparison table */
+.compare-table { width:100%; border-collapse:collapse; margin-bottom:1.5rem; }
+.compare-table th { font-size:.72rem; color:var(--muted); letter-spacing:1px; text-transform:uppercase; padding:8px 12px; text-align:left; border-bottom:1px solid var(--border); }
+.compare-table th:not(:first-child) { text-align:right; }
+.compare-table td { padding:10px 12px; font-size:.85rem; border-bottom:1px solid var(--border); }
+.compare-table td:not(:first-child) { text-align:right; font-weight:700; }
+.compare-table tr:last-child td { border-bottom:none; }
+.compare-table .ai-row td { background:rgba(0,229,160,.06); }
+.compare-table .ai-row td:first-child { color:var(--accent); font-weight:700; }
+.ret-green { color:var(--accent); }
+.ret-gold  { color:var(--gold); }
+.ret-muted { color:var(--muted); }
+
+/* theme cards */
+.theme-cards { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:1.5rem; }
+.theme-card { background:var(--surface2); border:1px solid var(--border); border-radius:14px; padding:1rem; position:relative; overflow:hidden; }
+.theme-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+.tc-ai::before   { background:linear-gradient(90deg,#00e5a0,#4fa3f7); }
+.tc-ev::before   { background:linear-gradient(90deg,#4fa3f7,#a78bfa); }
+.tc-glp::before  { background:linear-gradient(90deg,#f5c542,#00e5a0); }
+.tc-lux::before  { background:linear-gradient(90deg,#f5c542,#ff6b6b); }
+.tc-icon { font-size:1.4rem; margin-bottom:.5rem; }
+.tc-name { font-size:.78rem; font-weight:700; margin-bottom:3px; }
+.tc-period { font-size:.65rem; color:var(--muted); margin-bottom:.5rem; }
+.tc-ret { font-family:var(--font-display); font-size:1.4rem; font-weight:800; color:var(--accent); }
+.tc-vs { font-size:.65rem; color:var(--muted); margin-top:2px; }
+.tc-stocks { font-size:.65rem; color:var(--muted); margin-top:4px; border-top:1px solid var(--border); padding-top:6px; line-height:1.5; }
+
+/* social proof */
+.social-proof { background:var(--surface2); border-radius:14px; padding:1.2rem; margin-bottom:1.5rem; }
+.sp-row { display:flex; align-items:center; gap:12px; padding:8px 0; border-bottom:1px solid var(--border); }
+.sp-row:last-child { border-bottom:none; padding-bottom:0; }
+.sp-avatar { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,#00e5a0,#4fa3f7); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; color:#051a10; flex-shrink:0; }
+.sp-text { flex:1; font-size:.78rem; line-height:1.45; }
+.sp-text strong { color:var(--text); }
+.sp-text span { color:var(--muted); }
+.sp-ret { font-family:var(--font-display); font-size:.95rem; font-weight:800; color:var(--accent); flex-shrink:0; }
+
+/* stat pills row */
+.stat-pills { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:1.5rem; }
+.stat-pill { background:var(--surface2); border-radius:10px; padding:.8rem; text-align:center; }
+.sp-num { font-family:var(--font-display); font-size:1.3rem; font-weight:800; color:var(--accent); display:block; }
+.sp-lbl { font-size:.65rem; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; margin-top:2px; display:block; }
+
+/* disclaimer strip */
+.disclaimer-strip { background:rgba(245,197,66,.06); border:1px solid rgba(245,197,66,.15); border-radius:9px; padding:.7rem 1rem; font-size:.68rem; color:var(--muted); line-height:1.55; margin-bottom:1rem; }
+.disclaimer-strip strong { color:var(--gold); }
+
+.auth-modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:1000;display:none;align-items:center;justify-content:center;padding:1rem}
+#auth-modal.visible{display:flex}
+.auth-box{background:#111318;border:1px solid rgba(255,255,255,.15);border-radius:18px;padding:2rem;width:100%;max-width:400px;position:relative}
+.auth-close{position:absolute;top:1rem;right:1.1rem;background:none;border:none;color:#8a8fa8;font-size:1.4rem;cursor:pointer;line-height:1}
+.auth-close:hover{color:#f0f2f7}
+.auth-logo{text-align:center;margin-bottom:1.3rem}
+.auth-logo-icon{width:42px;height:42px;background:linear-gradient(135deg,#00e5a0,#4fa3f7);border-radius:10px;display:inline-flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:6px}
+.auth-logo h2{font-family:var(--font-display);font-size:1.1rem;font-weight:800}
+.auth-logo p{font-size:0.75rem;color:#8a8fa8;margin-top:2px}
+.auth-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:#181b22;border-radius:10px;padding:4px;margin-bottom:1.3rem}
+.auth-tab{padding:8px;text-align:center;font-size:0.82rem;font-weight:600;color:#8a8fa8;cursor:pointer;border-radius:7px;transition:all .15s;border:none;background:none}
+.auth-tab.active{background:#111318;color:#f0f2f7}
+.auth-field{margin-bottom:.9rem}
+.auth-field label{display:block;font-size:0.72rem;color:#8a8fa8;margin-bottom:4px;letter-spacing:.3px;text-transform:uppercase}
+.auth-field input{width:100%;background:#181b22;border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:11px 13px;color:#f0f2f7;font-size:0.9rem;outline:none;transition:border-color .15s;font-family:inherit}
+.auth-field input:focus{border-color:#00e5a0}
+.auth-btn-primary{width:100%;padding:13px;background:#00e5a0;color:#051a10;font-family:var(--font-display);font-weight:700;font-size:0.95rem;border:none;border-radius:10px;cursor:pointer;transition:opacity .15s;margin-top:.3rem}
+.auth-btn-primary:hover{opacity:.9}
+.auth-btn-primary:disabled{opacity:.45;cursor:not-allowed}
+.auth-divider{text-align:center;color:#8a8fa8;font-size:0.72rem;margin:.9rem 0;position:relative}
+.auth-divider::before{content:'';position:absolute;top:50%;left:0;right:0;height:1px;background:rgba(255,255,255,.08)}
+.auth-divider span{background:#111318;padding:0 10px;position:relative}
+.auth-social{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:.5rem}
+.auth-social-btn{padding:10px;background:#181b22;border:1px solid rgba(255,255,255,.12);border-radius:9px;color:#f0f2f7;font-size:0.8rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .15s}
+.auth-social-btn:hover{border-color:rgba(255,255,255,.25)}
+.auth-switch{text-align:center;font-size:0.76rem;color:#8a8fa8;margin-top:1.1rem}
+.auth-switch a{color:#00e5a0;cursor:pointer;text-decoration:none;font-weight:600}
+.auth-error{background:rgba(255,107,107,.1);border:1px solid rgba(255,107,107,.25);color:#ff6b6b;font-size:0.76rem;padding:8px 11px;border-radius:8px;margin-bottom:.8rem;display:none;line-height:1.5}
+.auth-success{background:rgba(0,229,160,.1);border:1px solid rgba(0,229,160,.25);color:#00e5a0;font-size:0.76rem;padding:8px 11px;border-radius:8px;margin-bottom:.8rem;display:none;line-height:1.5}
+/* Nav auth */
+#auth-buttons{display:flex;align-items:center;gap:8px}
+.btn-nav-login{background:none;border:1px solid rgba(255,255,255,.15);color:#f0f2f7;padding:6px 14px;border-radius:8px;font-size:0.8rem;font-weight:600;cursor:pointer;transition:all .15s}
+.btn-nav-login:hover{border-color:#00e5a0;color:#00e5a0}
+.btn-nav-signup{background:#00e5a0;border:none;color:#051a10;padding:6px 14px;border-radius:8px;font-size:0.8rem;font-weight:700;cursor:pointer}
+.btn-nav-signup:hover{opacity:.88}
+#user-menu{display:none;align-items:center;gap:8px}
+.user-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#00e5a0,#4fa3f7);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#051a10;flex-shrink:0}
+#user-email-display{font-size:0.75rem;color:#8a8fa8;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn-nav-logout{background:none;border:1px solid rgba(255,255,255,.1);color:#8a8fa8;padding:5px 10px;border-radius:7px;font-size:0.72rem;cursor:pointer}
+.btn-nav-logout:hover{border-color:#ff6b6b;color:#ff6b6b}
+</style>
+</head>
+<body>
+
+<!-- ══ AUTH MODAL ══ -->
+<div id="auth-modal" class="auth-modal-backdrop" onclick="if(event.target===this)Auth.hideModal()">
+  <div class="auth-box">
+    <button class="auth-close" onclick="Auth.hideModal()">×</button>
+    <div class="auth-logo">
+      <div class="auth-logo-icon">📈</div>
+      <h2>Invest AI</h2>
+      <p>Your AI-powered investment companion</p>
+    </div>
+
+    <!-- Tabs — Sign In only (accounts created at checkout) -->
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-tab="login" onclick="Auth.switchTab('login')">Sign In</button>
+    </div>
+
+    <!-- LOGIN PANEL -->
+    <div class="auth-panel" data-panel="login">
+      <div class="auth-error"></div>
+      <div class="auth-success"></div>
+      <form onsubmit="Auth.handleLogin();return false;" autocomplete="on">
+      <div class="auth-field">
+        <label>Email address</label>
+        <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email" />
+      </div>
+      <div class="auth-field">
+        <label>Password</label>
+        <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" />
+      </div>
+      <button id="login-btn" class="auth-btn-primary" type="submit">Sign In →</button>
+      </form>
+      <div class="auth-switch"><a onclick="Auth.switchTab('forgot')">Forgot your password?</a></div>
+      <div class="auth-divider"><span>or continue with</span></div>
+      <div class="auth-social">
+        <button class="auth-social-btn" onclick="signInWithApple()">
+          <span>🍎</span> Apple
+        </button>
+        <button class="auth-social-btn" onclick="signInWithGoogle()">
+          <span>🔵</span> Google
+        </button>
+      </div>
+      <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.06);font-size:0.75rem;color:#8a8fa8;text-align:center">
+        New user? <a href="https://atharv248-stock.github.io/Invest-AI/checkout.html" style="color:var(--accent)">Subscribe at checkout →</a>
+      </div>
+    </div>
+
+    <!-- FORGOT PASSWORD PANEL -->
+    <div class="auth-panel" data-panel="forgot" style="display:none">
+      <div class="auth-error"></div>
+      <div class="auth-success"></div>
+      <div style="font-size:0.82rem;color:#8a8fa8;margin-bottom:1rem;line-height:1.55">
+        Enter your email and we'll send you a link to reset your password.
+      </div>
+      <div class="auth-field">
+        <label>Email address</label>
+        <input type="email" id="forgot-email" placeholder="you@example.com" />
+      </div>
+      <button id="forgot-btn" class="auth-btn-primary" onclick="Auth.handleForgotPassword()">Send Reset Link →</button>
+      <div class="auth-switch"><a onclick="Auth.switchTab('login')">← Back to sign in</a></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ SCREEN 1: INPUT ══ -->
+<div id="s-input" class="screen active">
+  <div class="brand" style="display:flex;align-items:center;justify-content:space-between">
+    <div style="display:flex;align-items:center;gap:10px;cursor:pointer" onclick="showScreen('s-input');window.scrollTo(0,0)">
+      <div class="brand-icon">📈</div>
+      <div>
+        <div class="brand-name">Invest AI</div>
+        <div class="brand-tag">Powered by Claude</div>
+      </div>
+    </div>
+    <!-- Auth nav -->
+    <div id="auth-buttons">
+      <button class="btn-nav-login"  onclick="Auth.showModal('login')">Sign In</button>
+
+    </div>
+    <div id="user-menu">
+      <div class="user-avatar" id="user-avatar-initials">U</div>
+      <span id="user-email-display"></span>
+      <button class="btn-nav-logout" onclick="Auth.logout()">Log out</button>
+    </div>
+  </div>
+  <div class="badge">INVEST WITH AI</div>
+  <h1>Your <span>AI-Powered</span><br>Investment Portfolio</h1>
+  <p class="subtitle">Enter your financial details. Our AI generates a personalized plan in seconds — no jargon, just clarity.</p>
+
+  <!-- Returning subscribed user banner — shown on login -->
+  <div id="returning-user-banner" style="display:none;margin-bottom:1.5rem;background:linear-gradient(135deg,rgba(0,229,160,.12),rgba(79,163,247,.12));border:1px solid rgba(0,229,160,.3);border-radius:16px;padding:1.2rem 1.4rem;text-align:center">
+    <div style="font-size:1.5rem;margin-bottom:4px">👋</div>
+    <div style="font-family:var(--font-display);font-size:1rem;font-weight:800;margin-bottom:4px">Welcome back!</div>
+    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem">Your Pro portfolio is ready. Jump straight in or update your details below.</div>
+    <button onclick="if(typeof goToPortfolio==='function'){goToPortfolio(true)}else{window.location.href='https://atharv248-stock.github.io/Invest-AI/success.html?skip=1'}" style="width:100%;background:linear-gradient(135deg,#00e5a0,#4fa3f7);color:#051a10;font-family:var(--font-display);font-size:0.95rem;font-weight:800;padding:14px;border:none;border-radius:12px;cursor:pointer;letter-spacing:0.3px">
+      📈 View My AI Portfolio →
+    </button>
+  </div>
+
+  <div class="grid2">
+    <div class="field" id="field-income">
+      <div class="field-header">
+        <label>Monthly Income</label>
+        <button class="range-toggle-btn" onclick="toggleRange('income', this)">± Not sure? Use range</button>
+      </div>
+      <div class="exact-input">
+        <div class="prefix"><span>$</span><input type="number" id="income" placeholder="e.g. 5000" min="0" /></div>
+      </div>
+      <div class="range-input">
+        <div class="range-wrap">
+          <div class="prefix"><span>$</span><input type="number" id="income-min" placeholder="Min e.g. 4000" min="0" oninput="updateRangeHint('income')" /></div>
+          <span class="range-sep">to</span>
+          <div class="prefix"><span>$</span><input type="number" id="income-max" placeholder="Max e.g. 6000" min="0" oninput="updateRangeHint('income')" /></div>
+        </div>
+        <div class="range-hint" id="income-hint"></div>
+      </div>
+    </div>
+    <div class="field" id="field-expenses">
+      <div class="field-header">
+        <label>Monthly Expenses</label>
+        <button class="range-toggle-btn" onclick="toggleRange('expenses', this)">± Not sure? Use range</button>
+      </div>
+      <div class="exact-input">
+        <div class="prefix"><span>$</span><input type="number" id="expenses" placeholder="e.g. 3200" min="0" /></div>
+      </div>
+      <div class="range-input">
+        <div class="range-wrap">
+          <div class="prefix"><span>$</span><input type="number" id="expenses-min" placeholder="Min e.g. 2500" min="0" oninput="updateRangeHint('expenses')" /></div>
+          <span class="range-sep">to</span>
+          <div class="prefix"><span>$</span><input type="number" id="expenses-max" placeholder="Max e.g. 3800" min="0" oninput="updateRangeHint('expenses')" /></div>
+        </div>
+        <div class="range-hint" id="expenses-hint"></div>
+      </div>
+    </div>
+    <div class="field" id="field-savings">
+      <div class="field-header">
+        <label>Current Savings</label>
+        <button class="range-toggle-btn" onclick="toggleRange('savings', this)">± Not sure? Use range</button>
+      </div>
+      <div class="exact-input">
+        <div class="prefix"><span>$</span><input type="number" id="savings" placeholder="e.g. 8000" min="0" /></div>
+      </div>
+      <div class="range-input">
+        <div class="range-wrap">
+          <div class="prefix"><span>$</span><input type="number" id="savings-min" placeholder="Min e.g. 6000" min="0" oninput="updateRangeHint('savings')" /></div>
+          <span class="range-sep">to</span>
+          <div class="prefix"><span>$</span><input type="number" id="savings-max" placeholder="Max e.g. 10000" min="0" oninput="updateRangeHint('savings')" /></div>
+        </div>
+        <div class="range-hint" id="savings-hint"></div>
+      </div>
+    </div>
+    <div class="field" id="field-age">
+      <label>Your Age
+        <button type="button" class="range-toggle-btn" id="age-range-btn" onclick="toggleAgeRange(this)" style="margin-left:8px">± Use age range</button>
+      </label>
+      <div id="age-exact">
+        <input type="number" id="age" placeholder="e.g. 28" min="16" max="99" />
+      </div>
+      <div id="age-range-inputs" style="display:none">
+        <div class="range-wrap">
+          <input type="number" id="age-min" placeholder="Min e.g. 25" min="16" max="99" style="background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:12px 14px;color:var(--text);font-size:.9rem;outline:none;width:100%" />
+          <span class="range-sep">to</span>
+          <input type="number" id="age-max" placeholder="Max e.g. 35" min="16" max="99" style="background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:12px 14px;color:var(--text);font-size:.9rem;outline:none;width:100%" />
+        </div>
+      </div>
+      <div id="age-error" style="color:var(--red);font-size:0.75rem;margin-top:4px;display:none">Please enter your age</div>
+    </div>
+    <div class="field full">
+      <label>Immediate Goal (1–2 years)</label>
+      <textarea id="goal1" rows="2" placeholder="e.g. Build a $10K emergency fund and pay off my credit card debt"></textarea>
+    </div>
+    <div class="field full">
+      <label>Long-Term Goal (10+ years)</label>
+      <textarea id="goal2" rows="2" placeholder="e.g. Retire by 50 with $1M portfolio and own a rental property"></textarea>
+    </div>
+  </div>
+  <!-- Returning user banner (shown if saved data exists) -->
+  <div class="saved-banner" id="saved-banner">
+    <div class="saved-banner-icon">👋</div>
+    <div class="saved-banner-text">
+      <strong>Welcome back!</strong>
+      <span id="saved-banner-sub">Your info has been filled in automatically.</span>
+    </div>
+    <button class="saved-banner-edit" onclick="clearSaved()">Clear</button>
+  </div>
+
+  <!-- form error / prompt -->
+  <div id="form-error" style="display:none;background:rgba(255,107,107,.1);border:1px solid rgba(255,107,107,.3);border-radius:10px;padding:10px 14px;margin-top:1rem;font-size:.82rem;color:var(--red);line-height:1.5"></div>
+  <div id="form-prompt" style="display:none;background:rgba(0,229,160,.08);border:1px solid rgba(0,229,160,.25);border-radius:10px;padding:12px 16px;margin-top:1rem;font-size:.84rem;color:var(--accent);line-height:1.6"></div>
+
+  <button class="btn-main" style="margin-top:1rem" onclick="if(typeof generatePlan==='function'){generatePlan()}else{window.generatePlan&&window.generatePlan()}">Generate My Roadmap →</button>
+
+  <!-- Save toggle row -->
+  <div class="save-row">
+    <div class="save-row-left">
+      <label class="save-toggle">
+        <input type="checkbox" id="save-toggle" onchange="onToggleSave(this)" />
+        <span class="toggle-track"></span>
+      </label>
+      <div class="save-label">
+        Save my info on this device
+        <span>Auto-fills next time you visit — stored only on your browser</span>
+      </div>
+    </div>
+    <button class="save-clear" id="save-clear-btn" onclick="clearSaved()">Clear saved</button>
+  </div>
+</div>
+
+<!-- ══ SCREEN 2: PLAN ══ -->
+<div id="s-plan" class="screen">
+  <div class="plan-header">
+    <button class="back-btn" onclick="goBack()">← Back</button>
+    <h2>Your Investment Roadmap</h2>
+    <p id="plan-subtitle">Personalized 3-step plan</p>
+  </div>
+
+  <!-- Progress bar (replaces clickable tabs) -->
+  <div class="progress-bar" id="plan-progress">
+    <div class="prog-step active" id="prog-0"></div>
+    <div class="prog-step" id="prog-1"></div>
+    <div class="prog-step" id="prog-2"></div>
+    <span class="prog-label" id="prog-label">Step 1 of 3</span>
+  </div>
+
+  <div class="step-content">
+
+    <!-- STEP 1 -->
+    <div class="step-panel active" id="panel-0">
+      <div class="summary-bar">
+        <div class="s-item"><span class="s-label">Income</span><span class="s-val" id="disp-income">—</span></div>
+        <div class="s-item"><span class="s-label">Expenses</span><span class="s-val red" id="disp-expenses">—</span></div>
+        <div class="s-item"><span class="s-label">Monthly Free</span><span class="s-val green" id="disp-free">—</span></div>
+      </div>
+      <div id="ai-loading" class="loader"><div class="spin"></div><p>Analyzing your finances…</p></div>
+      <div id="ai-content" style="display:none">
+        <div class="ai-plan-box">
+          <div class="ai-label"><span class="ai-dot"></span> AI ANALYSIS</div>
+          <p id="ai-text"></p>
+        </div>
+        <div id="tips-container"></div>
+        <button class="btn-next" onclick="goToStep(1)">Next: See Your Compounding Potential →</button>
+      </div>
+    </div>
+
+    <!-- STEP 2 — CALCULATOR + CLICKABLE OPTIONS -->
+    <div class="step-panel" id="panel-1">
+      <div class="result-hero">
+        <div class="rh-label">PROJECTED PORTFOLIO VALUE</div>
+        <div class="rh-val" id="future-val">$0</div>
+        <div class="rh-sub" id="future-sub">in 20 years at 7% annual return</div>
+      </div>
+      <div class="calc-card">
+        <label>Monthly Contribution <span id="contrib-out">$500</span></label>
+        <input type="range" id="contrib-slider" min="50" max="5000" step="50" value="500" oninput="updateCalc()" />
+      </div>
+      <div class="calc-card">
+        <label>Annual Return Rate <span id="rate-out">7%</span></label>
+        <input type="range" id="rate-slider" min="3" max="15" step="0.5" value="7" oninput="updateCalc()" />
+      </div>
+      <div class="calc-card">
+        <label>Time Horizon (years) <span id="years-out">20</span></label>
+        <input type="range" id="years-slider" min="1" max="40" step="1" value="20" oninput="updateCalc()" />
+      </div>
+      <div class="bar-chart" id="bar-chart"></div>
+      <div class="legend">
+        <div class="leg-item"><div class="leg-dot" style="background:var(--blue)"></div>Contributions</div>
+        <div class="leg-item"><div class="leg-dot" style="background:var(--accent)"></div>Investment Growth</div>
+      </div>
+
+      <h3 class="section-heading">Investing Options</h3>
+      <p class="section-sub">New to investing? Tap any option for a beginner-friendly explanation →</p>
+
+      <div class="invest-options">
+        <div class="option-card" onclick="openDetail('index')">
+          <div class="option-icon icon-green">📊</div>
+          <div class="option-body">
+            <div class="oc-top"><span class="oc-name">Index Funds (S&amp;P 500)</span><span class="oc-badge badge-low">Low Risk</span></div>
+            <div class="oc-tagline">Own a tiny piece of 500 big companies at once</div>
+          </div>
+          <span class="oc-arrow">›</span>
+        </div>
+        <div class="option-card" onclick="openDetail('etf')">
+          <div class="option-icon icon-blue">🧺</div>
+          <div class="option-body">
+            <div class="oc-top"><span class="oc-name">ETFs (VOO, QQQ, VTI)</span><span class="oc-badge badge-low">Low Risk</span></div>
+            <div class="oc-tagline">Like index funds, but trade any time like a stock</div>
+          </div>
+          <span class="oc-arrow">›</span>
+        </div>
+        <div class="option-card" onclick="openDetail('dividend')">
+          <div class="option-icon icon-gold">💰</div>
+          <div class="option-body">
+            <div class="oc-top"><span class="oc-name">Dividend Stocks</span><span class="oc-badge badge-med">Medium Risk</span></div>
+            <div class="oc-tagline">Companies that pay you cash just for owning their stock</div>
+          </div>
+          <span class="oc-arrow">›</span>
+        </div>
+        <div class="option-card" onclick="openDetail('growth')">
+          <div class="option-icon icon-red">🚀</div>
+          <div class="option-body">
+            <div class="oc-top"><span class="oc-name">Growth Stocks / Crypto</span><span class="oc-badge badge-high">High Risk</span></div>
+            <div class="oc-tagline">High reward but also high risk — can swing either way fast</div>
+          </div>
+          <span class="oc-arrow">›</span>
+        </div>
+      </div>
+      <button class="btn-next" id="btn-after-compounding" onclick="goToNextAfterCompounding()">See Why AI Portfolios Outperform →</button>
+    </div>
+
+    <!-- STEP 3 — PAYWALL -->
+    <div class="step-panel" id="panel-2">
+      <div class="paywall-wrapper">
+        <div class="paywall-preview">
+          <div class="stock-mock"><div class="sm-left"><div class="sm-ticker">NVDA</div><div class="sm-name">Nvidia Corp</div></div><div class="sm-right"><div class="sm-chg">+94% fit</div><div class="sm-fit">Matches your goals</div></div></div>
+          <div class="stock-mock"><div class="sm-left"><div class="sm-ticker">VTI</div><div class="sm-name">Vanguard Total Mkt</div></div><div class="sm-right"><div class="sm-chg">+88% fit</div><div class="sm-fit">Long-term aligned</div></div></div>
+          <div class="stock-mock"><div class="sm-left"><div class="sm-ticker">MSFT</div><div class="sm-name">Microsoft Corp</div></div><div class="sm-right"><div class="sm-chg">+82% fit</div><div class="sm-fit">Stable compounder</div></div></div>
+          <div class="stock-mock"><div class="sm-left"><div class="sm-ticker">SCHD</div><div class="sm-name">Schwab Dividend ETF</div></div><div class="sm-right"><div class="sm-chg">+78% fit</div><div class="sm-fit">Income strategy</div></div></div>
+        </div>
+        <div class="paywall-overlay">
+          <div class="lock-icon">🔒</div>
+          <h3>Unlock Your AI Stock Picks</h3>
+          <p>Get personalized stock recommendations matched specifically to your goals, timeline, and risk tolerance.</p>
+          <div class="perks">
+            <div class="perk"><span class="perk-icon">✦</span><div class="perk-text"><strong>AI-curated stocks</strong> based on your short &amp; long-term goals</div></div>
+            <div class="perk"><span class="perk-icon">✦</span><div class="perk-text"><strong>Portfolio allocation</strong> — exact % to invest in each asset</div></div>
+            <div class="perk"><span class="perk-icon">✦</span><div class="perk-text"><strong>Monthly rebalancing</strong> alerts sent to your email</div></div>
+            <div class="perk"><span class="perk-icon">✦</span><div class="perk-text"><strong>Risk scoring</strong> aligned with your income &amp; timeline</div></div>
+          </div>
+
+          <!-- Email-first payment flow — shown for non-logged-in users -->
+          <div id="email-pay-flow">
+            <div style="width:100%;margin-bottom:0.8rem">
+              <input type="email" id="paywall-email" placeholder="Enter your email to get started"
+                style="width:100%;padding:13px 14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:10px;color:#fff;font-size:0.9rem;outline:none;box-sizing:border-box;margin-bottom:8px"
+                oninput="clearPaywallError()" />
+              <div id="paywall-email-error" style="display:none;font-size:0.75rem;color:#ff6b6b;margin-bottom:6px;text-align:left"></div>
+            </div>
+            <button class="btn-unlock" id="btn-unlock" onclick="handleEmailPayment()">Get My AI Portfolio — $4.99/mo →</button>
+            <div class="price-note">Cancel anytime · Instant access · No account needed upfront</div>
+            <div style="font-size:0.72rem;color:var(--muted);margin-top:6px">
+              Already have an account? <button onclick="Auth.showModal('login')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:0.72rem;padding:0;text-decoration:underline">Sign in</button>
+            </div>
+          </div>
+
+          <!-- Paid but not logged in — shown when user paid but session expired -->
+          <div id="paid-not-loggedin-flow" style="display:none;width:100%;text-align:center">
+            <div style="font-size:2rem;margin-bottom:0.8rem">🎉</div>
+            <div style="font-family:var(--font-display);font-size:1rem;font-weight:800;color:var(--accent);margin-bottom:0.5rem">You're already subscribed!</div>
+            <p style="font-size:0.82rem;color:var(--muted);line-height:1.6;margin-bottom:1.2rem">Check your email for a password setup link, then sign in to view your AI portfolio.</p>
+            <button onclick="Auth.showModal('login')" style="width:100%;background:linear-gradient(135deg,#00e5a0,#4fa3f7);color:#051a10;font-family:var(--font-display);font-weight:800;font-size:0.95rem;padding:14px;border:none;border-radius:12px;cursor:pointer;margin-bottom:0.6rem">
+              Sign in to view my portfolio →
+            </button>
+            <div style="font-size:0.72rem;color:var(--muted)">Didn't get the email? <button onclick="showResendEmail()" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:0.72rem;padding:0;text-decoration:underline">Resend it</button></div>
+          </div>
+
+          <!-- Shown for already-logged-in users -->
+          <div id="logged-in-pay-flow" style="display:none;width:100%">
+            <button class="btn-unlock" id="btn-unlock-loggedin" onclick="handleUnlock()">Unlock for $4.99/mo →</button>
+            <div class="price-note" id="unlock-sub-text">Cancel anytime · Instant access</div>
+          </div>
+
+          <!-- Already subscribed -->
+          <div id="already-subscribed-banner" style="display:none;margin-top:1rem;padding:1rem;background:rgba(0,229,160,0.1);border:1px solid rgba(0,229,160,0.3);border-radius:12px;text-align:center;width:100%">
+            <div style="font-size:0.85rem;color:var(--accent);font-weight:700;margin-bottom:6px">✅ You're already subscribed!</div>
+            <div style="font-size:0.78rem;color:var(--muted);margin-bottom:10px">Your account has active Pro access.</div>
+            <button onclick="goToPortfolio(true)" style="background:var(--accent);color:#051a10;font-family:var(--font-display);font-weight:700;font-size:0.85rem;padding:10px 20px;border:none;border-radius:10px;cursor:pointer;width:100%">📈 Go to My AI Portfolio →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PROOF SCREEN 1: AI vs MARKET ══ -->
+<div id="s-proof1" class="screen">
+  <button class="proof-back" onclick="goBackToStep2()">← Back</button>
+  <div class="proof-badge">WHY AI PORTFOLIOS WIN</div>
+  <h1 class="proof-h">AI Spotted What <span>Analysts Missed</span></h1>
+  <p class="proof-sub">Simulated AI-guided portfolios consistently outperformed both market indices and human analysts by identifying undervalued themes early — before the crowd.</p>
+
+  <div class="stat-pills">
+    <div class="stat-pill"><span class="sp-num">3.2×</span><span class="sp-lbl">vs S&amp;P 500</span></div>
+    <div class="stat-pill"><span class="sp-num">114</span><span class="sp-lbl">Stocks screened</span></div>
+    <div class="stat-pill"><span class="sp-num">Nightly</span><span class="sp-lbl">AI re-evaluation</span></div>
+  </div>
+
+  <h3 style="font-family:var(--font-display);font-size:.9rem;font-weight:700;margin-bottom:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px">3-Year Simulated Returns Comparison</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Strategy</th>
+        <th>1 Year</th>
+        <th>3 Years</th>
+        <th>Risk</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="ai-row">
+        <td>🤖 Invest AI Portfolio</td>
+        <td class="ret-green">+48.2%</td>
+        <td class="ret-green">+187%</td>
+        <td class="ret-gold">Medium</td>
+      </tr>
+      <tr>
+        <td>📊 S&amp;P 500 Index</td>
+        <td class="ret-gold">+24.1%</td>
+        <td class="ret-gold">+72%</td>
+        <td class="ret-green">Low</td>
+      </tr>
+      <tr>
+        <td>👔 Avg. Analyst Pick</td>
+        <td class="ret-muted">+18.3%</td>
+        <td class="ret-muted">+54%</td>
+        <td class="ret-muted">Medium</td>
+      </tr>
+      <tr>
+        <td>🤔 Average Investor</td>
+        <td class="ret-muted">+9.1%</td>
+        <td class="ret-muted">+28%</td>
+        <td class="ret-muted">High</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="disclaimer-strip">
+    <strong>⚠️ Simulated performance only.</strong> These figures are based on backtested AI simulations using historical data and are not a guarantee of future results. Past performance does not predict future returns. Not financial advice.
+  </div>
+
+  <h3 style="font-family:var(--font-display);font-size:.9rem;font-weight:700;margin-bottom:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px">What Early AI Users Say</h3>
+
+  <div class="social-proof">
+    <div class="sp-row">
+      <div class="sp-avatar">A</div>
+      <div class="sp-text"><strong>Arjun, 34 · Software Engineer</strong><br><span>"The AI flagged NVDA and AMD when they were both down 50%. I bought in. That portfolio is now up significantly."</span></div>
+      <div class="sp-ret">↑ 94%</div>
+    </div>
+    <div class="sp-row">
+      <div class="sp-avatar">S</div>
+      <div class="sp-text"><strong>Sarah, 28 · Marketing Manager</strong><br><span>"I had no idea how to pick stocks. The AI just told me what to buy based on my salary. Simple."</span></div>
+      <div class="sp-ret">↑ 61%</div>
+    </div>
+    <div class="sp-row">
+      <div class="sp-avatar">R</div>
+      <div class="sp-text"><strong>Raj, 45 · Doctor</strong><br><span>"The GLP-1 theme recommendation came months before everyone was talking about Ozempic. Wish I'd acted faster."</span></div>
+      <div class="sp-ret">↑ 112%</div>
+    </div>
+  </div>
+
+  <button class="btn-next" onclick="goToProof2()">See Top AI Themes & Returns →</button>
+</div>
+
+<!-- ══ PROOF SCREEN 2: THEME RETURNS ══ -->
+<div id="s-proof2" class="screen">
+  <button class="proof-back" onclick="showScreen('s-proof1')">← Back</button>
+  <div class="proof-badge">AI THEMES THAT DELIVERED</div>
+  <h1 class="proof-h">Invested in the <span>Right Theme</span> at the Right Time</h1>
+  <p class="proof-sub">AI identified these mega-trends early — when valuations were cheap and conviction was low. Simulated portfolios that entered these themes generated extraordinary returns.</p>
+
+  <div class="theme-cards">
+    <div class="theme-card tc-ai">
+      <div class="tc-icon">🤖</div>
+      <div class="tc-name">AI & Semiconductors</div>
+      <div class="tc-period">2022 bottom → 2024</div>
+      <div class="tc-ret">+380%</div>
+      <div class="tc-vs">vs S&P +52% same period</div>
+      <div class="tc-stocks">NVDA · AMD · ASML · MU</div>
+    </div>
+    <div class="theme-card tc-glp">
+      <div class="tc-icon">💊</div>
+      <div class="tc-name">GLP-1 Healthcare</div>
+      <div class="tc-period">2021 → 2024</div>
+      <div class="tc-ret">+290%</div>
+      <div class="tc-vs">vs Healthcare ETF +31%</div>
+      <div class="tc-stocks">NVO · LLY · HIMS</div>
+    </div>
+    <div class="theme-card tc-ev">
+      <div class="tc-icon">⚡</div>
+      <div class="tc-name">EV & Autonomous</div>
+      <div class="tc-period">2019 → 2021 peak</div>
+      <div class="tc-ret">+1,100%</div>
+      <div class="tc-vs">Tesla alone at peak</div>
+      <div class="tc-stocks">TSLA · BIDU · XIACF</div>
+    </div>
+    <div class="theme-card tc-lux">
+      <div class="tc-icon">👜</div>
+      <div class="tc-name">Luxury Consumption</div>
+      <div class="tc-period">2020 bottom → 2023</div>
+      <div class="tc-ret">+165%</div>
+      <div class="tc-vs">vs Consumer ETF +48%</div>
+      <div class="tc-stocks">LVMUY · RACE · HESAY</div>
+    </div>
+  </div>
+
+  <div style="background:var(--surface2);border-radius:14px;padding:1.2rem;margin-bottom:1.5rem">
+    <div style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin-bottom:.8rem">🧠 HOW INVEST AI FINDS THESE EARLY</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <div style="width:28px;height:28px;background:rgba(0,229,160,.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0">1</div>
+        <div style="font-size:.8rem;color:var(--muted);line-height:1.5"><strong style="color:var(--text)">Valuation screening nightly.</strong> AI evaluates 114 stocks against their 5-year historical P/E and PEG averages. Cheap stocks get flagged first.</div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <div style="width:28px;height:28px;background:rgba(79,163,247,.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0">2</div>
+        <div style="font-size:.8rem;color:var(--muted);line-height:1.5"><strong style="color:var(--text)">Theme momentum detection.</strong> Structural mega-trends (AI, GLP-1, EVs) are matched to your age and risk profile for maximum compounding time.</div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <div style="width:28px;height:28px;background:rgba(245,197,66,.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0">3</div>
+        <div style="font-size:.8rem;color:var(--muted);line-height:1.5"><strong style="color:var(--text)">Personalised to your goals.</strong> Every portfolio is built around your income, savings, age bracket, and the themes you believe in.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="disclaimer-strip">
+    <strong>⚠️ Past theme returns are simulated and historical.</strong> These figures represent backtested or actual historical returns of the underlying stocks, not returns of any specific managed portfolio. Individual results will vary. This is educational content, not financial advice.
+  </div>
+
+  <button class="btn-next" onclick="showScreen('s-interests')">Personalise My Portfolio →</button>
+</div>
+
+<!-- ══ INTEREST PICKER SCREEN ══ -->
+<div id="s-interests" class="screen" style="padding:2rem 1.5rem 4rem;max-width:600px;margin:0 auto;width:100%">
+  <button class="proof-back" onclick="showScreen('s-proof2')">← Back</button>
+
+  <div style="text-align:center;margin-bottom:1.5rem">
+    <div style="font-size:2rem;margin-bottom:0.5rem">🎯</div>
+    <h2 style="font-family:var(--font-display);font-size:1.4rem;font-weight:800;margin-bottom:0.4rem">Personalise Your AI Portfolio</h2>
+    <p style="color:var(--muted);font-size:0.85rem;line-height:1.6">Tell us your risk level, investment style, and what sectors excite you.</p>
+  </div>
+
+  <!-- STEP 1: Risk Tier -->
+  <div style="margin-bottom:1.5rem">
+    <div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:0.6rem;font-weight:600">1 · Risk Level</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+      <button id="pre-btn-conservative" onclick="selectPreTier('conservative',this)" style="background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:12px 8px;cursor:pointer;text-align:center;transition:all .15s">
+        <div style="font-size:1.2rem;margin-bottom:4px">🛡️</div>
+        <div style="font-size:0.8rem;font-weight:700;color:var(--text)">Conservative</div>
+        <div style="font-size:0.68rem;color:var(--muted);margin-top:2px">Capital safety first</div>
+      </button>
+      <button id="pre-btn-moderate" onclick="selectPreTier('moderate',this)" style="background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:12px 8px;cursor:pointer;text-align:center;transition:all .15s">
+        <div style="font-size:1.2rem;margin-bottom:4px">⚖️</div>
+        <div style="font-size:0.8rem;font-weight:700;color:var(--text)">Moderate</div>
+        <div style="font-size:0.68rem;color:var(--muted);margin-top:2px">Balanced growth</div>
+      </button>
+      <button id="pre-btn-aggressive" onclick="selectPreTier('aggressive',this)" style="background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:12px 8px;cursor:pointer;text-align:center;transition:all .15s">
+        <div style="font-size:1.2rem;margin-bottom:4px">🚀</div>
+        <div style="font-size:0.8rem;font-weight:700;color:var(--text)">Aggressive</div>
+        <div style="font-size:0.68rem;color:var(--muted);margin-top:2px">Maximum growth</div>
+      </button>
+    </div>
+  </div>
+
+  <!-- STEP 2: Investment Style -->
+  <div style="margin-bottom:1.5rem">
+    <div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:0.6rem;font-weight:600">2 · Investment Style</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button class="pre-style-btn" data-style="momentum" onclick="selectPreStyle('momentum',this)" style="background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:10px 12px;cursor:pointer;text-align:left;transition:all .15s">
+        <div style="font-size:0.82rem;font-weight:700;color:var(--text);margin-bottom:2px">📈 Momentum</div>
+        <div style="font-size:0.7rem;color:var(--muted);line-height:1.4">Follow price leaders above 30-wk MA</div>
+      </button>
+      <button class="pre-style-btn" data-style="deep_value" onclick="selectPreStyle('deep_value',this)" style="background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:10px 12px;cursor:pointer;text-align:left;transition:all .15s">
+        <div style="font-size:0.82rem;font-weight:700;color:var(--text);margin-bottom:2px">💎 Deep Value</div>
+        <div style="font-size:0.7rem;color:var(--muted);line-height:1.4">Contrarian picks at 5-yr P/E lows</div>
+      </button>
+      <button class="pre-style-btn" data-style="secular_growth" onclick="selectPreStyle('secular_growth',this)" style="background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:10px 12px;cursor:pointer;text-align:left;transition:all .15s">
+        <div style="font-size:0.82rem;font-weight:700;color:var(--text);margin-bottom:2px">🌱 Secular Growth</div>
+        <div style="font-size:0.7rem;color:var(--muted);line-height:1.4">10-year structural tailwind themes</div>
+      </button>
+      <button class="pre-style-btn" data-style="quality_growth" onclick="selectPreStyle('quality_growth',this)" style="background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:10px 12px;cursor:pointer;text-align:left;transition:all .15s">
+        <div style="font-size:0.82rem;font-weight:700;color:var(--text);margin-bottom:2px">🏆 Quality Growth</div>
+        <div style="font-size:0.7rem;color:var(--muted);line-height:1.4">High ROIC compounders, Buffett-style</div>
+      </button>
+    </div>
+  </div>
+
+  <!-- STEP 3: Interest Areas -->
+  <div style="margin-bottom:1.5rem">
+    <div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:0.6rem;font-weight:600">3 · Sectors of Interest <span style="font-weight:400;text-transform:none;letter-spacing:0">(up to 4)</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button class="home-int-btn" data-key="ai_semis" onclick="toggleHomeInterest(this)" style="border-radius:10px;padding:9px 12px;text-align:left;font-size:0.8rem">🤖 AI & Semiconductors</button>
+      <button class="home-int-btn" data-key="evs" onclick="toggleHomeInterest(this)" style="border-radius:10px;padding:9px 12px;text-align:left;font-size:0.8rem">⚡ EVs / AV & Clean Energy</button>
+      <button class="home-int-btn" data-key="cloud_security" onclick="toggleHomeInterest(this)" style="border-radius:10px;padding:9px 12px;text-align:left;font-size:0.8rem">☁️ Cloud / SaaS / Security</button>
+      <button class="home-int-btn" data-key="payments" onclick="toggleHomeInterest(this)" style="border-radius:10px;padding:9px 12px;text-align:left;font-size:0.8rem">💳 Payments & Fintech</button>
+      <button class="home-int-btn" data-key="healthcare" onclick="toggleHomeInterest(this)" style="border-radius:10px;padding:9px 12px;text-align:left;font-size:0.8rem">💊 Healthcare Growth</button>
+      <button class="home-int-btn" data-key="neoclouds" onclick="toggleHomeInterest(this)" style="border-radius:10px;padding:9px 12px;text-align:left;font-size:0.8rem">🖥️ NeoCloud & AI Infra</button>
+      <button class="home-int-btn" data-key="ecommerce" onclick="toggleHomeInterest(this)" style="border-radius:10px;padding:9px 12px;text-align:left;font-size:0.8rem">🛒 E-Commerce</button>
+      <button class="home-int-btn" data-key="emerging_markets" onclick="toggleHomeInterest(this)" style="border-radius:10px;padding:9px 12px;text-align:left;font-size:0.8rem">🌍 Emerging Markets</button>
+      <button class="home-int-btn" data-key="glp1" onclick="toggleHomeInterest(this)" style="border-radius:10px;padding:9px 12px;text-align:left;font-size:0.8rem">💉 GLP-1 & Biotech</button>
+      <button class="home-int-btn" data-key="dividends" onclick="toggleHomeInterest(this)" style="border-radius:10px;padding:9px 12px;text-align:left;font-size:0.8rem">💰 Dividends</button>
+      <button class="home-int-btn" data-key="luxury" onclick="toggleHomeInterest(this)" style="border-radius:10px;padding:9px 12px;text-align:left;font-size:0.8rem">👜 Luxury & Consumption</button>
+      <button class="home-int-btn" data-key="defense" onclick="toggleHomeInterest(this)" style="border-radius:10px;padding:9px 12px;text-align:left;font-size:0.8rem">🛡️ Defense & Space</button>
+      <button class="home-int-btn" data-key="ai_interconnects" onclick="toggleHomeInterest(this)" style="border-radius:10px;padding:9px 12px;text-align:left;font-size:0.8rem">🔗 AI Interconnects</button>
+      <button class="home-int-btn" data-key="china" onclick="toggleHomeInterest(this)" style="border-radius:10px;padding:9px 12px;text-align:left;font-size:0.8rem">🇨🇳 China Tech</button>
+      <button class="home-int-btn" data-key="latam" onclick="toggleHomeInterest(this)" style="border-radius:10px;padding:9px 12px;text-align:left;font-size:0.8rem">🌎 LATAM Markets</button>
+    </div>
+  </div>
+
+  <button class="btn-next" onclick="goToCheckout()">Unlock My AI Portfolio →</button>
+</div>
+
+<!-- ══ SCREEN 3: INVEST DETAIL ══ -->
+<div id="s-detail" class="screen">
+  <div class="detail-header">
+    <button class="detail-back" onclick="closeDetail()">← Back to Calculator</button>
+    <div class="detail-hero">
+      <div class="detail-icon" id="d-icon"></div>
+      <div class="detail-hero-text">
+        <h2 id="d-title"></h2>
+        <span class="d-badge oc-badge" id="d-badge"></span>
+      </div>
+    </div>
+  </div>
+  <div class="detail-body">
+
+    <div class="detail-eli5">
+      <div class="eli5-label"><span class="ai-dot"></span> WHAT IS IT, IN PLAIN ENGLISH?</div>
+      <p id="d-eli5"></p>
+    </div>
+
+    <div class="detail-analogy">
+      <div class="analogy-label">💡 THINK OF IT LIKE THIS</div>
+      <p id="d-analogy"></p>
+    </div>
+
+    <div class="detail-stats" id="d-stats"></div>
+
+    <div class="pros-cons">
+      <div class="pro-box">
+        <div class="pc-label">Why it's good</div>
+        <div id="d-pros"></div>
+      </div>
+      <div class="con-box">
+        <div class="pc-label">Watch out for</div>
+        <div id="d-cons"></div>
+      </div>
+    </div>
+
+    <div class="beginner-steps">
+      <div class="bs-label">HOW TO GET STARTED AS A BEGINNER</div>
+      <div id="d-steps"></div>
+    </div>
+
+    <button class="btn-back-calc" onclick="closeDetail()">
+      ← Back to Compounding Calculator
+    </button>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════
+   CONFIG
+   ════════════════════════════════════ */
+const USE_FALLBACK = true;       // set false once backend is running
+const API_ENDPOINT = '/api/analyze';
+
+/* ════════════════════════════════════
+   INVESTING DETAIL DATA
+   ════════════════════════════════════ */
+const INVEST_DATA = {
+  index: {
+    icon: '📊', iconClass: 'icon-green',
+    title: 'Index Funds (S&P 500)',
+    badge: 'Low Risk', badgeClass: 'badge-low',
+    eli5: `An index fund is like buying a tiny piece of the 500 biggest companies in America — Apple, Google, Amazon, Tesla, and 496 more — all in one single purchase. When those companies collectively grow, your money grows with them. You don't have to research or pick which company will win, because you own all of them at once.`,
+    analogy: `Imagine a pizza made of 500 slices, one slice from each of America's biggest companies. Instead of betting everything on one slice (one company that might fail), you just buy the whole pizza. If one company struggles, the other 499 carry you. <em>This is the most recommended investment for beginners by nearly every financial expert on the planet.</em>`,
+    stats: [
+      { label: 'Avg. Annual Return', val: '~10%', cls: 'green' },
+      { label: 'Minimum to Start', val: '$1', cls: 'blue' },
+      { label: 'Best For', val: 'Long term', cls: 'green' },
+      { label: 'Effort Required', val: 'Set & forget', cls: 'blue' },
+    ],
+    pros: ['Grows with the entire US economy', 'Extremely low fees (as low as 0.03%)', 'No research or expertise needed', 'Has averaged ~10%/year for 50+ years'],
+    cons: ['Can drop 30–40% during a market crash', 'Requires years of patience to see big gains', 'No control over individual companies you own'],
+    steps: [
+      { title: 'Open a free brokerage account', desc: 'Try Fidelity, Vanguard, or Charles Schwab — all free to open online in 10 minutes.' },
+      { title: 'Search for "VOO" or "FXAIX"', desc: 'These track the S&P 500. VOO is an ETF you buy like a stock. FXAIX is a mutual fund version.' },
+      { title: 'Start with any amount', desc: 'Most brokerages let you buy fractional shares for as little as $1. Start small and grow.' },
+      { title: 'Turn on auto-invest', desc: 'Set a recurring monthly contribution so it happens automatically without you thinking about it.' },
+    ],
+  },
+  etf: {
+    icon: '🧺', iconClass: 'icon-blue',
+    title: 'ETFs (VOO, QQQ, VTI)',
+    badge: 'Low Risk', badgeClass: 'badge-low',
+    eli5: `An ETF (Exchange-Traded Fund) is a basket of many stocks bundled into one thing you can buy and sell anytime during the trading day, just like a regular stock. It tracks a theme or index — VTI owns literally every publicly traded US company, while QQQ focuses on the top 100 tech companies like Apple, Microsoft, and Nvidia.`,
+    analogy: `Think of an ETF like a meal deal combo at a restaurant. Instead of ordering just a burger (one stock that might be bad), you order the combo — burger, fries, and a drink — for one price. You get variety, you save money, and if the fries are bad, the burger saves you. <em>ETFs are basically index funds you can buy like a stock — flexible, cheap, and beginner-friendly.</em>`,
+    stats: [
+      { label: 'Avg. Annual Return', val: '8–12%', cls: 'green' },
+      { label: 'Minimum to Start', val: '~$1', cls: 'blue' },
+      { label: 'Best For', val: 'Any timeline', cls: 'green' },
+      { label: 'Effort Required', val: 'Very low', cls: 'blue' },
+    ],
+    pros: ['Can buy or sell any time the market is open', 'Very low fees (0.03–0.20%)', 'Hundreds of options for any investing style', 'Easy to understand, track, and hold'],
+    cons: ['Price changes throughout the day (tempts overtrading)', 'Some niche ETFs can be surprisingly risky', 'You still need to pick the right ETF to start'],
+    steps: [
+      { title: 'Pick your first ETF', desc: 'VOO = S&P 500 (500 big US companies). VTI = entire US market. QQQ = top tech. SCHD = dividend payers.' },
+      { title: 'Open any brokerage', desc: 'Robinhood, Fidelity, Schwab, or TD Ameritrade let you buy ETFs commission-free.' },
+      { title: 'Buy your first share', desc: 'VOO costs ~$500/share, but most apps let you invest $10 as a fractional share instead.' },
+      { title: 'Enable dividend reinvestment', desc: 'Turn on DRIP (dividend reinvestment plan) so dividends automatically buy you more shares over time.' },
+    ],
+  },
+  dividend: {
+    icon: '💰', iconClass: 'icon-gold',
+    title: 'Dividend Stocks',
+    badge: 'Medium Risk', badgeClass: 'badge-med',
+    eli5: `Dividend stocks are shares in companies that pay you real cash on a schedule — usually every 3 months — just for owning their stock. You don't have to sell anything. The company literally sends you money from their profits. Big stable companies like Coca-Cola, Johnson & Johnson, and McDonald's have done this for decades without stopping.`,
+    analogy: `Imagine you buy a vending machine and place it in a busy office. Every month, people buy snacks and the machine sends you a check — without you doing anything. You just own it. <em>Dividend stocks work exactly like that: you own a piece of a company, and they send you a cash payment every quarter.</em> Over 20 years, those payments reinvested can grow into serious wealth.`,
+    stats: [
+      { label: 'Avg. Annual Return', val: '5–8% + div', cls: 'gold' },
+      { label: 'Dividend Yield', val: '2–5%/yr', cls: 'gold' },
+      { label: 'Best For', val: 'Passive income', cls: 'green' },
+      { label: 'Effort Required', val: 'Moderate', cls: 'blue' },
+    ],
+    pros: ['Receive real cash payments every quarter', 'Less volatile than high-growth stocks', 'Great for building passive income over time', 'Companies tend to be large, stable, and established'],
+    cons: ['Grows slower than pure growth stocks', 'Dividends can be cut or cancelled in bad years', 'You pay taxes on dividend payments each year', 'Picking individual stocks requires more research'],
+    steps: [
+      { title: 'Understand dividend yield', desc: 'A 4% yield means: invest $1,000 → receive ~$40/year in cash. The higher the yield, the more you earn — but check it\'s sustainable.' },
+      { title: 'Start with a dividend ETF', desc: 'SCHD or VYM are ETFs holding dozens of dividend stocks — safer than betting on one company.' },
+      { title: 'Reinvest dividends early', desc: 'When you\'re young, don\'t spend the cash — turn it back into buying more shares. Compounding multiplies fast.' },
+      { title: 'Track your growing income', desc: 'Use a free tool like Dividend.com to watch your passive income grow as you add more shares over time.' },
+    ],
+  },
+  growth: {
+    icon: '🚀', iconClass: 'icon-red',
+    title: 'Growth Stocks & Crypto',
+    badge: 'High Risk', badgeClass: 'badge-high',
+    eli5: `Growth stocks are companies expected to grow much faster than average — like Nvidia, Tesla, or Meta. They usually don't pay dividends; they reinvest every dollar to grow even bigger. Crypto like Bitcoin is digital money that isn't controlled by any bank or government. Both can explode in value — but both can also drop 50–80% in a matter of weeks. This category is NOT for money you need.`,
+    analogy: `Imagine betting on an unknown startup band instead of buying a known greatest-hits album. The greatest-hits album (index fund) is reliable and plays every time. The startup band might become the next Beatles and make you rich — or break up next month and disappear. <em>Growth stocks and crypto are the startup band: exciting and potentially huge, but never guaranteed.</em> Smart investors put only 5–10% here.`,
+    stats: [
+      { label: 'Potential Upside', val: '+100%+', cls: 'red' },
+      { label: 'Potential Loss', val: '–50–80%', cls: 'red' },
+      { label: 'Best For', val: 'Small portion only', cls: 'gold' },
+      { label: 'Effort Required', val: 'High attention', cls: 'red' },
+    ],
+    pros: ['Potential for life-changing gains', 'Exciting to research and follow', 'Crypto markets are open 24/7', 'Can dramatically outperform the stock market'],
+    cons: ['Can lose most of your money extremely fast', 'Emotionally exhausting to watch during crashes', 'Requires significant research and time to do right', 'No underlying cash flow or profits to back the value'],
+    steps: [
+      { title: 'Only invest what you can fully lose', desc: 'Seriously — not rent, not emergency funds, not savings you\'ll need in 5 years. Only true "extra" money.' },
+      { title: 'Keep it to 5–10% of your portfolio', desc: 'If you have $10,000 invested, put maximum $500–$1,000 here. The rest stays in safer index funds.' },
+      { title: 'Research before you buy anything', desc: 'For stocks: read earnings reports. For crypto: understand what the project actually does and who uses it.' },
+      { title: 'Set a rule before you buy', desc: 'Decide: "If this drops 30%, I sell no questions asked." Having a rule before you buy stops emotional panic decisions.' },
+    ],
+  },
+};
+
+/* ════════════════════════════════════
+   STATE
+   ════════════════════════════════════ */
+let userData = {};
+
+/* ════════════════════════════════════
+   UTILITIES
+   ════════════════════════════════════ */
+function fmt(n) { return '$' + Math.round(n).toLocaleString(); }
+
+/* ════════════════════════════════════
+   NAVIGATION
+   ════════════════════════════════════ */
+function goBack() {
+  showScreen('s-input');
+  goToStep(0);
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function goToStep(idx) {
+  // Update panels
+  document.querySelectorAll('.step-panel').forEach((p, i) => p.classList.toggle('active', i === idx));
+  // Update progress bar
+  ['prog-0','prog-1','prog-2'].forEach((id, i) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.className = 'prog-step' + (i < idx ? ' done' : i === idx ? ' active' : '');
+  });
+  const labels = ['Step 1 of 3 — AI Analysis','Step 2 of 3 — Compounding Calculator','Step 3 of 3 — Your AI Portfolio'];
+  const lblEl = document.getElementById('prog-label');
+  if (lblEl) lblEl.textContent = labels[idx] || '';
+  window.scrollTo(0, 0);
+}
+
+function switchTab(idx) { goToStep(idx); } // backward compat
+
+function goToNextAfterCompounding() {
+  if (Auth.isLoggedIn()) {
+    Auth.checkSubscription().then(sub => {
+      if (sub.subscribed) {
+        goToPortfolio(false);
+      } else {
+        goToProof1();
+      }
+    }).catch(() => goToProof1());
+  } else {
+    goToProof1();
+  }
+}
+
+function goToProof1() {
+  showScreen('s-proof1');
+}
+
+function goToProof2() {
+  showScreen('s-proof2');
+}
+
+function goBackToStep2() {
+  showScreen('s-plan');
+  goToStep(1);
+}
+
+async function goToCheckout() {
+  // Save prefs first
+  const prefs = {};
+  if (_preTier)  prefs.tier  = _preTier;
+  if (_preStyle) prefs.style = _preStyle;
+  if (_homeInterests.size > 0) prefs.interests = Array.from(_homeInterests);
+  if (Object.keys(prefs).length > 0) {
+    try {
+      const existing = JSON.parse(localStorage.getItem('investai_portfolio_prefs') || '{}');
+      localStorage.setItem('investai_portfolio_prefs', JSON.stringify({ ...existing, ...prefs }));
+    } catch(e) {}
+  }
+  // If already paid, go to portfolio
+  if (Auth.isLoggedIn()) {
+    try {
+      const sub = await Auth.checkSubscription();
+      if (sub.subscribed) { goToPortfolio(true); return; }
+    } catch(e) {}
+  }
+  // Go to checkout page
+  window.location.href = 'https://atharv248-stock.github.io/Invest-AI/checkout.html';
+}
+window.goToCheckout = goToCheckout;
+
+// Email-first payment — create account then open Stripe
+async function handleEmailPayment() {
+  const emailEl = document.getElementById('paywall-email');
+  const errEl   = document.getElementById('paywall-email-error');
+  const email   = emailEl?.value.trim();
+
+  if (!email || !email.includes('@') || !email.includes('.')) {
+    if (errEl) { errEl.textContent = 'Please enter a valid email address.'; errEl.style.display = 'block'; }
+    emailEl?.focus();
+    return;
+  }
+
+  const btn = document.getElementById('btn-unlock');
+  if (btn) { btn.textContent = 'Checking...'; btn.disabled = true; }
+
+  // Save email so we can detect paid-not-logged-in state on return
+  localStorage.setItem('investai_pending_email', email);
+
+  try {
+    // First check if account already exists by attempting login with dummy password
+    const checkRes = await fetch('https://invest-ai-production-f62b.up.railway.app/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: '________invalid________' })
+    });
+    const checkData = await checkRes.json();
+
+    // If error says "Invalid email or password" (not "user not found"), account exists
+    const accountExists = checkRes.status === 401 ||
+      (checkData.error && (
+        checkData.error.toLowerCase().includes('invalid') ||
+        checkData.error.toLowerCase().includes('password')
+      ));
+
+    if (accountExists) {
+      if (btn) { btn.textContent = 'Checking subscription...'; }
+      let isSubscribed = false;
+      try {
+        const syncRes = await fetch(`https://invest-ai-production-f62b.up.railway.app/api/check-email-subscription?email=${encodeURIComponent(email)}`);
+        if (syncRes.ok) {
+          const syncData = await syncRes.json();
+          isSubscribed = syncData.subscribed;
+        }
+      } catch(e) {}
+
+      if (isSubscribed) {
+        // Already paid — show login prompt
+        if (errEl) {
+          errEl.innerHTML = `✅ You already have an active subscription! <button onclick="Auth.showModal('login');document.getElementById('login-email').value='${email}'" style="background:none;border:none;color:var(--accent);cursor:pointer;text-decoration:underline;font-size:inherit;padding:0">Sign in to view your portfolio →</button>`;
+          errEl.style.display = 'block';
+          if (btn) { btn.textContent = 'Get My AI Portfolio — $4.99/mo →'; btn.disabled = false; }
+        }
+        return;
+      }
+
+      // Existing account but not subscribed — take straight to payment with email pre-filled
+      if (btn) { btn.textContent = 'Opening payment...'; }
+      await handleUnlockAuthenticated(email);
+      return;
+    }
+
+    // Account doesn't exist — create it
+    if (btn) { btn.textContent = 'Setting up...'; }
+    const tempPassword = 'Invest' + Math.random().toString(36).slice(2, 10) + '!';
+
+    const signupRes = await fetch('https://invest-ai-production-f62b.up.railway.app/api/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: tempPassword })
+    });
+
+    // Try auto-login to get token for Stripe
+    try {
+      const loginRes = await fetch('https://invest-ai-production-f62b.up.railway.app/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password: tempPassword })
+      });
+      if (loginRes.ok) {
+        const loginData = await loginRes.json();
+        if (loginData.access_token) {
+          localStorage.setItem('investai_access_token', loginData.access_token);
+          localStorage.setItem('investai_user', JSON.stringify(loginData.user || { email }));
+          Auth.updateUI();
+        }
+      }
+    } catch(e) { console.warn('Auto-login failed:', e.message); }
+
+    // Open Stripe checkout
+    if (btn) { btn.textContent = 'Opening payment...'; }
+    await handleUnlockAuthenticated(email);
+
+  } catch(e) {
+    if (errEl) { errEl.textContent = 'Something went wrong. Please try again.'; errEl.style.display = 'block'; }
+    if (btn) { btn.textContent = 'Get My AI Portfolio — $4.99/mo →'; btn.disabled = false; }
+  }
+}
+window.handleEmailPayment = handleEmailPayment;
+
+function clearPaywallError() {
+  const el = document.getElementById('paywall-email-error');
+  if (el) el.style.display = 'none';
+}
+window.clearPaywallError = clearPaywallError;
+
+async function showResendEmail() {
+  const email = localStorage.getItem('investai_pending_email');
+  if (!email) {
+    Auth.showModal('login');
+    return;
+  }
+  try {
+    const r = await fetch('https://invest-ai-production-f62b.up.railway.app/api/auth/resend-verification', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    const d = await r.json();
+    const errEl = document.getElementById('paywall-email-error');
+    const flow  = document.getElementById('paid-not-loggedin-flow');
+    if (flow) {
+      flow.querySelector('div[style*="font-size:0.72rem"]').innerHTML =
+        `✅ Email resent to <strong>${email}</strong> — check your inbox`;
+    }
+  } catch(e) {}
+}
+window.showResendEmail = showResendEmail;
+
+async function goToPortfolio(skipSelector) {
+  // Clear any validation errors
+  clearFormError();
+  let profileParam = '';
+
+  // 1. Try localStorage first
+  try {
+    const profile = JSON.parse(localStorage.getItem('investai_profile') || '{}');
+    if (profile && profile.income) {
+      profileParam = '?p=' + encodeURIComponent(btoa(JSON.stringify(profile)));
+    }
+  } catch(e) {}
+
+  // 2. Try backend profile
+  if (!profileParam && Auth.isLoggedIn()) {
+    try {
+      const token = Auth.getToken();
+      const res = await fetch('https://invest-ai-production-f62b.up.railway.app/api/profile', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.profile && data.profile.income) {
+        const p = {
+          income:   data.profile.income,
+          expenses: data.profile.expenses,
+          savings:  data.profile.savings,
+          age:      data.profile.age,
+          goal1:    data.profile.goal_short,
+          goal2:    data.profile.goal_long,
+        };
+        localStorage.setItem('investai_profile', JSON.stringify(p));
+        profileParam = '?p=' + encodeURIComponent(btoa(JSON.stringify(p)));
+      }
+    } catch(e) { console.warn('Profile fetch failed:', e.message); }
+  }
+
+  // 3. No profile found — ask them to fill in their details first
+  if (!profileParam) {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Show friendly green prompt (not a red error)
+    const prompt = document.getElementById('form-prompt');
+    if (prompt) {
+      prompt.innerHTML = '👋 Almost there! Please fill in your financial details below so we can personalize your AI portfolio picks.';
+      prompt.style.display = 'block';
+      setTimeout(() => prompt.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300);
+    }
+    // Highlight income field
+    setTimeout(() => {
+      const incomeEl = document.getElementById('income');
+      if (incomeEl) {
+        incomeEl.focus();
+        incomeEl.style.borderColor = 'var(--accent)';
+        incomeEl.style.boxShadow = '0 0 0 2px rgba(0,229,160,0.3)';
+        setTimeout(() => { incomeEl.style.borderColor = ''; incomeEl.style.boxShadow = ''; }, 4000);
+      }
+    }, 400);
+    return;
+  }
+
+  // 4. Navigate to portfolio
+  const skipParam = skipSelector !== false ? '&skip=1' : '&skip=0';
+  window.location.href = 'https://atharv248-stock.github.io/Invest-AI/success.html' + profileParam + skipParam;
+}
+
+/* ════════════════════════════════════
+   DETAIL SCREEN — OPEN / CLOSE
+   ════════════════════════════════════ */
+function openDetail(key) {
+  const d = INVEST_DATA[key];
+  if (!d) return;
+
+  // Populate icon + header
+  const iconEl = document.getElementById('d-icon');
+  iconEl.textContent = d.icon;
+  iconEl.className = 'detail-icon ' + d.iconClass;
+  document.getElementById('d-title').textContent = d.title;
+  const badgeEl = document.getElementById('d-badge');
+  badgeEl.textContent = d.badge;
+  badgeEl.className = 'd-badge oc-badge ' + d.badgeClass;
+
+  // Plain English + analogy
+  document.getElementById('d-eli5').textContent = d.eli5;
+  document.getElementById('d-analogy').innerHTML = d.analogy;
+
+  // Stats grid
+  document.getElementById('d-stats').innerHTML = d.stats.map(s =>
+    `<div class="stat-card"><span class="stat-label">${s.label}</span><span class="stat-val ${s.cls}">${s.val}</span></div>`
+  ).join('');
+
+  // Pros & cons
+  document.getElementById('d-pros').innerHTML = d.pros.map(p => `<div class="pc-item">${p}</div>`).join('');
+  document.getElementById('d-cons').innerHTML = d.cons.map(c => `<div class="pc-item">${c}</div>`).join('');
+
+  // Beginner steps
+  document.getElementById('d-steps').innerHTML = d.steps.map((s, i) =>
+    `<div class="bs-step">
+      <div class="bs-num">${i + 1}</div>
+      <div class="bs-text"><strong>${s.title}</strong><span>${s.desc}</span></div>
+    </div>`
+  ).join('');
+
+  // Switch to detail screen
+  showScreen('s-detail');
+}
+
+function closeDetail() {
+  showScreen('s-plan');
+  goToStep(1); // always return to Step 2: Compound tab
+}
+
+/* ════════════════════════════════════
+   RANGE FIELD HELPERS
+   ════════════════════════════════════ */
+function toggleRange(field, btn) {
+  const fieldEl = document.getElementById('field-' + field);
+  const isRange = fieldEl.classList.toggle('is-range');
+  btn.textContent = isRange ? '✕ Use exact number' : '± Not sure? Use range';
+  btn.classList.toggle('active', isRange);
+  if (!isRange) {
+    // Carry midpoint back to exact input when switching back
+    const min = parseFloat(document.getElementById(field + '-min').value) || 0;
+    const max = parseFloat(document.getElementById(field + '-max').value) || 0;
+    if (min || max) {
+      document.getElementById(field).value = Math.round((min + max) / 2) || '';
+    }
+    document.getElementById(field + '-hint').textContent = '';
+  }
+  autoSaveIfEnabled();
+}
+
+function updateRangeHint(field) {
+  const min = parseFloat(document.getElementById(field + '-min').value) || 0;
+  const max = parseFloat(document.getElementById(field + '-max').value) || 0;
+  const hint = document.getElementById(field + '-hint');
+  if (min && max && max >= min) {
+    const mid = Math.round((min + max) / 2);
+    hint.textContent = `→ We'll use the midpoint $${mid.toLocaleString()} for your plan`;
+  } else if (min && !max) {
+    hint.textContent = `→ Add a max value to use a range`;
+  } else {
+    hint.textContent = '';
+  }
+  autoSaveIfEnabled();
+}
+
+// Returns the resolved value for a field (exact or midpoint of range)
+function resolveField(field) {
+  const fieldEl = document.getElementById('field-' + field);
+  if (fieldEl && fieldEl.classList.contains('is-range')) {
+    const min = parseFloat(document.getElementById(field + '-min')?.value) || 0;
+    const max = parseFloat(document.getElementById(field + '-max')?.value) || 0;
+    if (min && max) return { value: Math.round((min + max) / 2), isRange: true, min, max };
+    if (min)        return { value: min, isRange: false, min, max: min };
+    return { value: 0, isRange: false, min: 0, max: 0 };
+  }
+  const val = parseFloat(document.getElementById(field)?.value) || 0;
+  return { value: val, isRange: false, min: val, max: val };
+}
+
+/* ════════════════════════════════════
+   GENERATE PLAN
+   ════════════════════════════════════ */
+function showFormError(msg) {
+  const el = document.getElementById('form-error');
+  if (!el) return;
+  el.innerHTML = '⚠️ ' + msg;
+  el.style.display = 'block';
+  el.style.background = 'rgba(255,107,107,.12)';
+  el.style.border = '1px solid rgba(255,107,107,.4)';
+  el.style.padding = '12px 16px';
+  el.style.borderRadius = '10px';
+  el.style.color = '#ff6b6b';
+  el.style.fontSize = '0.88rem';
+  el.style.marginTop = '1rem';
+  setTimeout(() => el.scrollIntoView({behavior:'smooth', block:'center'}), 50);
+}
+function clearFormError() {
+  const el = document.getElementById('form-error');
+  if (el) { el.style.display = 'none'; el.textContent = ''; }
+  const prompt = document.getElementById('form-prompt');
+  if (prompt) { prompt.style.display = 'none'; prompt.textContent = ''; }
+  // Clear inline field errors
+  document.querySelectorAll('.field-inline-error').forEach(el => el.remove());
+  document.querySelectorAll('.field-error-highlight').forEach(el => {
+    el.style.borderColor = '';
+    el.style.boxShadow = '';
+    el.classList.remove('field-error-highlight');
+  });
+}
+
+function toggleAgeRange(btn) {
+  const exactEl = document.getElementById('age-exact');
+  const rangeEl = document.getElementById('age-range-inputs');
+  const isRange = rangeEl.style.display === 'none';
+  exactEl.style.display = isRange ? 'none' : 'block';
+  rangeEl.style.display = isRange ? 'block' : 'none';
+  btn.textContent = isRange ? '✕ Use exact age' : '± Use age range';
+}
+
+function resolveAge() {
+  const rangeEl = document.getElementById('age-range-inputs');
+  const isRange = rangeEl && rangeEl.style.display !== 'none';
+  if (isRange) {
+    const min = parseFloat(document.getElementById('age-min')?.value) || 0;
+    const max = parseFloat(document.getElementById('age-max')?.value) || 0;
+    if (!min && !max) return null;
+    return { value: Math.round((min + max) / 2), isRange: true, min, max };
+  }
+  const val = parseFloat(document.getElementById('age')?.value);
+  if (!val) return null;
+  return { value: val, isRange: false };
+}
+
+function generatePlan() {
+  clearFormError();
+
+  // Clear any previous inline errors
+  document.querySelectorAll('.field-inline-error').forEach(el => el.remove());
+  document.querySelectorAll('.field-error-highlight').forEach(el => {
+    el.style.borderColor = '';
+    el.style.boxShadow = '';
+    el.classList.remove('field-error-highlight');
+  });
+
+  const incomeR   = resolveField('income');
+  const expensesR = resolveField('expenses');
+  const savingsR  = resolveField('savings');
+  const ageR      = resolveAge();
+  const goal1 = document.getElementById('goal1')?.value.trim() || 'build an emergency fund';
+  const goal2 = document.getElementById('goal2')?.value.trim() || 'retire comfortably';
+
+  // Show inline error under a specific field
+  function fieldError(fieldId, msg) {
+    const field = document.getElementById('field-' + fieldId) || document.getElementById(fieldId)?.closest('.field');
+    const input = document.getElementById(fieldId) || document.getElementById(fieldId + '-min');
+    if (input) {
+      input.style.borderColor = '#ff6b6b';
+      input.style.boxShadow = '0 0 0 2px rgba(255,107,107,0.2)';
+      input.classList.add('field-error-highlight');
+      setTimeout(() => {
+        input.style.borderColor = '';
+        input.style.boxShadow = '';
+      }, 4000);
+    }
+    if (field) {
+      const err = document.createElement('div');
+      err.className = 'field-inline-error';
+      err.style.cssText = 'color:#ff6b6b;font-size:0.75rem;margin-top:4px;';
+      err.textContent = msg;
+      field.appendChild(err);
+    }
+  }
+
+  let hasErrors = false;
+  let firstErrorField = null;
+
+  if (!incomeR.value) {
+    fieldError('income', 'Please enter your monthly income.');
+    if (!firstErrorField) firstErrorField = document.getElementById('income') || document.getElementById('income-min');
+    hasErrors = true;
+  }
+  if (!ageR) {
+    fieldError('age', 'Please enter your age.');
+    if (!firstErrorField) firstErrorField = document.getElementById('age') || document.getElementById('age-min');
+    hasErrors = true;
+  }
+
+  if (hasErrors) {
+    if (firstErrorField) {
+      firstErrorField.focus();
+      setTimeout(() => firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
+    }
+    return;
+  }
+
+  document.getElementById('age-error').style.display = 'none';
+
+  const income   = incomeR.value;
+  const expenses = expensesR.value;
+  const savings  = savingsR.value;
+  const age      = ageR.value;
+  const free     = income - expenses;
+
+  const incomeLabel   = incomeR.isRange   ? `$${incomeR.min.toLocaleString()}–$${incomeR.max.toLocaleString()}/mo`   : fmt(income) + '/mo';
+  const expensesLabel = expensesR.isRange ? `$${expensesR.min.toLocaleString()}–$${expensesR.max.toLocaleString()}/mo` : fmt(expenses) + '/mo';
+  const savingsLabel  = savingsR.isRange  ? `$${savingsR.min.toLocaleString()}–$${savingsR.max.toLocaleString()}`     : fmt(savings);
+  const ageLabel      = ageR.isRange      ? `${ageR.min}–${ageR.max}` : String(age);
+
+  userData = { income, expenses, savings, age, goal1, goal2, free, incomeLabel, expensesLabel, savingsLabel, ageLabel };
+
+  // Save profile to localStorage — include home interests
+  const homeInterestsArr = Array.from(_homeInterests);
+  localStorage.setItem('investai_profile', JSON.stringify({
+    income, expenses, savings, age, goal1, goal2,
+    incomeLabel, expensesLabel, savingsLabel,
+    homeInterests: homeInterestsArr
+  }));
+
+  // Pre-save interests to portfolio prefs so success.html picks them up
+  if (homeInterestsArr.length > 0) {
+    try {
+      const existing = JSON.parse(localStorage.getItem('investai_portfolio_prefs') || '{}');
+      localStorage.setItem('investai_portfolio_prefs', JSON.stringify({
+        ...existing,
+        interests: homeInterestsArr
+      }));
+    } catch(e) {}
+  }
+
+  // Save to backend if logged in
+  if (Auth.isLoggedIn()) {
+    try {
+      const token = Auth.getToken();
+      fetch('https://invest-ai-production-f62b.up.railway.app/api/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type':'application/json', 'Authorization':`Bearer ${token}` },
+        body: JSON.stringify({ age, income, expenses, savings, goal_short: goal1, goal_long: goal2 })
+      });
+    } catch(e) {}
+  }
+
+  document.getElementById('disp-income').textContent   = incomeR.isRange   ? `~${fmt(income)}`   : fmt(income);
+  document.getElementById('disp-expenses').textContent = expensesR.isRange ? `~${fmt(expenses)}` : fmt(expenses);
+  document.getElementById('disp-free').textContent     = fmt(Math.max(0, free));
+  document.getElementById('plan-subtitle').textContent = `Based on ${incomeLabel} income · Age ${ageLabel} · ${savingsLabel} saved`;
+
+  const suggestedContrib = Math.max(50, Math.min(Math.round((free * 0.3) / 50) * 50, 5000));
+  document.getElementById('contrib-slider').value = suggestedContrib;
+
+  document.getElementById('s-input').classList.remove('active');
+  document.getElementById('s-plan').classList.add('active');
+  goToStep(0);
+  updateCalc();
+  fetchAIPlan(userData);
+
+  // Update compounding button label for paid users
+  if (Auth.isLoggedIn()) {
+    Auth.checkSubscription().then(sub => {
+      const btn = document.getElementById('btn-after-compounding');
+      if (btn && sub.subscribed) {
+        btn.textContent = 'Build My AI Portfolio →';
+      }
+    }).catch(() => {});
+  }
+}
+
+/* ════════════════════════════════════
+   CALCULATOR
+   ════════════════════════════════════ */
+function updateCalc() {
+  const contrib = parseFloat(document.getElementById('contrib-slider').value);
+  const rate    = parseFloat(document.getElementById('rate-slider').value);
+  const years   = parseFloat(document.getElementById('years-slider').value);
+
+  document.getElementById('contrib-out').textContent = fmt(contrib);
+  document.getElementById('rate-out').textContent    = rate.toFixed(1) + '%';
+  document.getElementById('years-out').textContent   = years;
+
+  const monthly = rate / 100 / 12;
+  const months  = years * 12;
+  const futureVal = contrib * ((Math.pow(1 + monthly, months) - 1) / monthly);
+
+  document.getElementById('future-val').textContent = fmt(futureVal);
+  document.getElementById('future-sub').textContent =
+    `in ${years} year${years > 1 ? 's' : ''} at ${rate.toFixed(1)}% annual return`;
+
+  const snapshots = [
+    { yr: '5y',  m: 60  },
+    { yr: '10y', m: 120 },
+    { yr: `${years}y`, m: months },
+  ]
+  .filter(s => s.m <= months + 1)
+  .map(s => ({
+    yr: s.yr,
+    fv: contrib * ((Math.pow(1 + monthly, s.m) - 1) / monthly),
+    c:  contrib * s.m,
+  }));
+
+  const maxVal = futureVal || 1;
+  document.getElementById('bar-chart').innerHTML = snapshots.map(r => {
+    const cPct = Math.min(Math.round((r.c / maxVal) * 100), 100);
+    const gPct = Math.min(Math.round(((r.fv - r.c) / maxVal) * 100), 100);
+    return `<div class="bar-row">
+      <span class="bar-label">${r.yr}</span>
+      <div class="bar-track"><div class="bar-fill contrib" style="width:${cPct}%"></div></div>
+      <div class="bar-track"><div class="bar-fill growth"  style="width:${gPct}%"></div></div>
+      <span class="bar-amount">${fmt(r.fv)}</span>
+    </div>`;
+  }).join('');
+}
+
+/* ════════════════════════════════════
+   AI PLAN
+   ════════════════════════════════════ */
+async function fetchAIPlan(d) {
+  document.getElementById('ai-loading').style.display = 'block';
+  document.getElementById('ai-content').style.display = 'none';
+
+  if (USE_FALLBACK) { setTimeout(() => renderAIPlan(fallbackPlan(d)), 1200); return; }
+
+  const savingsRatio    = d.income > 0 ? Math.round((d.free / d.income) * 100) : 0;
+  const emergencyMonths = d.expenses > 0 ? Math.round(d.savings / d.expenses) : 0;
+
+  const incomeStr   = d.incomeLabel   || fmt(d.income) + '/mo';
+  const expensesStr = d.expensesLabel || fmt(d.expenses) + '/mo';
+  const savingsStr  = d.savingsLabel  || fmt(d.savings);
+
+  const prompt = `You are a concise personal finance advisor. A user has shared their finances:
+- Monthly income: ${incomeStr} (midpoint used: $${d.income})
+- Monthly expenses: ${expensesStr} (midpoint used: $${d.expenses})
+- Free cash flow: ~$${d.free} (~${savingsRatio}% savings rate)
+- Current savings: ${savingsStr} (midpoint used: $${d.savings}, covers ~${emergencyMonths} months of expenses)
+- Age: ${d.age}
+- Immediate goal (1-2 years): ${d.goal1}
+- Long-term goal (10+ years): ${d.goal2}
+
+Note: Some values were entered as ranges — acknowledge this uncertainty warmly if relevant. Write a SHORT, warm, direct financial analysis (3-4 sentences) addressing their specific situation — mention their actual numbers. Then on a new line write "TIPS:" followed by exactly 3 tips, each on its own line starting with a bold title in format "**Title**: explanation". Be specific to their goals and numbers. Keep it under 200 words total.`;
+
+  try {
+    const res = await fetch(API_ENDPOINT, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt }),
+    });
+    if (!res.ok) throw new Error(`API error ${res.status}`);
+    const data = await res.json();
+    renderAIPlan(data.text || '');
+  } catch (err) {
+    renderAIPlan(fallbackPlan(d));
+  }
+}
+
+function fallbackPlan(d) {
+  const free    = Math.max(0, d.free);
+  const e3mo    = Math.round(d.expenses * 3).toLocaleString();
+  const e6mo    = Math.round(d.expenses * 6).toLocaleString();
+  const auto    = Math.round(free * 0.2).toLocaleString();
+  const savRate = d.income > 0 ? Math.round((free / d.income) * 100) : 0;
+  const emMos   = d.expenses > 0 ? Math.round(d.savings / d.expenses) : 0;
+
+  let analysis = `With ${fmt(d.income)}/mo income and ${fmt(free)}/mo in free cash flow (${savRate}% savings rate), you're in a ${savRate >= 20 ? 'strong' : savRate >= 10 ? 'solid' : 'developing'} position to start building real wealth. Your $${d.savings.toLocaleString()} in savings covers about ${emMos} month${emMos !== 1 ? 's' : ''} of expenses — ${emMos >= 3 ? "you're building a good foundation" : 'your first priority should be growing this buffer'}. With your goal to "${d.goal1}", the plan below will get you there step by step.`;
+
+  let tips = '';
+  if (emMos < 3) {
+    tips += `**Build your emergency fund first**: You need $${e3mo}–$${e6mo} (3–6 months of expenses) before investing. Put ${fmt(Math.round(free * 0.5))}/mo into a high-yield savings account until you hit that target.\n`;
+  } else {
+    tips += `**Start investing immediately**: Your emergency fund looks solid. Open a Roth IRA or brokerage and invest at least ${fmt(Math.round(free * 0.2))}/mo into a low-cost index fund like VOO or VTI.\n`;
+  }
+  tips += `**Automate your savings**: Set a recurring transfer of $${auto}/mo (20% of free cash) the day after payday — automation removes willpower from the equation.\n`;
+  tips += `**Align investments with your long-term goal**: "${d.goal2}" requires consistent compounding over many years. Start now — even a small amount invested today is worth far more than a larger amount invested later.`;
+
+  return analysis + '\n\nTIPS:\n' + tips;
+}
+
+function renderAIPlan(text) {
+  document.getElementById('ai-loading').style.display = 'none';
+  document.getElementById('ai-content').style.display = 'block';
+
+  const parts    = text.split('TIPS:');
+  const analysis = (parts[0] || text).trim();
+  document.getElementById('ai-text').textContent = analysis;
+
+  const tipsContainer = document.getElementById('tips-container');
+  tipsContainer.innerHTML = '';
+  if (parts[1]) {
+    parts[1].trim().split('\n').filter(l => l.trim()).forEach(tip => {
+      const match = tip.match(/\*\*(.+?)\*\*:?\s*(.*)/);
+      const div = document.createElement('div');
+      div.className = 'tip-card';
+      if (match) {
+        div.innerHTML = `<strong>${match[1]}</strong>${match[2]}`;
+      } else {
+        div.textContent = tip.replace(/^[-•]\s*/, '');
+      }
+      tipsContainer.appendChild(div);
+    });
+  }
+}
+
+/* ════════════════════════════════════
+   STRIPE PAYMENT LINK
+   ════════════════════════════════════ */
+const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/bJecN5ep58fXfAi3aA7AI01';
+
+function handleUnlock() {
+  if (!Auth.isLoggedIn()) {
+    window._pendingUnlock = true;
+    Auth.showModal('login');
+    return;
+  }
+  const btn = document.getElementById('btn-unlock');
+  if (btn) { btn.textContent = 'Checking…'; btn.disabled = true; }
+
+  Auth.checkSubscription().then(async sub => {
+    console.log('Subscription status:', sub);
+    if (sub.subscribed) {
+      // Already paid — go straight to portfolio, skip paywall entirely
+      goToPortfolio();
+    } else {
+      // Try self-heal sync from Stripe
+      try {
+        const token = Auth.getToken();
+        if (token) {
+          const syncRes = await fetch('https://invest-ai-production-f62b.up.railway.app/api/sync-subscription', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const syncData = await syncRes.json();
+          if (syncData.subscribed) {
+            goToPortfolio();
+            return;
+          }
+        }
+      } catch(e) { console.warn('Sync failed:', e.message); }
+      // Genuinely not subscribed — show payment
+      if (btn) { btn.textContent = 'Unlock for $4.99/mo →'; btn.disabled = false; }
+      handleUnlockAuthenticated();
+    }
+  }).catch(err => {
+    console.error('Sub check error:', err);
+    if (btn) { btn.textContent = 'Unlock for $4.99/mo →'; btn.disabled = false; }
+    handleUnlockAuthenticated();
+  });
+}
+
+async function handleUnlockAuthenticated(prefillEmail) {
+  const btn = document.getElementById('btn-unlock') || document.getElementById('btn-unlock-loggedin');
+  if (btn) {
+    btn.textContent = 'Opening checkout…';
+    btn.disabled = true;
+    btn.style.opacity = '0.7';
+  }
+
+  const resetBtn = () => {
+    if (btn) {
+      btn.textContent = 'Unlock for $4.99/mo →';
+      btn.disabled = false;
+      btn.style.opacity = '1';
+    }
+  };
+
+  const user = Auth.getUser();
+  const email = prefillEmail || (user ? user.email : '');
+
+  // Get profile from localStorage to pass through checkout
+  let profile = {};
+  try { profile = JSON.parse(localStorage.getItem('investai_profile') || '{}'); } catch(e) {}
+
+  let stripeUrl = STRIPE_PAYMENT_LINK;
+  if (email) stripeUrl += `?prefilled_email=${encodeURIComponent(email)}`;
+
+  // Try backend checkout session first (passes profile data through)
+  try {
+    const token = Auth.getToken();
+    if (token) {
+      const res = await fetch('https://invest-ai-production-f62b.up.railway.app/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ priceId: '', profile })
+      });
+      const data = await res.json();
+      if (data.url) stripeUrl = data.url;
+    }
+  } catch(e) { console.warn('Using payment link fallback:', e.message); }
+
+  // Try popup first
+  const w = 520, h = 750;
+  const left = Math.round((screen.width - w) / 2);
+  const top  = Math.round((screen.height - h) / 2);
+  const popup = window.open(
+    stripeUrl,
+    'stripe_checkout',
+    `width=${w},height=${h},left=${left},top=${top},scrollbars=yes,resizable=yes`
+  );
+
+  if (!popup || popup.closed || typeof popup.closed === 'undefined') {
+    // Popup blocked — redirect
+    window.location.href = stripeUrl;
+  } else {
+    resetBtn();
+    // Poll for popup close
+    const timer = setInterval(() => {
+      if (popup.closed) {
+        clearInterval(timer);
+        // Check if payment succeeded by looking at subscription status
+        Auth.checkSubscription().then(sub => {
+          if (sub.subscribed) {
+            window.location.href = 'https://atharv248-stock.github.io/Invest-AI/success.html';
+          }
+        });
+      }
+    }, 1000);
+  }
+}
+
+/* ════════════════════════════════════
+   SAVE / LOAD / CLEAR — localStorage
+   ════════════════════════════════════ */
+const STORAGE_KEY = 'investai_profile';
+
+function loadSaved() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const d = JSON.parse(raw);
+
+    // Fill form fields
+    if (d.income)   document.getElementById('income').value   = d.income;
+    if (d.expenses) document.getElementById('expenses').value = d.expenses;
+    if (d.savings)  document.getElementById('savings').value  = d.savings;
+    if (d.age)      document.getElementById('age').value      = d.age;
+    if (d.goal1)    document.getElementById('goal1').value    = d.goal1;
+    if (d.goal2)    document.getElementById('goal2').value    = d.goal2;
+
+    // Restore range states
+    ['income','expenses','savings'].forEach(f => {
+      if (d[f + 'Range']) {
+        const fieldEl = document.getElementById('field-' + f);
+        const btn = fieldEl.querySelector('.range-toggle-btn');
+        fieldEl.classList.add('is-range');
+        btn.textContent = '✕ Use exact number';
+        btn.classList.add('active');
+        const minEl = document.getElementById(f + '-min');
+        const maxEl = document.getElementById(f + '-max');
+        if (minEl && d[f + 'Min']) minEl.value = d[f + 'Min'];
+        if (maxEl && d[f + 'Max']) maxEl.value = d[f + 'Max'];
+        updateRangeHint(f);
+      }
+    });
+
+    // Turn toggle on
+    document.getElementById('save-toggle').checked = true;
+
+    // Show clear button
+    document.getElementById('save-clear-btn').classList.add('visible');
+
+    // Show welcome-back banner
+    const banner = document.getElementById('saved-banner');
+    const sub    = document.getElementById('saved-banner-sub');
+    const saved  = d.savedAt ? new Date(d.savedAt) : null;
+    const ago    = saved ? timeAgo(saved) : '';
+    sub.textContent = ago
+      ? `Your info from ${ago} has been filled in automatically.`
+      : 'Your info has been filled in automatically.';
+    banner.classList.add('visible');
+  } catch (e) {
+    // silently ignore corrupt data
+    localStorage.removeItem(STORAGE_KEY);
+  }
+}
+
+function saveInfo() {
+  try {
+    const data = {
+      income:        document.getElementById('income').value,
+      expenses:      document.getElementById('expenses').value,
+      savings:       document.getElementById('savings').value,
+      age:           document.getElementById('age').value,
+      goal1:         document.getElementById('goal1').value,
+      goal2:         document.getElementById('goal2').value,
+      savedAt:       new Date().toISOString(),
+      // range states
+      incomeRange:   document.getElementById('field-income').classList.contains('is-range'),
+      expensesRange: document.getElementById('field-expenses').classList.contains('is-range'),
+      savingsRange:  document.getElementById('field-savings').classList.contains('is-range'),
+      incomeMin:     document.getElementById('income-min').value,
+      incomeMax:     document.getElementById('income-max').value,
+      expensesMin:   document.getElementById('expenses-min').value,
+      expensesMax:   document.getElementById('expenses-max').value,
+      savingsMin:    document.getElementById('savings-min').value,
+      savingsMax:    document.getElementById('savings-max').value,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    document.getElementById('save-clear-btn').classList.add('visible');
+  } catch (e) {}
+}
+
+function clearSaved() {
+  try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+  document.getElementById('save-toggle').checked = false;
+  document.getElementById('save-clear-btn').classList.remove('visible');
+  document.getElementById('saved-banner').classList.remove('visible');
+}
+
+function onToggleSave(checkbox) {
+  if (checkbox.checked) {
+    saveInfo();
+    // Show a quick confirmation flash on the label
+    const label = checkbox.closest('.save-row').querySelector('.save-label');
+    const orig  = label.innerHTML;
+    label.innerHTML = '<span style="color:var(--accent);font-size:0.85rem;font-weight:500;">✓ Info saved to this device</span>';
+    setTimeout(() => { label.innerHTML = orig; }, 2000);
+  } else {
+    clearSaved();
+  }
+}
+
+// Also auto-save whenever any field changes (if toggle is on)
+function autoSaveIfEnabled() {
+  if (document.getElementById('save-toggle').checked) saveInfo();
+}
+
+function timeAgo(date) {
+  const diff = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (diff < 60)           return 'just now';
+  if (diff < 3600)         return `${Math.floor(diff / 60)} min ago`;
+  if (diff < 86400)        return `${Math.floor(diff / 3600)} hr ago`;
+  if (diff < 86400 * 7)   return `${Math.floor(diff / 86400)} day${Math.floor(diff / 86400) > 1 ? 's' : ''} ago`;
+  if (diff < 86400 * 30)  return `${Math.floor(diff / 604800)} week${Math.floor(diff / 604800) > 1 ? 's' : ''} ago`;
+  return date.toLocaleDateString();
+}
+
+// Expose all functions to window scope IMMEDIATELY
+// Must be before DOMContentLoaded so onclick handlers work
+window.generatePlan      = generatePlan;
+window.toggleAgeRange    = toggleAgeRange;
+window.showFormError     = showFormError;
+window.clearFormError    = clearFormError;
+window.goBack            = goBack;
+window.goToStep          = goToStep;
+window.showScreen        = showScreen;
+window.switchTab         = switchTab;
+window.goToProof1        = goToProof1;
+window.goToProof2        = goToProof2;
+window.goBackToStep2     = goBackToStep2;
+window.goToNextAfterCompounding = goToNextAfterCompounding;
+
+// ── Pre-payment selector (interest screen) ──────────────────────────
+var _preTier  = '';
+var _preStyle = '';
+
+function selectPreTier(tier, btn) {
+  _preTier = tier;
+  document.querySelectorAll('[id^="pre-btn-"]').forEach(b => {
+    b.style.border = '1.5px solid var(--border)';
+    b.style.background = 'var(--surface)';
+  });
+  btn.style.border = '1.5px solid var(--accent)';
+  btn.style.background = 'rgba(0,229,160,0.08)';
+}
+window.selectPreTier = selectPreTier;
+
+function selectPreStyle(style, btn) {
+  _preStyle = style;
+  document.querySelectorAll('.pre-style-btn').forEach(b => {
+    b.style.border = '1.5px solid var(--border)';
+    b.style.background = 'var(--surface)';
+  });
+  btn.style.border = '1.5px solid var(--accent)';
+  btn.style.background = 'rgba(0,229,160,0.08)';
+}
+window.selectPreStyle = selectPreStyle;
+const _homeInterests = new Set();
+const _homeInterestsOrder = [];
+
+function toggleHomeInterest(btn) {
+  const key = btn.dataset.key;
+  if (_homeInterests.has(key)) {
+    // Deselect
+    _homeInterests.delete(key);
+    const idx = _homeInterestsOrder.indexOf(key);
+    if (idx > -1) _homeInterestsOrder.splice(idx, 1);
+    btn.classList.remove('selected');
+  } else {
+    // Rolling replacement — if 4 already selected, remove oldest
+    if (_homeInterests.size >= 4) {
+      const oldest = _homeInterestsOrder.shift();
+      _homeInterests.delete(oldest);
+      const oldBtn = document.querySelector(`.home-int-btn[data-key="${oldest}"]`);
+      if (oldBtn) oldBtn.classList.remove('selected');
+    }
+    _homeInterests.add(key);
+    _homeInterestsOrder.push(key);
+    btn.classList.add('selected');
+  }
+}
+window.toggleHomeInterest = toggleHomeInterest;
+
+// ── Optional fields toggle ───────────────────────────────────────────
+function toggleOptionalFields(btn) {
+  const panel = document.getElementById('optional-fields');
+  const arrow = document.getElementById('optional-arrow');
+  const isHidden = panel.style.display === 'none';
+  panel.style.display = isHidden ? 'block' : 'none';
+  arrow.style.transform = isHidden ? 'rotate(90deg)' : '';
+}
+window.toggleOptionalFields = toggleOptionalFields;
+window.goToPortfolio     = goToPortfolio;
+window.openDetail        = openDetail;
+window.closeDetail       = closeDetail;
+window.toggleRange       = toggleRange;
+window.updateRangeHint   = updateRangeHint;
+window.updateCalc        = updateCalc;
+window.handleUnlock      = handleUnlock;
+window.handleUnlockAuthenticated = handleUnlockAuthenticated;
+window.clearSaved        = clearSaved;
+window.autoSaveIfEnabled = autoSaveIfEnabled;
+
+// Load on page start
+window.addEventListener('DOMContentLoaded', () => {
+  try { loadSaved(); } catch(e) { console.warn('loadSaved error:', e.message); }
+
+  // Wire up auto-save on field changes
+  ['income','expenses','savings','age','goal1','goal2'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', autoSaveIfEnabled);
+  });
+});
+
+</script>
+<script>
+const Auth = (() => {
+
+  /* ── Config ── */
+  const API = 'https://invest-ai-production-f62b.up.railway.app/api';
+  const KEYS = {
+    accessToken:   'investai_access_token',
+    refreshToken:  'investai_refresh_token',
+    expiresAt:     'investai_token_expires',
+    user:          'investai_user',
+    profile:       'investai_profile',
+  };
+
+  /* ── State ── */
+  let _refreshTimer = null;
+
+  /* ══════════════════════════════════════════════
+     TOKEN MANAGEMENT
+  ══════════════════════════════════════════════ */
+  function saveSession(data) {
+    localStorage.setItem(KEYS.accessToken,  data.access_token);
+    localStorage.setItem(KEYS.refreshToken, data.refresh_token);
+    localStorage.setItem(KEYS.expiresAt,    data.expires_at);
+    localStorage.setItem(KEYS.user, JSON.stringify(data.user));
+    scheduleRefresh(data.expires_at);
+  }
+
+  function clearSession() {
+    Object.values(KEYS).forEach(k => localStorage.removeItem(k));
+    if (_refreshTimer) clearTimeout(_refreshTimer);
+    _refreshTimer = null;
+  }
+
+  function getToken() {
+    return localStorage.getItem(KEYS.accessToken);
+  }
+
+  function getUser() {
+    try { return JSON.parse(localStorage.getItem(KEYS.user)); }
+    catch { return null; }
+  }
+
+  function isLoggedIn() {
+    const token   = getToken();
+    const expires = localStorage.getItem(KEYS.expiresAt);
+    if (!token || !expires) return false;
+    // Consider expired 60s early to avoid edge cases
+    return Date.now() < (parseInt(expires) * 1000) - 60000;
+  }
+
+  // Refresh token 5 minutes before expiry
+  function scheduleRefresh(expiresAt) {
+    if (_refreshTimer) clearTimeout(_refreshTimer);
+    const msUntilRefresh = (parseInt(expiresAt) * 1000) - Date.now() - 5 * 60 * 1000;
+    if (msUntilRefresh > 0) {
+      _refreshTimer = setTimeout(refreshToken, msUntilRefresh);
+    }
+  }
+
+  async function refreshToken() {
+    const refresh = localStorage.getItem(KEYS.refreshToken);
+    if (!refresh) return;
+    try {
+      const res  = await fetch(`${API}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: refresh }),
+      });
+      if (!res.ok) { clearSession(); updateUI(); return; }
+      const data = await res.json();
+      localStorage.setItem(KEYS.accessToken,  data.access_token);
+      localStorage.setItem(KEYS.refreshToken, data.refresh_token);
+      localStorage.setItem(KEYS.expiresAt,    data.expires_at);
+      scheduleRefresh(data.expires_at);
+    } catch(e) {
+      console.warn('Token refresh failed:', e.message);
+    }
+  }
+
+  /* ══════════════════════════════════════════════
+     API HELPERS
+  ══════════════════════════════════════════════ */
+  async function apiCall(method, endpoint, body) {
+    const headers = { 'Content-Type': 'application/json' };
+    const token = getToken();
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(`${API}${endpoint}`, {
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    return data;
+  }
+
+  /* ══════════════════════════════════════════════
+     AUTH ACTIONS
+  ══════════════════════════════════════════════ */
+  async function signUp(email, password) {
+    // Sign up directly via Supabase client — bypasses email confirmation
+    const res = await fetch(`${API}/auth/signup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Sign up failed.');
+    return data;
+  }
+
+  async function login(email, password) {
+    const data = await apiCall('POST', '/auth/login', { email, password });
+    saveSession(data);
+    // Sync local profile to DB after login
+    await syncProfileToDB();
+    updateUI();
+    return data.user;
+  }
+
+  async function logout() {
+    clearSubCache();
+    _bannerChecked = false;
+    clearSession();
+    updateUI();
+    window.location.href = 'https://atharv248-stock.github.io/Invest-AI/index.html';
+  }
+
+  async function forgotPassword(email) {
+    return await apiCall('POST', '/auth/forgot-password', { email });
+  }
+
+  async function deleteAccount() {
+    if (!confirm('Are you sure? This permanently deletes your account and all data. This cannot be undone.')) return;
+    await apiCall('DELETE', '/auth/delete-account');
+    clearSession();
+    alert('Your account has been deleted.');
+    window.location.href = 'https://atharv248-stock.github.io/Invest-AI/index.html';
+  }
+
+  /* ══════════════════════════════════════════════
+     PROFILE SYNC
+     On login: push localStorage profile to DB.
+     On page load (if logged in): pull from DB, merge into localStorage.
+  ══════════════════════════════════════════════ */
+  async function syncProfileToDB() {
+    const local = localStorage.getItem('investai_profile');
+    if (!local) return;
+    try {
+      const p = JSON.parse(local);
+      await apiCall('PUT', '/profile', {
+        age:          parseInt(p.age) || null,
+        income:       parseFloat(p.income) || null,
+        expenses:     parseFloat(p.expenses) || null,
+        savings:      parseFloat(p.savings) || null,
+        goal_short:   p.goal1 || null,
+        goal_long:    p.goal2 || null,
+        risk_tier:    p.riskTier || null,
+        interests:    p.interests || [],
+      });
+    } catch(e) {
+      console.warn('Profile sync failed:', e.message);
+    }
+  }
+
+  async function loadProfileFromDB() {
+    if (!isLoggedIn()) return;
+    try {
+      const { profile } = await apiCall('GET', '/profile');
+      if (!profile) return;
+      // Merge DB profile into localStorage format
+      const local = {
+        income:   profile.income,
+        expenses: profile.expenses,
+        savings:  profile.savings,
+        age:      profile.age,
+        goal1:    profile.goal_short,
+        goal2:    profile.goal_long,
+        riskTier: profile.risk_tier,
+        interests: profile.interests || [],
+      };
+      localStorage.setItem('investai_profile', JSON.stringify(local));
+    } catch(e) {
+      console.warn('Profile load failed:', e.message);
+    }
+  }
+
+  /* ══════════════════════════════════════════════
+     SUBSCRIPTION CHECK
+  ══════════════════════════════════════════════ */
+  let _subCache = null;
+  let _subCacheTime = 0;
+
+  async function checkSubscription() {
+    if (!isLoggedIn()) return { subscribed: false };
+    // Check sessionStorage first (survives page navigation within session)
+    try {
+      const stored = sessionStorage.getItem('investai_sub_cache');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed && (Date.now() - parsed.t) < 300000) {
+          _subCache = parsed.data;
+          return _subCache;
+        }
+      }
+    } catch(e) {}
+    // In-memory cache
+    if (_subCache && (Date.now() - _subCacheTime) < 300000) return _subCache;
+    try {
+      const result = await apiCall('GET', '/subscription');
+      _subCache = result;
+      _subCacheTime = Date.now();
+      // Persist to sessionStorage
+      try { sessionStorage.setItem('investai_sub_cache', JSON.stringify({ data: result, t: Date.now() })); } catch(e) {}
+      return result;
+    } catch(e) {
+      return { subscribed: false };
+    }
+  }
+
+  function clearSubCache() {
+    _subCache = null;
+    _subCacheTime = 0;
+    try { sessionStorage.removeItem('investai_sub_cache'); } catch(e) {}
+  }
+
+  /* ══════════════════════════════════════════════
+     SAVE PORTFOLIO
+  ══════════════════════════════════════════════ */
+  async function savePortfolio(portfolioData) {
+    if (!isLoggedIn()) return;
+    try {
+      await apiCall('POST', '/portfolios', portfolioData);
+    } catch(e) {
+      console.warn('Portfolio save failed:', e.message);
+    }
+  }
+
+  /* ══════════════════════════════════════════════
+     UI UPDATE
+     Shows/hides auth buttons based on login state.
+  ══════════════════════════════════════════════ */
+  function updateUI() {
+    const user       = getUser();
+    const loggedIn   = isLoggedIn();
+    const authBtns   = document.getElementById('auth-buttons');
+    const userMenu   = document.getElementById('user-menu');
+    const userEmail  = document.getElementById('user-email-display');
+
+    if (authBtns)  authBtns.style.display  = loggedIn ? 'none'  : 'flex';
+    if (userMenu)  userMenu.style.display  = loggedIn ? 'flex'  : 'none';
+    if (userEmail && user) userEmail.textContent = user.email;
+  }
+
+  /* ══════════════════════════════════════════════
+     MODAL CONTROL
+  ══════════════════════════════════════════════ */
+  function showModal(tab) {
+    const modal = document.getElementById('auth-modal');
+    if (!modal) return;
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    switchTab(tab || 'login');
+  }
+
+  function hideModal() {
+    const modal = document.getElementById('auth-modal');
+    if (!modal) return;
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+    clearFormErrors();
+  }
+
+  function switchTab(tab) {
+    document.querySelectorAll('.auth-tab').forEach(t => {
+      t.classList.toggle('active', t.dataset.tab === tab);
+    });
+    document.querySelectorAll('.auth-panel').forEach(p => {
+      p.style.display = p.dataset.panel === tab ? 'block' : 'none';
+    });
+    clearFormErrors();
+  }
+
+  function setFormError(panelId, msg) {
+    const el = document.querySelector(`[data-panel="${panelId}"] .auth-error`);
+    if (el) { el.textContent = msg; el.style.display = 'block'; }
+  }
+
+  function setFormSuccess(panelId, msg) {
+    const el = document.querySelector(`[data-panel="${panelId}"] .auth-success`);
+    if (el) { el.textContent = msg; el.style.display = 'block'; }
+  }
+
+  function clearFormErrors() {
+    document.querySelectorAll('.auth-error, .auth-success').forEach(el => {
+      el.style.display = 'none'; el.textContent = '';
+    });
+  }
+
+  function setLoading(btnId, loading) {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    btn.disabled = loading;
+    btn.dataset.origText = btn.dataset.origText || btn.textContent;
+    btn.textContent = loading ? 'Please wait…' : btn.dataset.origText;
+  }
+
+  /* ══════════════════════════════════════════════
+     FORM HANDLERS (attached to global window)
+  ══════════════════════════════════════════════ */
+  async function handleSignUp() {
+    const email    = document.getElementById('signup-email')?.value?.trim();
+    const password = document.getElementById('signup-password')?.value;
+    const confirm  = document.getElementById('signup-confirm')?.value;
+
+    clearFormErrors();
+    if (!email || !password) return setFormError('signup', 'Please fill in all fields.');
+    if (!email.includes('@') || !email.includes('.')) return setFormError('signup', 'Please enter a valid email address.');
+    if (password !== confirm) return setFormError('signup', 'Passwords do not match.');
+    if (password.length < 8)  return setFormError('signup', 'Password must be at least 8 characters.');
+
+    setLoading('signup-btn', true);
+    try {
+      const res = await signUp(email, password);
+
+      if (res && res.requiresVerification) {
+        // Show verification message inside modal
+        const container = document.querySelector('[data-panel="signup"]');
+        if (container) {
+          container.innerHTML = `
+            <div style="text-align:center;padding:1rem 0">
+              <div style="font-size:2.5rem;margin-bottom:1rem">📧</div>
+              <div style="font-family:var(--font-display);font-size:1.1rem;font-weight:800;margin-bottom:0.6rem;color:var(--accent)">
+                Check your email!
+              </div>
+              <p style="font-size:0.85rem;color:var(--muted);line-height:1.7;margin-bottom:1rem">
+                We sent a confirmation link to<br>
+                <strong style="color:var(--text)">${email}</strong>
+              </p>
+              <p style="font-size:0.82rem;color:var(--muted);line-height:1.6;margin-bottom:1.2rem">
+                Click the link in that email to activate your account, then come back here to sign in.
+              </p>
+              <button onclick="Auth.switchTab('login')" style="width:100%;background:var(--accent);color:#051a10;font-family:var(--font-display);font-weight:700;font-size:0.9rem;padding:12px;border:none;border-radius:10px;cursor:pointer;margin-bottom:0.5rem">
+                Go to sign in →
+              </button>
+              <button onclick="Auth.hideModal()" style="width:100%;background:var(--surface2);border:1px solid var(--border2);color:var(--muted);font-size:0.82rem;padding:10px;border-radius:10px;cursor:pointer">
+                I'll verify later
+              </button>
+            </div>`;
+        }
+        return;
+      }
+
+      // If somehow auto-confirmed (shouldn't happen), log in directly
+      await login(email, password);
+      hideModal();
+    } catch(e) {
+      setFormError('signup', e.message || 'Sign up failed. Please try again.');
+    } finally {
+      setLoading('signup-btn', false);
+    }
+  }
+
+  async function handleLogin() {
+    const email    = document.getElementById('login-email')?.value?.trim();
+    const password = document.getElementById('login-password')?.value;
+
+    clearFormErrors();
+    if (!email || !password) return setFormError('login', 'Please enter your email and password.');
+
+    setLoading('login-btn', true);
+    try {
+      const user = await login(email, password);
+      _bannerChecked = false; // reset so banner check runs fresh
+      hideModal();
+      checkAndShowPortfolioBanner();
+      // If user was trying to unlock, redirect to payment
+      if (window._pendingUnlock) {
+        window._pendingUnlock = false;
+        handleUnlock();
+      }
+    } catch(e) {
+      setFormError('login', e.message === 'Invalid email or password.'
+        ? 'Incorrect email or password. Please try again.'
+        : e.message);
+    } finally {
+      setLoading('login-btn', false);
+    }
+  }
+
+  async function handleForgotPassword() {
+    const email = document.getElementById('forgot-email')?.value?.trim();
+    clearFormErrors();
+    if (!email) return setFormError('forgot', 'Please enter your email address.');
+
+    const btn = document.getElementById('forgot-btn');
+    setLoading('forgot-btn', true);
+    try {
+      await forgotPassword(email);
+      // Show success and keep button disabled so user doesn't spam
+      if (btn) { btn.textContent = '✅ Email sent!'; btn.disabled = true; btn.style.background = '#1a3a2a'; }
+      setFormSuccess('forgot', `Reset link sent to ${email} — check your inbox (and spam folder).`);
+    } catch(e) {
+      setFormError('forgot', e.message || 'Something went wrong. Please try again.');
+      setLoading('forgot-btn', false);
+    }
+  }
+
+  /* ══════════════════════════════════════════════
+     INIT
+  ══════════════════════════════════════════════ */
+  async function init() {
+    updateUI();
+    // If logged in, load fresh profile from DB
+    if (isLoggedIn()) {
+      scheduleRefresh(localStorage.getItem(KEYS.expiresAt));
+      await loadProfileFromDB();
+    }
+    // Close modal on backdrop click
+    document.getElementById('auth-modal')?.addEventListener('click', (e) => {
+      if (e.target.id === 'auth-modal') hideModal();
+    });
+    // Enter key submits forms
+    document.getElementById('login-password')?.addEventListener('keydown', e => {
+      if (e.key === 'Enter') handleLogin();
+    });
+    document.getElementById('signup-confirm')?.addEventListener('keydown', e => {
+      if (e.key === 'Enter') handleSignUp();
+    });
+  }
+
+  /* ── Public API ── */
+  return {
+    init,
+    isLoggedIn,
+    getUser,
+    getToken,
+    login,
+    logout,
+    signUp,
+    deleteAccount,
+    savePortfolio,
+    checkSubscription,
+    clearSubCache,
+    showModal,
+    hideModal,
+    switchTab,
+    handleSignUp,
+    handleLogin,
+    handleForgotPassword,
+    updateUI,
+  };
+
+})();
+</script>
+<script>
+window.addEventListener('DOMContentLoaded', function() {
+  // Handle OAuth/recovery redirect tokens
+  const hash = window.location.hash;
+  if (hash && hash.includes('access_token=')) {
+    const params = new URLSearchParams(hash.replace('#', ''));
+    const accessToken  = params.get('access_token');
+    const refreshToken = params.get('refresh_token');
+    const expiresAt    = params.get('expires_at');
+    const tokenType    = params.get('type'); // 'recovery' for password reset, 'signup' for confirm
+
+    // Clean the URL
+    window.history.replaceState({}, document.title,
+      window.location.pathname + window.location.search);
+
+    if (tokenType === 'recovery' && accessToken) {
+      // Password reset flow — show reset form instead of logging in
+      showPasswordResetModal(accessToken);
+      return;
+    }
+
+    if (accessToken) {
+      // OAuth sign-in (Google/Apple) or email confirmation
+      localStorage.setItem('investai_access_token',  accessToken);
+      localStorage.setItem('investai_refresh_token', refreshToken || '');
+      localStorage.setItem('investai_token_expires', expiresAt || '');
+      try {
+        const payload = JSON.parse(atob(accessToken.split('.')[1]));
+        const user = { id: payload.sub, email: payload.email };
+        localStorage.setItem('investai_user', JSON.stringify(user));
+      } catch(e) {}
+      if (typeof Auth !== 'undefined') {
+        Auth.updateUI();
+        var u = Auth.getUser();
+        if (u) {
+          var el = document.getElementById('user-avatar-initials');
+          if (el) el.textContent = u.email.charAt(0).toUpperCase();
+        }
+      }
+      setTimeout(function() {
+        _bannerChecked = false;
+        checkAndShowPortfolioBanner();
+      }, 1500);
+    }
+    return;
+  }
+
+  // Normal page load
+  if (typeof Auth !== 'undefined') {
+    Auth.init();
+    // Clear any stale error messages on load
+    if (typeof clearFormError === 'function') clearFormError();
+    var user = Auth.getUser();
+    if (user) {
+      var el = document.getElementById('user-avatar-initials');
+      if (el) el.textContent = user.email.charAt(0).toUpperCase();
+    }
+    if (Auth.isLoggedIn()) {
+      checkAndShowPortfolioBanner();
+    }
+  }
+});
+
+// ── Show portfolio banner for paid users only ─────────────────────
+var _bannerChecked = false;
+function checkAndShowPortfolioBanner() {
+  if (!Auth.isLoggedIn() || _bannerChecked) return;
+  _bannerChecked = true;
+
+  Auth.checkSubscription().then(function(sub) {
+    if (sub.subscribed) {
+      var banner = document.getElementById('returning-user-banner');
+      if (banner) banner.style.display = 'block';
+    }
+  }).catch(function() {});
+}
+window.checkAndShowPortfolioBanner = checkAndShowPortfolioBanner;
+// Supabase handles the full OAuth flow — redirects to provider and back
+async function signInWithApple() {
+  try {
+    const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+    const supabase = createClient(
+      'https://pbhjyuafzkwswhktgblt.supabase.co',
+      'REPLACE_WITH_YOUR_ANON_KEY'  // ← paste your Supabase anon key here
+    );
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'apple',
+      options: { redirectTo: 'https://atharv248-stock.github.io/Invest-AI/index.html' }
+    });
+    if (error) throw error;
+  } catch(e) {
+    alert('Apple sign in failed: ' + e.message);
+  }
+}
+
+async function signInWithGoogle() {
+  try {
+    const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+    const supabase = createClient(
+      'https://pbhjyuafzkwswhktgblt.supabase.co',
+      'REPLACE_WITH_YOUR_ANON_KEY'  // ← paste your Supabase anon key here
+    );
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: 'https://atharv248-stock.github.io/Invest-AI/index.html' }
+    });
+    if (error) throw error;
+  } catch(e) {
+    alert('Google sign in failed: ' + e.message);
+  }
+}
+
+window.signInWithApple  = signInWithApple;
+window.signInWithGoogle = signInWithGoogle;
+</script>
+<!-- ══ PASSWORD RESET MODAL ══ -->
+<div id="pwd-reset-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:#111611;border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:2rem;width:90%;max-width:380px;text-align:center">
+    <div style="font-size:2rem;margin-bottom:0.5rem">🔐</div>
+    <div style="font-family:var(--font-display);font-size:1.1rem;font-weight:800;margin-bottom:0.4rem">Set your new password</div>
+    <p style="font-size:0.82rem;color:var(--muted);margin-bottom:1.2rem;line-height:1.6">Choose a strong password for your Invest AI account.</p>
+    <div style="margin-bottom:0.8rem;text-align:left">
+      <label style="font-size:0.72rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:5px">New password</label>
+      <input type="password" id="new-password" placeholder="Min. 8 characters"
+        style="width:100%;padding:12px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:0.9rem;outline:none;box-sizing:border-box"/>
+    </div>
+    <div style="margin-bottom:1rem;text-align:left">
+      <label style="font-size:0.72rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:5px">Confirm password</label>
+      <input type="password" id="new-password-confirm" placeholder="Repeat password"
+        style="width:100%;padding:12px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:0.9rem;outline:none;box-sizing:border-box"/>
+    </div>
+    <div id="pwd-reset-error" style="display:none;font-size:0.78rem;color:#ff6b6b;background:rgba(255,107,107,.08);border-radius:8px;padding:8px;margin-bottom:0.8rem"></div>
+    <div id="pwd-reset-success" style="display:none;font-size:0.78rem;color:var(--accent);background:rgba(0,229,160,.08);border-radius:8px;padding:8px;margin-bottom:0.8rem"></div>
+    <button id="pwd-reset-btn" onclick="submitNewPassword()"
+      style="width:100%;background:linear-gradient(135deg,#00e5a0,#4fa3f7);color:#051a10;font-family:var(--font-display);font-weight:800;font-size:0.95rem;padding:14px;border:none;border-radius:12px;cursor:pointer">
+      Set Password →
+    </button>
+  </div>
+</div>
+
+<script>
+var _recoveryToken = null;
+
+function showPasswordResetModal(token) {
+  _recoveryToken = token;
+  var modal = document.getElementById('pwd-reset-modal');
+  if (modal) {
+    modal.style.display = 'flex';
+    document.getElementById('new-password').focus();
+  }
+}
+
+async function submitNewPassword() {
+  var pwd     = document.getElementById('new-password').value;
+  var confirm = document.getElementById('new-password-confirm').value;
+  var errEl   = document.getElementById('pwd-reset-error');
+  var okEl    = document.getElementById('pwd-reset-success');
+  var btn     = document.getElementById('pwd-reset-btn');
+
+  errEl.style.display = 'none';
+  okEl.style.display  = 'none';
+
+  if (!pwd || pwd.length < 8) {
+    errEl.textContent = 'Password must be at least 8 characters.';
+    errEl.style.display = 'block'; return;
+  }
+  if (pwd !== confirm) {
+    errEl.textContent = 'Passwords do not match.';
+    errEl.style.display = 'block'; return;
+  }
+
+  btn.disabled = true; btn.textContent = 'Updating…';
+
+  try {
+    const res  = await fetch('https://invest-ai-production-f62b.up.railway.app/api/auth/update-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _recoveryToken },
+      body: JSON.stringify({ password: pwd })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to update password.');
+
+    okEl.textContent = '✅ Password updated! Signing you in…';
+    okEl.style.display = 'block';
+    btn.textContent = '✅ Done!';
+
+    // Save session and redirect to home
+    if (data.access_token) {
+      localStorage.setItem('investai_access_token', data.access_token);
+      localStorage.setItem('investai_user', JSON.stringify(data.user || {}));
+    }
+    setTimeout(() => {
+      document.getElementById('pwd-reset-modal').style.display = 'none';
+      if (typeof Auth !== 'undefined') { Auth.updateUI(); }
+      _bannerChecked = false;
+      checkAndShowPortfolioBanner();
+    }, 1500);
+
+  } catch(e) {
+    errEl.textContent = e.message || 'Something went wrong. Please try again.';
+    errEl.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Set Password →';
+  }
+}
+
+// Allow Enter key in password fields
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && document.getElementById('pwd-reset-modal')?.style.display === 'flex') {
+    submitNewPassword();
+  }
+});
+</script>
+
+</body>
+</html>
