@@ -584,7 +584,15 @@ app.get('/api/subscription', requireAuth, async (req, res) => {
   res.json({ subscribed: isActive, ...data });
 });
 
-/* ── Direct subscription creation (used by checkout.html) ──────────── */
+/* ── Expose safe public config to frontend ── */
+app.get('/api/supabase-config', (req, res) => {
+  res.json({
+    url:     process.env.SUPABASE_URL,
+    anonKey: process.env.SUPABASE_ANON_KEY,
+  });
+});
+
+
 app.post('/api/create-subscription', async (req, res) => {
   const { paymentMethodId, email } = req.body;
   if (!paymentMethodId || !email) return res.status(400).json({ error: 'paymentMethodId and email required.' });
@@ -1255,6 +1263,16 @@ app.post('/api/admin/fix-subscription', async (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`✅ Invest AI running at http://localhost:${PORT}`);
+  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASS) {
+    console.warn('⚠️  GMAIL_USER or GMAIL_APP_PASS not set — email sending will fail!');
+  } else {
+    console.log(`📧 Gmail SMTP configured for: ${process.env.GMAIL_USER}`);
+    // Verify connection
+    emailTransporter.verify((err) => {
+      if (err) console.warn('⚠️  Gmail SMTP connection failed:', err.message);
+      else console.log('✅ Gmail SMTP connection verified');
+    });
+  }
   loadCacheFromDisk();
   const cacheAge = valuationCache.lastUpdated
     ? Date.now() - new Date(valuationCache.lastUpdated).getTime()
