@@ -369,31 +369,32 @@ app.post('/api/auth/login', async (req, res) => {
   const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
   if (error) {
-    console.warn(`Login failed for ${email}: ${error.message} (status: ${error.status})`);
+    console.warn(`Login failed for ${email}: "${error.message}" (code: ${error.code}, status: ${error.status})`);
 
     // If email not confirmed, auto-confirm via admin and retry
     if (error.message?.toLowerCase().includes('email not confirmed') ||
         error.message?.toLowerCase().includes('not confirmed')) {
       try {
-        await supabaseAdmin.auth.admin.updateUserById(
-          (await supabaseAdmin.auth.admin.listUsers()).data.users.find(u => u.email === email)?.id,
-          { email_confirm: true }
-        );
-        // Retry login
-        const retry = await supabaseClient.auth.signInWithPassword({ email, password });
-        if (!retry.error) {
-          console.log(`Auto-confirmed and logged in: ${email}`);
-          return res.json({
-            access_token:  retry.data.session.access_token,
-            refresh_token: retry.data.session.refresh_token,
-            expires_at:    retry.data.session.expires_at,
-            user: { id: retry.data.user.id, email: retry.data.user.email },
-          });
+        const { data: userList } = await supabaseAdmin.auth.admin.listUsers();
+        const userId = userList?.users?.find(u => u.email === email)?.id;
+        if (userId) {
+          await supabaseAdmin.auth.admin.updateUserById(userId, { email_confirm: true });
+          const retry = await supabaseClient.auth.signInWithPassword({ email, password });
+          if (!retry.error) {
+            console.log(`✅ Auto-confirmed and logged in: ${email}`);
+            return res.json({
+              access_token:  retry.data.session.access_token,
+              refresh_token: retry.data.session.refresh_token,
+              expires_at:    retry.data.session.expires_at,
+              user: { id: retry.data.user.id, email: retry.data.user.email },
+            });
+          }
         }
       } catch(e) { console.warn('Auto-confirm failed:', e.message); }
     }
 
-    return res.status(401).json({ error: 'Invalid email or password.' });
+    // Return the actual error so we can debug
+    return res.status(401).json({ error: error.message || 'Invalid email or password.' });
   }
 
   res.json({
