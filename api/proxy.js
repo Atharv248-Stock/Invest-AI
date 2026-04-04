@@ -92,9 +92,12 @@ const emailTransporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
   port: 465,
   secure: true,
+  connectionTimeout: 10000,  // 10 second timeout — fail fast
+  greetingTimeout: 10000,
+  socketTimeout: 15000,
   auth: {
-    user: process.env.GMAIL_USER,     // your Gmail address
-    pass: process.env.GMAIL_APP_PASS, // Gmail App Password (not your login password)
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_APP_PASS,
   }
 });
 
@@ -426,11 +429,16 @@ app.post('/api/auth/forgot-password', async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: 'Email required.' });
   try {
-    await sendResetPasswordEmail(email);  // Case 3: reset password email
+    // Use Supabase's built-in reset — reliable, no SMTP config needed
+    const supabaseClient = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+    await supabaseClient.auth.resetPasswordForEmail(email, {
+      redirectTo: 'https://atharv248-stock.github.io/Invest-AI/index.html',
+    });
+    console.log(`📧 Password reset email sent via Supabase for: ${email}`);
   } catch(e) {
-    console.warn('Forgot password email error:', e.message);
+    console.warn('Forgot password error:', e.message);
   }
-  // Always return success to prevent email enumeration
+  // Always return success immediately — don't reveal if email exists
   res.json({ message: 'If that email exists, a reset link has been sent.' });
 });
 
