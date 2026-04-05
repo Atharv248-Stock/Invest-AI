@@ -1360,6 +1360,27 @@ app.post('/api/admin/fix-subscription', async (req, res) => {
   }
 });
 
+// POST /api/admin/test-email  — trigger welcome email without real payment
+app.post('/api/admin/test-email', async (req, res) => {
+  const secret = req.headers['x-admin-secret'] || req.query.secret;
+  if (secret !== process.env.CACHE_ADMIN_SECRET) return res.status(401).json({ error: 'Unauthorized.' });
+
+  const { email, type } = req.body;  // type: 'new' | 'existing'
+  if (!email) return res.status(400).json({ error: 'email required' });
+
+  try {
+    if (type === 'new') {
+      await sendNewPaidUserEmail(email);
+      res.json({ success: true, message: `Case 1 (new user) welcome email triggered for ${email}` });
+    } else {
+      await sendExistingPaidUserEmail(email);
+      res.json({ success: true, message: `Case 2 (existing user) welcome email triggered for ${email}` });
+    }
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 
 app.listen(PORT, () => {
   console.log(`✅ Invest AI running at http://localhost:${PORT}`);
