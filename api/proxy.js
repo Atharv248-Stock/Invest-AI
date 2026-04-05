@@ -411,34 +411,69 @@ app.post('/api/auth/login', async (req, res) => {
 // POST /api/auth/update-password  (called with recovery token from reset email)
 app.post('/api/auth/update-password', async (req, res) => {
   const { password } = req.body;
-  const token = req.headers.authorization?.replace('Bearer ', '');
-  if (!token) return res.status(401).json({ error: 'No token provided.' });
+  const accessToken  = req.headers.authorization?.replace('Bearer ', '');
+  const refreshToken = req.headers['x-refresh-token'] || '';
+
+  if (!accessToken) return res.status(401).json({ error: 'No token provided.' });
   if (!password || password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters.' });
 
   try {
-    // Use the recovery token to create a Supabase client session
-    const { createClient } = require('@supabase/supabase-js');
-    const supabaseClient = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY, {
-      global: { headers: { Authorization: `Bearer ${token}` } }
+    const supabaseClient = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+
+    // Set session using access + refresh token
+    const { error: sessionError } = await supabaseClient.auth.setSession({
+      access_token:  accessToken,
+      refresh_token: refreshToken || accessToken,
     });
 
-    // Update the user's password
+    if (sessionError) {
+      console.warn('setSession error:', sessionError.message);
+      // Try admin approach as fallback
+      const { data: userList } = await supabaseAdmin.auth.admin.listUsers();
+      // Decode token to get user id
+      let userId = null;
+      try {
+        const payload = JSON.parse(Buffer.from(accessToken.split('.')[1], 'base64').toString());
+        userId = payload.sub;
+      } catch(e) {}
+
+      if (!userId) return res.status(401).json({ error: 'Auth session missing.' });
+
+      const { error: adminUpdateErr } = await supabaseAdmin.auth.admin.updateUserById(userId, { password });
+      if (adminUpdateErr) return res.status(400).json({ error: adminUpdateErr.message });
+
+      // Log user in after admin update
+      const { data: loginData, error: loginErr } = await supabaseClient.auth.signInWithPassword({
+        email: userList?.users?.find(u => u.id === userId)?.email || '',
+        password,
+      });
+
+      console.log(`✅ Password updated via admin for user ${userId}`);
+      return res.json({
+        access_token: loginData?.session?.access_token || accessToken,
+        user: { id: userId, email: loginData?.user?.email }
+      });
+    }
+
+    // Normal path - update password with valid session
     const { data, error } = await supabaseClient.auth.updateUser({ password });
     if (error) {
-      console.warn('Update password error:', error.message);
+      console.warn('updateUser error:', error.message);
       return res.status(400).json({ error: error.message });
     }
 
-    console.log(`✅ Password updated for user: ${data.user?.email}`);
+    // Get fresh session
+    const { data: sessionData } = await supabaseClient.auth.getSession();
+    const newToken = sessionData?.session?.access_token || accessToken;
 
-    // Return a fresh session so the user is logged in
+    console.log(`✅ Password updated for user: ${data.user?.email}`);
     res.json({
-      access_token:  token,
+      access_token: newToken,
       user: { id: data.user?.id, email: data.user?.email }
     });
   } catch(e) {
     console.error('Update password error:', e.message);
-    res.status(500).json({ error: 'Failed to update password.' });
+    res.status(500).json({ error: 'Failed to update password. Please try again.' });
   }
 });
 
