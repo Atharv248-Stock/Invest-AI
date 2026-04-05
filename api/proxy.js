@@ -44,7 +44,6 @@ const path      = require('path');
 const fs        = require('fs');
 const cron      = require('node-cron');
 const Stripe    = require('stripe');
-const nodemailer = require('nodemailer');
 const { createClient } = require('@supabase/supabase-js');
 // Universe tickers for nightly cache — all 272 stocks
 const UNIVERSE_TICKERS = [
@@ -87,22 +86,9 @@ const supabaseAdmin = createClient(
   { auth: { autoRefreshToken: false, persistSession: false } }
 );
 
-// ─── Email transporter (Gmail SMTP) ──────────────────────────────────────────
-const emailTransporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true,
-  connectionTimeout: 10000,  // 10 second timeout — fail fast
-  greetingTimeout: 10000,
-  socketTimeout: 15000,
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASS,
-  }
-});
+// Gmail SMTP removed — Railway blocks outbound SMTP. Using Supabase email delivery.
 
 const APP_URL = 'https://atharv248-stock.github.io/Invest-AI/index.html';
-const FROM    = `"Invest AI" <${process.env.GMAIL_USER}>`;
 
 // ── Helper: generate password reset link via Supabase admin ──────────────────
 async function getPasswordResetLink(email) {
@@ -133,32 +119,34 @@ async function getInviteLink(email) {
 // EMAIL CASE 1: New user paid (no prior account) — set password + welcome
 // ═══════════════════════════════════════════════════════════
 // ── All email sent via Supabase (Railway blocks SMTP outbound) ────────
+// ── All email sent via Supabase client signInWithOtp (actually sends email) ──
 async function sendNewPaidUserEmail(email) {
-  // Try invite first (new user), fall back to magic link (existing user)
-  try {
-    await supabaseAdmin.auth.admin.inviteUserByEmail(email, { redirectTo: APP_URL });
-    console.log(`📧 [Case 1] Invite email sent to ${email}`);
-  } catch(e) {
-    // User already exists — send magic link instead
-    const { error } = await supabaseAdmin.auth.admin.generateLink({
-      type: 'magiclink',
+  // inviteUserByEmail actually sends an email via Supabase
+  const { error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+    redirectTo: APP_URL
+  });
+  if (error) {
+    console.warn(`inviteUserByEmail failed for ${email}: ${error.message} — trying OTP`);
+    // User already exists — send OTP magic link (actually sends email)
+    const supabaseClient = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+    const { error: otpErr } = await supabaseClient.auth.signInWithOtp({
       email,
-      options: { redirectTo: APP_URL }
+      options: { emailRedirectTo: APP_URL, shouldCreateUser: false }
     });
-    if (error) throw new Error(error.message);
-    console.log(`📧 [Case 1 fallback] Magic link sent to ${email}`);
+    if (otpErr) throw new Error(otpErr.message);
   }
+  console.log(`📧 [Case 1] Welcome email sent to ${email}`);
 }
 
 async function sendExistingPaidUserEmail(email) {
-  // Send magic link — logs user straight in without needing password
-  const { error } = await supabaseAdmin.auth.admin.generateLink({
-    type: 'magiclink',
+  // signInWithOtp actually sends a magic link email via Supabase
+  const supabaseClient = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+  const { error } = await supabaseClient.auth.signInWithOtp({
     email,
-    options: { redirectTo: APP_URL }
+    options: { emailRedirectTo: APP_URL, shouldCreateUser: false }
   });
   if (error) throw new Error(error.message);
-  console.log(`📧 [Case 2] Magic link sent to ${email}`);
+  console.log(`📧 [Case 2] Magic link email sent to ${email}`);
 }
 
 
@@ -166,23 +154,11 @@ async function sendExistingPaidUserEmail(email) {
 // EMAIL CASE 3: Reset password (forgot password flow)
 // ═══════════════════════════════════════════════════════════
 async function sendResetPasswordEmail(email) {
-  const link = await getPasswordResetLink(email);
-  await emailTransporter.sendMail({
-    from: FROM,
-    to: email,
-    subject: 'Reset your Invest AI password',
-    html: `
-<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#0d1117;color:#e6edf3;border-radius:12px">
-  <p style="font-size:18px;font-weight:700;color:#00e5a0;margin-bottom:20px">📈 Invest AI</p>
-  <h2 style="font-size:20px;font-weight:700;margin-bottom:8px">Reset your password</h2>
-  <p style="color:#8b949e;line-height:1.7;margin-bottom:24px">We received a request to reset your Invest AI password. Click below to choose a new one.</p>
-  <a href="${link}" style="display:inline-block;background:#00e5a0;color:#051a10;font-weight:700;font-size:15px;padding:14px 28px;border-radius:10px;text-decoration:none;margin-bottom:24px">
-    Reset my password →
-  </a>
-  <p style="color:#8b949e;font-size:13px;line-height:1.6">After resetting you'll be taken to the sign-in page.</p>
-  <p style="color:#484f58;font-size:12px;margin-top:24px">This link expires in 1 hour. If you didn't request this, your account is safe — ignore this email.</p>
-</div>`
+  const supabaseClient = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+  const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+    redirectTo: APP_URL + '?type=recovery',
   });
+  if (error) throw new Error(error.message);
   console.log(`📧 [Case 3] Reset password email sent to ${email}`);
 }
 
