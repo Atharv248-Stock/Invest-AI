@@ -134,34 +134,31 @@ async function getInviteLink(email) {
 // ═══════════════════════════════════════════════════════════
 // ── All email sent via Supabase (Railway blocks SMTP outbound) ────────
 async function sendNewPaidUserEmail(email) {
-  // New user who paid — send invite link (lets them set password)
-  const { error } = await supabaseAdmin.auth.admin.generateLink({
-    type: 'invite',
-    email,
-    options: { redirectTo: APP_URL }
-  });
-  if (error) {
-    // User already exists — send recovery link instead
-    const { error: e2 } = await supabaseAdmin.auth.admin.generateLink({
-      type: 'recovery',
+  // Try invite first (new user), fall back to magic link (existing user)
+  try {
+    await supabaseAdmin.auth.admin.inviteUserByEmail(email, { redirectTo: APP_URL });
+    console.log(`📧 [Case 1] Invite email sent to ${email}`);
+  } catch(e) {
+    // User already exists — send magic link instead
+    const { error } = await supabaseAdmin.auth.admin.generateLink({
+      type: 'magiclink',
       email,
       options: { redirectTo: APP_URL }
     });
-    if (e2) throw new Error(e2.message);
+    if (error) throw new Error(error.message);
+    console.log(`📧 [Case 1 fallback] Magic link sent to ${email}`);
   }
-  // Use Supabase's own email delivery (configured in Supabase dashboard)
-  await supabaseAdmin.auth.admin.inviteUserByEmail(email, { redirectTo: APP_URL });
-  console.log(`📧 [Case 1] Invite email sent via Supabase to ${email}`);
 }
 
 async function sendExistingPaidUserEmail(email) {
-  // Existing user who paid — send magic link so they can log straight in
-  const supabaseClient = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
-  const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-    redirectTo: APP_URL,
+  // Send magic link — logs user straight in without needing password
+  const { error } = await supabaseAdmin.auth.admin.generateLink({
+    type: 'magiclink',
+    email,
+    options: { redirectTo: APP_URL }
   });
   if (error) throw new Error(error.message);
-  console.log(`📧 [Case 2] Login link sent via Supabase to ${email}`);
+  console.log(`📧 [Case 2] Magic link sent to ${email}`);
 }
 
 
