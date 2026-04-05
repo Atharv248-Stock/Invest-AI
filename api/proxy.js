@@ -132,13 +132,32 @@ async function getInviteLink(email) {
 // ═══════════════════════════════════════════════════════════
 // EMAIL CASE 1: New user paid (no prior account) — set password + welcome
 // ═══════════════════════════════════════════════════════════
+// ── Reliable send: try Gmail SMTP, fall back to Supabase magic link ──
+async function sendWithFallback(email, subject, html, fallbackFn) {
+  try {
+    await Promise.race([
+      emailTransporter.sendMail({ from: FROM, to: email, subject, html }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('SMTP timeout')), 12000))
+    ]);
+    console.log(`📧 Gmail sent: "${subject}" to ${email}`);
+    return true;
+  } catch(e) {
+    console.warn(`⚠️ Gmail failed for ${email}: ${e.message} — using Supabase fallback`);
+    if (fallbackFn) {
+      try { await fallbackFn(); console.log(`📧 Supabase fallback sent to ${email}`); return true; }
+      catch(e2) { console.error(`❌ Supabase fallback also failed: ${e2.message}`); }
+    }
+    return false;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// EMAIL CASE 1: New user paid (no prior account) — set password + welcome
+// ═══════════════════════════════════════════════════════════
 async function sendNewPaidUserEmail(email) {
   const link = await getInviteLink(email);
-  await emailTransporter.sendMail({
-    from: FROM,
-    to: email,
-    subject: 'Your Invest AI Pro is ready — set your password 🚀',
-    html: `
+  const subject = 'Your Invest AI Pro is ready — set your password 🚀';
+  const html = `
 <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#0d1117;color:#e6edf3;border-radius:12px">
   <p style="font-size:18px;font-weight:700;color:#00e5a0;margin-bottom:20px">📈 Invest AI</p>
   <div style="background:#00e5a010;border:1px solid #00e5a030;border-radius:10px;padding:14px 18px;margin-bottom:20px">
@@ -147,27 +166,27 @@ async function sendNewPaidUserEmail(email) {
   </div>
   <h2 style="font-size:20px;font-weight:700;margin-bottom:8px">Welcome to Invest AI Pro!</h2>
   <p style="color:#8b949e;line-height:1.7;margin-bottom:24px">
-    Thank you for your payment. Set a password below to activate your account and view your AI-powered stock portfolio anytime.
+    Thank you for your payment. Click below to set your password and view your AI-powered stock portfolio.
   </p>
   <a href="${link}" style="display:inline-block;background:#00e5a0;color:#051a10;font-weight:700;font-size:15px;padding:14px 28px;border-radius:10px;text-decoration:none;margin-bottom:16px">
     Set my password →
   </a>
-  <p style="color:#8b949e;font-size:13px;line-height:1.6">After setting your password you'll be taken to the sign-in page. Log in to view your personalised AI portfolio.</p>
+  <p style="color:#8b949e;font-size:13px;line-height:1.6">After setting your password you'll be taken to the sign-in page.</p>
   <p style="color:#484f58;font-size:12px;margin-top:24px">This link expires in 24 hours. Didn't make this payment? Contact us immediately.</p>
-</div>`
+</div>`;
+  await sendWithFallback(email, subject, html, async () => {
+    await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+      redirectTo: APP_URL
+    });
   });
-  console.log(`📧 [Case 1] New paid user welcome email sent to ${email}`);
 }
 
 // ═══════════════════════════════════════════════════════════
 // EMAIL CASE 2: Existing registered user just paid — welcome + login link
 // ═══════════════════════════════════════════════════════════
 async function sendExistingPaidUserEmail(email) {
-  await emailTransporter.sendMail({
-    from: FROM,
-    to: email,
-    subject: 'Your Invest AI Pro is active — log in to view your portfolio 🎉',
-    html: `
+  const subject = 'Your Invest AI Pro is active — log in to view your portfolio 🎉';
+  const html = `
 <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#0d1117;color:#e6edf3;border-radius:12px">
   <p style="font-size:18px;font-weight:700;color:#00e5a0;margin-bottom:20px">📈 Invest AI</p>
   <div style="background:#00e5a010;border:1px solid #00e5a030;border-radius:10px;padding:14px 18px;margin-bottom:20px">
@@ -176,17 +195,21 @@ async function sendExistingPaidUserEmail(email) {
   </div>
   <h2 style="font-size:20px;font-weight:700;margin-bottom:8px">Your AI portfolio is ready!</h2>
   <p style="color:#8b949e;line-height:1.7;margin-bottom:24px">
-    Thank you for subscribing. Log in with your existing password to view your personalised AI stock picks.
+    Thank you for subscribing. Log in with your password to view your personalised AI stock picks.
   </p>
   <a href="${APP_URL}" style="display:inline-block;background:#00e5a0;color:#051a10;font-weight:700;font-size:15px;padding:14px 28px;border-radius:10px;text-decoration:none;margin-bottom:16px">
-    Log in & view my portfolio →
+    Log in &amp; view my portfolio →
   </a>
-  <p style="color:#8b949e;font-size:13px;line-height:1.6">Sign in with your email and password at the link above. Your AI portfolio will be ready immediately.</p>
+  <p style="color:#8b949e;font-size:13px;line-height:1.6">Sign in with your email and password. Your AI portfolio will be ready immediately.</p>
   <p style="color:#484f58;font-size:12px;margin-top:24px">Didn't make this payment? Contact us immediately.</p>
-</div>`
+</div>`;
+  await sendWithFallback(email, subject, html, async () => {
+    // Fallback: send a magic link so they can still access the app
+    const supabaseClient = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+    await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: APP_URL });
   });
-  console.log(`📧 [Case 2] Existing paid user welcome email sent to ${email}`);
 }
+
 
 // ═══════════════════════════════════════════════════════════
 // EMAIL CASE 3: Reset password (forgot password flow)
