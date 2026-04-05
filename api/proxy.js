@@ -394,16 +394,15 @@ app.post('/api/auth/forgot-password', async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: 'Email required.' });
   try {
-    // Use Supabase's built-in reset — reliable, no SMTP config needed
     const supabaseClient = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
-    await supabaseClient.auth.resetPasswordForEmail(email, {
-      redirectTo: 'https://atharv248-stock.github.io/Invest-AI/index.html?type=recovery',
+    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+      redirectTo: 'https://atharv248-stock.github.io/Invest-AI/index.html',
     });
-    console.log(`📧 Password reset email sent via Supabase for: ${email}`);
+    if (error) console.warn('Reset email error:', error.message);
+    else console.log(`📧 Password reset email sent via Supabase for: ${email}`);
   } catch(e) {
     console.warn('Forgot password error:', e.message);
   }
-  // Always return success immediately — don't reveal if email exists
   res.json({ message: 'If that email exists, a reset link has been sent.' });
 });
 
