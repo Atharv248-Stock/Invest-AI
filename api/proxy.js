@@ -412,7 +412,7 @@ app.post('/api/auth/login', async (req, res) => {
 app.post('/api/auth/update-password', async (req, res) => {
   const { password } = req.body;
   const accessToken  = req.headers.authorization?.replace('Bearer ', '');
-  const refreshToken = req.headers['x-refresh-token'] || '';
+  const refreshToken = req.body.refreshToken || '';
 
   if (!accessToken) return res.status(401).json({ error: 'No token provided.' });
   if (!password || password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters.' });
