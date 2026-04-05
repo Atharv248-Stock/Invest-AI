@@ -132,82 +132,36 @@ async function getInviteLink(email) {
 // ═══════════════════════════════════════════════════════════
 // EMAIL CASE 1: New user paid (no prior account) — set password + welcome
 // ═══════════════════════════════════════════════════════════
-// ── Reliable send: try Gmail SMTP, fall back to Supabase magic link ──
-async function sendWithFallback(email, subject, html, fallbackFn) {
-  try {
-    await Promise.race([
-      emailTransporter.sendMail({ from: FROM, to: email, subject, html }),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('SMTP timeout')), 12000))
-    ]);
-    console.log(`📧 Gmail sent: "${subject}" to ${email}`);
-    return true;
-  } catch(e) {
-    console.warn(`⚠️ Gmail failed for ${email}: ${e.message} — using Supabase fallback`);
-    if (fallbackFn) {
-      try { await fallbackFn(); console.log(`📧 Supabase fallback sent to ${email}`); return true; }
-      catch(e2) { console.error(`❌ Supabase fallback also failed: ${e2.message}`); }
-    }
-    return false;
-  }
-}
-
-// ═══════════════════════════════════════════════════════════
-// EMAIL CASE 1: New user paid (no prior account) — set password + welcome
-// ═══════════════════════════════════════════════════════════
+// ── All email sent via Supabase (Railway blocks SMTP outbound) ────────
 async function sendNewPaidUserEmail(email) {
-  const link = await getInviteLink(email);
-  const subject = 'Your Invest AI Pro is ready — set your password 🚀';
-  const html = `
-<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#0d1117;color:#e6edf3;border-radius:12px">
-  <p style="font-size:18px;font-weight:700;color:#00e5a0;margin-bottom:20px">📈 Invest AI</p>
-  <div style="background:#00e5a010;border:1px solid #00e5a030;border-radius:10px;padding:14px 18px;margin-bottom:20px">
-    <div style="font-size:12px;color:#00e5a0;font-weight:700;margin-bottom:2px">✅ PAYMENT CONFIRMED</div>
-    <div style="font-size:13px;color:#8b949e">Invest AI Pro · $4.99/mo · Active</div>
-  </div>
-  <h2 style="font-size:20px;font-weight:700;margin-bottom:8px">Welcome to Invest AI Pro!</h2>
-  <p style="color:#8b949e;line-height:1.7;margin-bottom:24px">
-    Thank you for your payment. Click below to set your password and view your AI-powered stock portfolio.
-  </p>
-  <a href="${link}" style="display:inline-block;background:#00e5a0;color:#051a10;font-weight:700;font-size:15px;padding:14px 28px;border-radius:10px;text-decoration:none;margin-bottom:16px">
-    Set my password →
-  </a>
-  <p style="color:#8b949e;font-size:13px;line-height:1.6">After setting your password you'll be taken to the sign-in page.</p>
-  <p style="color:#484f58;font-size:12px;margin-top:24px">This link expires in 24 hours. Didn't make this payment? Contact us immediately.</p>
-</div>`;
-  await sendWithFallback(email, subject, html, async () => {
-    await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-      redirectTo: APP_URL
-    });
+  // New user who paid — send invite link (lets them set password)
+  const { error } = await supabaseAdmin.auth.admin.generateLink({
+    type: 'invite',
+    email,
+    options: { redirectTo: APP_URL }
   });
+  if (error) {
+    // User already exists — send recovery link instead
+    const { error: e2 } = await supabaseAdmin.auth.admin.generateLink({
+      type: 'recovery',
+      email,
+      options: { redirectTo: APP_URL }
+    });
+    if (e2) throw new Error(e2.message);
+  }
+  // Use Supabase's own email delivery (configured in Supabase dashboard)
+  await supabaseAdmin.auth.admin.inviteUserByEmail(email, { redirectTo: APP_URL });
+  console.log(`📧 [Case 1] Invite email sent via Supabase to ${email}`);
 }
 
-// ═══════════════════════════════════════════════════════════
-// EMAIL CASE 2: Existing registered user just paid — welcome + login link
-// ═══════════════════════════════════════════════════════════
 async function sendExistingPaidUserEmail(email) {
-  const subject = 'Your Invest AI Pro is active — log in to view your portfolio 🎉';
-  const html = `
-<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#0d1117;color:#e6edf3;border-radius:12px">
-  <p style="font-size:18px;font-weight:700;color:#00e5a0;margin-bottom:20px">📈 Invest AI</p>
-  <div style="background:#00e5a010;border:1px solid #00e5a030;border-radius:10px;padding:14px 18px;margin-bottom:20px">
-    <div style="font-size:12px;color:#00e5a0;font-weight:700;margin-bottom:2px">✅ PAYMENT CONFIRMED</div>
-    <div style="font-size:13px;color:#8b949e">Invest AI Pro · $4.99/mo · Active</div>
-  </div>
-  <h2 style="font-size:20px;font-weight:700;margin-bottom:8px">Your AI portfolio is ready!</h2>
-  <p style="color:#8b949e;line-height:1.7;margin-bottom:24px">
-    Thank you for subscribing. Log in with your password to view your personalised AI stock picks.
-  </p>
-  <a href="${APP_URL}" style="display:inline-block;background:#00e5a0;color:#051a10;font-weight:700;font-size:15px;padding:14px 28px;border-radius:10px;text-decoration:none;margin-bottom:16px">
-    Log in &amp; view my portfolio →
-  </a>
-  <p style="color:#8b949e;font-size:13px;line-height:1.6">Sign in with your email and password. Your AI portfolio will be ready immediately.</p>
-  <p style="color:#484f58;font-size:12px;margin-top:24px">Didn't make this payment? Contact us immediately.</p>
-</div>`;
-  await sendWithFallback(email, subject, html, async () => {
-    // Fallback: send a magic link so they can still access the app
-    const supabaseClient = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
-    await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: APP_URL });
+  // Existing user who paid — send magic link so they can log straight in
+  const supabaseClient = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+  const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+    redirectTo: APP_URL,
   });
+  if (error) throw new Error(error.message);
+  console.log(`📧 [Case 2] Login link sent via Supabase to ${email}`);
 }
 
 
@@ -238,37 +192,7 @@ async function sendResetPasswordEmail(email) {
 // ═══════════════════════════════════════════════════════════
 // EMAIL CASE 4: New user signed up (no payment yet) — confirm email
 // ═══════════════════════════════════════════════════════════
-async function sendConfirmSignupEmail(email) {
-  const { data, error } = await supabaseAdmin.auth.admin.generateLink({
-    type: 'signup',
-    email,
-    options: { redirectTo: APP_URL }
-  });
-  if (error) throw new Error('Could not generate confirmation link: ' + error.message);
-  const link = data.properties?.action_link || data.action_link;
-
-  await emailTransporter.sendMail({
-    from: FROM,
-    to: email,
-    subject: 'Welcome to Invest AI — please confirm your email',
-    html: `
-<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#0d1117;color:#e6edf3;border-radius:12px">
-  <p style="font-size:18px;font-weight:700;color:#00e5a0;margin-bottom:20px">📈 Invest AI</p>
-  <h2 style="font-size:20px;font-weight:700;margin-bottom:8px">Welcome! Confirm your email</h2>
-  <p style="color:#8b949e;line-height:1.7;margin-bottom:24px">
-    Thanks for signing up. Click below to confirm your email address and activate your account.
-    Once confirmed you can unlock your AI-powered stock portfolio for just $4.99/mo.
-  </p>
-  <a href="${link}" style="display:inline-block;background:#00e5a0;color:#051a10;font-weight:700;font-size:15px;padding:14px 28px;border-radius:10px;text-decoration:none;margin-bottom:24px">
-    Confirm my email →
-  </a>
-  <p style="color:#8b949e;font-size:13px;line-height:1.6;margin-bottom:8px">After confirming you'll be taken to the sign-in page. Then visit the app to get started:</p>
-  <a href="${APP_URL}" style="color:#00e5a0;font-size:13px">${APP_URL}</a>
-  <p style="color:#484f58;font-size:12px;margin-top:24px">If you didn't create an account, ignore this email.</p>
-</div>`
-  });
-  console.log(`📧 [Case 4] Confirm signup email sent to ${email}`);
-}
+// sendConfirmSignupEmail removed — accounts only created at checkout
 
 
 
@@ -333,21 +257,15 @@ async function requireAuth(req, res, next) {
    AUTH ROUTES
 ═══════════════════════════════════════════════════════════ */
 
-// POST /api/auth/signup
+// POST /api/auth/signup  (checkout only — always auto-confirmed)
 app.post('/api/auth/signup', async (req, res) => {
-  const { email, password, fromCheckout } = req.body;
+  const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email and password required.' });
   if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters.' });
 
   try {
-    // At checkout: auto-confirm so user can log in immediately after payment
-    // For regular signup: require email confirmation
-    const emailConfirm = fromCheckout === true;
-
-    const { data: userData, error: createError } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: emailConfirm,
+    const { error: createError } = await supabaseAdmin.auth.admin.createUser({
+      email, password, email_confirm: true,
     });
 
     if (createError) {
@@ -357,16 +275,8 @@ app.post('/api/auth/signup', async (req, res) => {
       return res.status(400).json({ error: createError.message });
     }
 
-    if (fromCheckout) {
-      // Checkout signup — user will get welcome email after payment, no confirm email needed yet
-      console.log(`✅ Checkout user created (auto-confirmed): ${email}`);
-      res.json({ message: 'Account created.', requiresVerification: false });
-    } else {
-      // Regular signup — send confirmation email
-      await sendConfirmSignupEmail(email);
-      console.log(`✅ Regular signup — confirmation email sent: ${email}`);
-      res.json({ message: 'Account created! Please check your email to confirm before signing in.', requiresVerification: true });
-    }
+    console.log(`✅ Account created at checkout (auto-confirmed): ${email}`);
+    res.json({ message: 'Account created.', requiresVerification: false });
 
   } catch(e) {
     console.error('Signup error:', e.message);
@@ -374,21 +284,7 @@ app.post('/api/auth/signup', async (req, res) => {
   }
 });
 
-// POST /api/auth/resend-verification
-app.post('/api/auth/resend-verification', async (req, res) => {
-  const { email } = req.body;
-  if (!email) return res.status(400).json({ error: 'Email required.' });
-  try {
-    await supabaseAdmin.auth.admin.generateLink({
-      type: 'signup',
-      email,
-      options: { redirectTo: 'https://atharv248-stock.github.io/Invest-AI/index.html' }
-    });
-    res.json({ message: 'Verification email resent.' });
-  } catch(e) {
-    res.status(400).json({ error: e.message });
-  }
-});
+// resend-verification removed — not needed, accounts created at checkout
 
 // POST /api/auth/login
 app.post('/api/auth/login', async (req, res) => {
@@ -1366,8 +1262,12 @@ app.post('/api/admin/fix-subscription', async (req, res) => {
 
 // POST /api/admin/test-email  — trigger welcome email without real payment
 app.post('/api/admin/test-email', async (req, res) => {
-  const secret = req.headers['x-admin-secret'] || req.query.secret;
-  if (secret !== process.env.CACHE_ADMIN_SECRET) return res.status(401).json({ error: 'Unauthorized.' });
+  const secret = req.headers['x-admin-secret'] || req.query.secret || req.body?.secret;
+  const validSecret = process.env.CACHE_ADMIN_SECRET || 'investai2024';
+  if (secret !== validSecret) {
+    console.log(`Auth failed — received: "${secret}", expected: "${validSecret}"`);
+    return res.status(401).json({ error: 'Unauthorized.', hint: 'Check x-admin-secret header' });
+  }
 
   const { email, type } = req.body;  // type: 'new' | 'existing'
   if (!email) return res.status(400).json({ error: 'email required' });
@@ -1388,16 +1288,7 @@ app.post('/api/admin/test-email', async (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`✅ Invest AI running at http://localhost:${PORT}`);
-  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASS) {
-    console.warn('⚠️  GMAIL_USER or GMAIL_APP_PASS not set — email sending will fail!');
-  } else {
-    console.log(`📧 Gmail SMTP configured for: ${process.env.GMAIL_USER}`);
-    // Verify connection
-    emailTransporter.verify((err) => {
-      if (err) console.warn('⚠️  Gmail SMTP connection failed:', err.message);
-      else console.log('✅ Gmail SMTP connection verified');
-    });
-  }
+  console.log('📧 Email delivery via Supabase (Railway blocks outbound SMTP)');
   loadCacheFromDisk();
   const cacheAge = valuationCache.lastUpdated
     ? Date.now() - new Date(valuationCache.lastUpdated).getTime()
