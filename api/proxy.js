@@ -1235,22 +1235,21 @@ app.post('/api/sector-insight', async (req, res) => {
   const { summary, total } = req.body;
   if (!summary) return res.status(400).json({ error: 'summary required' });
 
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) return res.status(500).json({ error: 'API key not set.' });
   try {
-    const Anthropic = require('@anthropic-ai/sdk');
-    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
-    const msg = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 180,
-      messages: [{
-        role: 'user',
-        content: `You are a portfolio analyst. Here is a stock portfolio breakdown (${total} stocks total): ${summary}.
-
-Write exactly ONE concise paragraph (2-3 sentences max) that notes: any overconcentration in a sector, whether any heavily-weighted sector looks stretched on valuation right now, or where genuine value exists. Be specific and direct. No preamble, no bullet points, no headers. Plain text only.`
-      }]
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 180,
+        messages: [{ role: 'user', content: `You are a portfolio analyst. Here is a stock portfolio breakdown (${total} stocks total): ${summary}.\n\nWrite exactly ONE concise paragraph (2-3 sentences max) that notes: any overconcentration in a sector, whether any heavily-weighted sector looks stretched on valuation right now, or where genuine value exists. Be specific and direct. No preamble, no bullet points, no headers. Plain text only.` }]
+      })
     });
-
-    res.json({ insight: msg.content[0]?.text?.trim() || '' });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error?.message || 'API error');
+    res.json({ insight: data.content?.[0]?.text?.trim() || '' });
   } catch(e) {
     console.error('Sector insight error:', e.message);
     res.status(500).json({ error: e.message });
@@ -1262,43 +1261,22 @@ app.post('/api/fundamentals', async (req, res) => {
   const { ticker } = req.body;
   if (!ticker) return res.status(400).json({ error: 'ticker required' });
 
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) return res.status(500).json({ error: 'API key not set.' });
   try {
-    const Anthropic = require('@anthropic-ai/sdk');
-    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
-    const msg = await client.messages.create({
-      model: 'claude-opus-4-5-20251101',
-      max_tokens: 600,
-      messages: [{
-        role: 'user',
-        content: `Give me the latest fundamental metrics for ${ticker} stock. Return ONLY a JSON object with these exact keys, no markdown, no explanation:
-{
-  "pe": "trailing P/E ratio or N/A",
-  "pb": "price to book ratio or N/A",
-  "ps": "price to sales (TTM) or N/A",
-  "fps": "forward price to sales or N/A",
-  "gm": "gross margin % e.g. 45.2% or N/A",
-  "om": "operating margin % or N/A",
-  "roe": "return on equity % or N/A",
-  "roce": "return on capital employed % or N/A",
-  "rev_yoy": "revenue growth YoY % or N/A",
-  "rev_cagr": "revenue 3yr CAGR % or N/A",
-  "eps_yoy": "EPS growth YoY % or N/A",
-  "eps_cagr": "EPS 3yr CAGR % or N/A",
-  "de": "debt to equity ratio or N/A",
-  "cr": "current ratio or N/A",
-  "cash": "total cash e.g. $12.4B or N/A",
-  "dilution": "equity dilution % last 3yrs or N/A"
-}
-Use most recent available data (TTM/annual). Format numbers cleanly e.g. 24.5x, 3.2x, 45.2%, $8.3B. If genuinely unknown use N/A.`
-      }]
+    const prompt = `Give me the latest fundamental metrics for ${ticker} stock. Return ONLY a JSON object with these exact keys, no markdown, no explanation:\n{\n  "pe": "trailing P/E ratio or N/A",\n  "pb": "price to book ratio or N/A",\n  "ps": "price to sales (TTM) or N/A",\n  "fps": "forward price to sales or N/A",\n  "gm": "gross margin % e.g. 45.2% or N/A",\n  "om": "operating margin % or N/A",\n  "roe": "return on equity % or N/A",\n  "roce": "return on capital employed % or N/A",\n  "rev_yoy": "revenue growth YoY % or N/A",\n  "rev_cagr": "revenue 3yr CAGR % or N/A",\n  "eps_yoy": "EPS growth YoY % or N/A",\n  "eps_cagr": "EPS 3yr CAGR % or N/A",\n  "de": "debt to equity ratio or N/A",\n  "cr": "current ratio or N/A",\n  "cash": "total cash e.g. $12.4B or N/A",\n  "dilution": "equity dilution % last 3yrs or N/A"\n}\nUse most recent available data (TTM/annual). Format numbers cleanly e.g. 24.5x, 3.2x, 45.2%, $8.3B. If genuinely unknown use N/A.`;
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 600, messages: [{ role: 'user', content: prompt }] })
     });
-
-    const text = msg.content[0]?.text || '{}';
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error?.message || 'API error');
+    const text = data.content?.[0]?.text || '{}';
     const clean = text.replace(/```json|```/g, '').trim();
-    const data = JSON.parse(clean);
+    const parsed = JSON.parse(clean);
     console.log(`📊 Fundamentals fetched for ${ticker}`);
-    res.json(data);
+    res.json(parsed);
   } catch(e) {
     console.error(`Fundamentals error for ${ticker}:`, e.message);
     res.status(500).json({ error: e.message });
