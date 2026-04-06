@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0"/>
+<title>Invest AI — Checkout</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>"/>
+<style>
+:root{--bg:#0a0f0a;--surface:#111611;--surface2:#181e18;--border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);--text:#e8f0e8;--muted:#7a8c7a;--accent:#00e5a0;--blue:#4fa3f7;--red:#ff6b6b;--font-body:'DM Sans',system-ui,sans-serif;--font-display:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--text);font-family:var(--font-body);min-height:100vh;overflow-x:hidden}
+a{color:var(--accent);text-decoration:none}
+.page{display:grid;grid-template-columns:1fr 360px;min-height:100vh;max-width:960px;margin:0 auto}
+@media(max-width:680px){.page{grid-template-columns:1fr}.order-summary{order:-1;border-bottom:1px solid var(--border);padding:1.2rem 1rem!important}}
+.checkout-form{padding:2.5rem 2rem 4rem;border-right:1px solid var(--border)}
+@media(max-width:680px){.checkout-form{padding:1.5rem 1rem 3rem}}
+.brand-link{display:flex;align-items:center;gap:10px;margin-bottom:0.5rem;text-decoration:none}
+.brand-icon{width:36px;height:36px;background:linear-gradient(135deg,#00e5a0,#4fa3f7);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.brand-name{font-family:var(--font-display);font-size:17px;font-weight:700;color:var(--text)}
+.back-link{font-size:0.78rem;color:var(--muted);margin-bottom:1.8rem;display:inline-block}
+.returning-bar{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:1.5rem;font-size:0.85rem;color:var(--muted);cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.returning-bar span{color:var(--accent);font-weight:600}
+.login-box{background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:1.2rem;margin-bottom:1.5rem;display:none}
+.login-box.open{display:block}
+.login-box h3{font-size:0.9rem;font-weight:700;margin-bottom:1rem}
+.lmsg{display:none;font-size:0.78rem;padding:8px 10px;border-radius:8px;margin-bottom:0.6rem}
+.step{display:none}.step.active{display:block}
+.section-title{font-size:0.7rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:0.8rem}
+.field{margin-bottom:1rem}
+.field label{display:block;font-size:0.75rem;color:var(--muted);margin-bottom:5px}
+.field input{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:12px 14px;color:var(--text);font-size:0.9rem;outline:none;font-family:var(--font-body);transition:border-color .15s}
+.field input:focus{border-color:var(--accent)}
+.field input::placeholder{color:var(--muted);opacity:0.6}
+.ferr{font-size:0.75rem;color:var(--red);margin-top:4px;display:none}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.btn-p{width:100%;background:linear-gradient(135deg,var(--accent),var(--blue));color:#051a10;font-family:var(--font-display);font-weight:800;font-size:1rem;padding:16px;border:none;border-radius:12px;cursor:pointer;transition:opacity .2s;letter-spacing:.2px}
+.btn-p:hover{opacity:.9}.btn-p:disabled{opacity:.5;cursor:not-allowed}
+.btn-s{width:100%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-family:var(--font-display);font-weight:700;font-size:.88rem;padding:11px;border-radius:10px;cursor:pointer;margin-top:.5rem}
+.note{font-size:.72rem;color:var(--muted);text-align:center;margin-top:.6rem;line-height:1.6}
+#gerr{display:none;border-radius:10px;padding:10px 14px;font-size:.82rem;margin-top:.5rem;line-height:1.5}
+.redirect-box{background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:1.5rem;text-align:center}
+.pm-row{display:flex;gap:8px;justify-content:center;margin-bottom:1rem;flex-wrap:wrap}
+.pm{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:.72rem;color:var(--muted)}
+.order-summary{padding:2.5rem 1.5rem;background:var(--surface)}
+.order-title{font-family:var(--font-display);font-size:1rem;font-weight:700;margin-bottom:1.2rem}
+.oi{display:flex;justify-content:space-between;margin-bottom:.8rem;font-size:.88rem}
+.oi-d{font-size:.75rem;color:var(--muted);margin-top:2px}
+.od{border:none;border-top:1px solid var(--border);margin:1rem 0}
+.ot{display:flex;justify-content:space-between;font-weight:700;font-size:1rem;margin-bottom:.4rem}
+.on{font-size:.72rem;color:var(--muted)}
+.perks{margin-top:1.5rem}
+.perk{display:flex;align-items:flex-start;gap:8px;margin-bottom:.7rem;font-size:.8rem;color:var(--muted);line-height:1.5}
+.pd{width:6px;height:6px;background:var(--accent);border-radius:50%;flex-shrink:0;margin-top:5px}
+.perk strong{color:var(--text)}
+.lov{display:none;position:fixed;inset:0;background:rgba(10,15,10,.85);align-items:center;justify-content:center;z-index:100;flex-direction:column;gap:1rem}
+.lov.show{display:flex}
+.sp{width:36px;height:36px;border:3px solid rgba(0,229,160,.2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+</head>
+<body>
+<div class="page">
+  <div class="checkout-form">
+    <a href="https://atharv248-stock.github.io/Invest-AI/index.html" class="brand-link">
+      <div class="brand-icon">📈</div>
+      <div class="brand-name">Invest AI</div>
+    </a>
+    <a href="https://atharv248-stock.github.io/Invest-AI/index.html" class="back-link">← Back to home</a>
+
+    <div class="returning-bar" onclick="toggleLogin()">
+      Returning customer? <span>Click here to sign in →</span>
+    </div>
+
+    <div class="login-box" id="login-box">
+      <h3>Sign in to your account</h3>
+      <div id="lerr" class="lmsg" style="color:var(--red);background:rgba(255,107,107,.08)"></div>
+      <div id="lok" class="lmsg" style="color:var(--accent);background:rgba(0,229,160,.08)"></div>
+      <div id="forgot-panel" style="display:none">
+        <p style="font-size:.82rem;color:var(--muted);margin-bottom:.8rem;line-height:1.5">Enter your email — we will send a reset link.</p>
+        <div class="field"><label>Email</label><input type="email" id="forgot-email" placeholder="you@example.com"/></div>
+        <button class="btn-s" onclick="handleForgot()" id="forgot-btn">Send reset link →</button>
+        <div style="margin-top:.6rem;font-size:.78rem;text-align:center"><a href="#" onclick="showLP()" style="color:var(--muted)">← Back to sign in</a></div>
+      </div>
+      <div id="login-panel">
+        <form onsubmit="handleLogin();return false;" autocomplete="on">
+          <div class="field"><label>Email</label><input type="email" id="lin-email" placeholder="you@example.com" autocomplete="email"/></div>
+          <div class="field"><label>Password</label><input type="password" id="lin-pwd" placeholder="••••••••" autocomplete="current-password"/></div>
+          <button class="btn-s" type="submit" id="lin-btn">Sign In →</button>
+        </form>
+        <div style="margin-top:.6rem;font-size:.78rem;text-align:center"><a href="#" onclick="showFP()" style="color:var(--muted)">Forgot your password?</a></div>
+        <div style="display:flex;align-items:center;gap:8px;margin:.8rem 0;font-size:.72rem;color:var(--muted)">
+          <div style="flex:1;height:1px;background:var(--border)"></div>or continue with<div style="flex:1;height:1px;background:var(--border)"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <button onclick="socialSignIn('apple')" style="padding:10px;background:#181b22;border:1px solid rgba(255,255,255,.12);border-radius:9px;color:#f0f2f7;font-size:.8rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px">🍎 Apple</button>
+          <button onclick="socialSignIn('google')" style="padding:10px;background:#181b22;border:1px solid rgba(255,255,255,.12);border-radius:9px;color:#f0f2f7;font-size:.8rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px">🔵 Google</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="step active" id="step-1">
+      <div class="section-title">Create your account</div>
+      <form onsubmit="handleStep1();return false;" autocomplete="on">
+        <div class="field">
+          <label>Email address *</label>
+          <input type="email" id="email" placeholder="you@example.com" autocomplete="email"/>
+          <div class="ferr" id="e-err"></div>
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <label>Password *</label>
+            <input type="password" id="pwd" placeholder="Min. 8 characters" autocomplete="new-password"/>
+            <div class="ferr" id="p-err"></div>
+          </div>
+          <div class="field">
+            <label>Confirm password *</label>
+            <input type="password" id="cpwd" placeholder="Repeat password" autocomplete="new-password"/>
+            <div class="ferr" id="c-err"></div>
+          </div>
+        </div>
+        <div id="gerr"></div>
+        <button class="btn-p" type="submit" id="s1btn" style="margin-top:.5rem">Continue to payment →</button>
+        <div class="note">Secure checkout via Stripe — supports Apple Pay, Google Pay & card</div>
+      </form>
+    </div>
+
+    <div class="step" id="step-2">
+      <div class="redirect-box">
+        <div style="font-size:2rem;margin-bottom:.8rem">🔒</div>
+        <div style="font-size:.85rem;color:var(--accent);font-weight:700;margin-bottom:.4rem" id="s2-email"></div>
+        <div style="font-size:.82rem;color:var(--muted);line-height:1.7;margin-bottom:1.2rem">
+          You'll be taken to Stripe's secure checkout.<br>
+          Supports card, Apple Pay and Google Pay.
+        </div>
+        <div class="pm-row">
+          <div class="pm">💳 Card</div>
+          <div class="pm"> Apple Pay</div>
+          <div class="pm">G Google Pay</div>
+          <div class="pm">🔒 SSL secured</div>
+        </div>
+        <button class="btn-p" id="stripe-btn" onclick="goToStripe()">Continue to secure payment →</button>
+        <div class="note" style="margin-top:.8rem">$4.99/month · Cancel anytime</div>
+      </div>
+      <button class="btn-s" onclick="goBack()">← Change account details</button>
+    </div>
+  </div>
+
+  <div class="order-summary">
+    <div class="order-title">Your order</div>
+    <div class="oi"><div><div style="font-size:.88rem;font-weight:600">Invest AI Pro</div><div class="oi-d">Monthly subscription</div></div><div style="font-size:.88rem;font-weight:600">$4.99/mo</div></div>
+    <hr class="od"/>
+    <div class="ot"><span>Total today</span><span>$4.99</span></div>
+    <div class="on">Then $4.99/month. Cancel anytime.</div>
+    <div class="perks">
+      <div class="perk"><div class="pd"></div><div><strong>AI-curated stock picks</strong> matched to your goals</div></div>
+      <div class="perk"><div class="pd"></div><div><strong>Exact % allocations</strong> per stock</div></div>
+      <div class="perk"><div class="pd"></div><div><strong>Bull &amp; bear analysis</strong> for every pick</div></div>
+      <div class="perk"><div class="pd"></div><div><strong>Monthly rebalancing</strong> alerts</div></div>
+      <div class="perk"><div class="pd"></div><div><strong>Risk scoring</strong> for your profile</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="lov" id="lov"><div class="sp"></div><div style="font-size:.88rem;color:var(--muted)" id="lov-txt">Please wait…</div></div>
+
+<script>
+const API='https://invest-ai-production-f62b.up.railway.app/api';
+const APP='https://atharv248-stock.github.io/Invest-AI';
+const STRIPE_LINK='https://buy.stripe.com/bJecN5ep58fXfAi3aA7AI01';
+let _email='',_pwd='';
+
+function setLoad(on,t){document.getElementById('lov').classList.toggle('show',on);document.getElementById('lov-txt').textContent=t||'Please wait…'}
+function fe(id,m){const e=document.getElementById(id);if(e){e.textContent=m;e.style.display=m?'block':'none'}}
+function clearE(){['e-err','p-err','c-err'].forEach(id=>fe(id,''));const g=document.getElementById('gerr');g.style.display='none'}
+function showG(m,ok){const e=document.getElementById('gerr');e.textContent=m;e.style.display='block';e.style.color=ok?'var(--accent)':'var(--red)';e.style.background=ok?'rgba(0,229,160,.08)':'rgba(255,107,107,.08)';e.style.border=ok?'1px solid rgba(0,229,160,.2)':'1px solid rgba(255,107,107,.2)'}
+function goBack(){document.getElementById('step-2').classList.remove('active');document.getElementById('step-1').classList.add('active')}
+function saveSession(d){if(!d.access_token)return;localStorage.setItem('investai_access_token',d.access_token);localStorage.setItem('investai_refresh_token',d.refresh_token||'');localStorage.setItem('investai_token_expires',String(d.expires_at||Math.floor(Date.now()/1000)+3600));localStorage.setItem('investai_user',JSON.stringify(d.user||{}))}
+
+async function handleStep1(){
+  clearE();
+  const email=document.getElementById('email').value.trim();
+  const pwd=document.getElementById('pwd').value;
+  const cpwd=document.getElementById('cpwd').value;
+  let ok=true;
+  if(!email||!email.includes('@')){fe('e-err','Please enter a valid email.');ok=false}
+  if(!pwd||pwd.length<8){fe('p-err','Password must be at least 8 characters.');ok=false}
+  if(pwd!==cpwd){fe('c-err','Passwords do not match.');ok=false}
+  if(!ok)return;
+  const btn=document.getElementById('s1btn');
+  btn.disabled=true;btn.textContent='Checking…';
+  try{
+    const cr=await fetch(API+'/check-email-subscription?email='+encodeURIComponent(email));
+    const cd=await cr.json();
+    if(cd.subscribed){showG('✅ This email already has an active subscription. Sign in above.',true);btn.disabled=false;btn.textContent='Continue to payment →';return}
+    const sr=await fetch(API+'/auth/signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pwd,fromCheckout:true})});
+    if(!sr.ok){
+      const lr=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pwd})});
+      if(lr.ok){saveSession(await lr.json())}
+      else{showG('An account with this email exists but the password is wrong. Try signing in above or use "Forgot password".');btn.disabled=false;btn.textContent='Continue to payment →';return}
+    }else{
+      const lr=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pwd})});
+      if(lr.ok)saveSession(await lr.json());
+    }
+    _email=email;_pwd=pwd;
+    document.getElementById('s2-email').textContent=email;
+    document.getElementById('step-1').classList.remove('active');
+    document.getElementById('step-2').classList.add('active');
+    btn.disabled=false;btn.textContent='Continue to payment →';
+  }catch(e){showG('Something went wrong. Please try again.');btn.disabled=false;btn.textContent='Continue to payment →'}
+}
+
+async function goToStripe(){
+  const btn=document.getElementById('stripe-btn');
+  btn.disabled=true;btn.textContent='Opening Stripe…';
+  try{
+    const token=localStorage.getItem('investai_access_token');
+    const headers={'Content-Type':'application/json'};
+    if(token)headers['Authorization']='Bearer '+token;
+    const res=await fetch(API+'/create-checkout-session',{method:'POST',headers,body:JSON.stringify({priceId:'',profile:{}})});
+    const data=await res.json();
+    if(data.url){window.location.href=data.url}
+    else{window.location.href=STRIPE_LINK+'?prefilled_email='+encodeURIComponent(_email)}
+  }catch(e){window.location.href=STRIPE_LINK+'?prefilled_email='+encodeURIComponent(_email)}
+}
+
+// Login box
+function toggleLogin(){const b=document.getElementById('login-box');b.classList.toggle('open');if(b.classList.contains('open'))document.getElementById('lin-email').focus()}
+function showFP(){document.getElementById('login-panel').style.display='none';document.getElementById('forgot-panel').style.display='block';const le=document.getElementById('lin-email').value;if(le)document.getElementById('forgot-email').value=le}
+function showLP(){document.getElementById('forgot-panel').style.display='none';document.getElementById('login-panel').style.display='block'}
+function lmsg(m,ok){const e=document.getElementById(ok?'lok':'lerr'),o=document.getElementById(ok?'lerr':'lok');e.textContent=m;e.style.display='block';o.style.display='none'}
+
+async function handleForgot(){
+  const email=(document.getElementById('forgot-email').value||'').trim();
+  if(!email){lmsg('Please enter your email.',false);return}
+  const btn=document.getElementById('forgot-btn');btn.disabled=true;btn.textContent='Sending…';
+  try{await fetch(API+'/auth/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});lmsg('✅ Reset link sent to '+email+' — check your inbox.',true);btn.textContent='Sent!';setTimeout(()=>{btn.disabled=false;btn.textContent='Send reset link →'},4000)}
+  catch(e){lmsg('Something went wrong.',false);btn.disabled=false;btn.textContent='Send reset link →'}
+}
+
+async function handleLogin(){
+  const email=document.getElementById('lin-email').value.trim();
+  const pwd=document.getElementById('lin-pwd').value;
+  if(!email||!pwd){lmsg('Please enter your email and password.',false);return}
+  const btn=document.getElementById('lin-btn');btn.disabled=true;btn.textContent='Signing in…';
+  try{
+    const res=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pwd})});
+    const data=await res.json();
+    if(!res.ok){lmsg(data.error||'Invalid email or password.',false);btn.disabled=false;btn.textContent='Sign In →';return}
+    saveSession(data);
+    const sr=await fetch(API+'/subscription',{headers:{'Authorization':'Bearer '+data.access_token}});
+    const sd=await sr.json();
+    if(sd.subscribed){window.location.href=APP+'/success.html?skip=1'}
+    else{document.getElementById('login-box').classList.remove('open');document.getElementById('email').value=email;showG('✅ Signed in! Enter a password below to continue.',true)}
+  }catch(e){lmsg('Something went wrong.',false);btn.disabled=false;btn.textContent='Sign In →'}
+}
+
+// Social sign-in
+let _supabase = null;
+async function getSupabase() {
+  if (_supabase) return _supabase;
+  const cfg = await fetch(API + '/supabase-config').then(r => r.json());
+  const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+  _supabase = createClient(cfg.url, cfg.anonKey);
+  return _supabase;
+}
+async function socialSignIn(provider) {
+  try {
+    const sb = await getSupabase();
+    const { error } = await sb.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: APP + '/index.html' }
+    });
+    if (error) throw error;
+  } catch(e) { lmsg('Sign in failed: ' + e.message, false); }
+}
+
+const _p=new URLSearchParams(window.location.search);
+if(_p.get('email'))document.getElementById('email').value=_p.get('email');
+</script>
+</body>
+</html>
