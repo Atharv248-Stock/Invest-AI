@@ -1522,33 +1522,48 @@ app.post('/api/fundamentals', async (req, res) => {
   const { ticker } = req.body;
   if (!ticker) return res.status(400).json({ error: 'ticker required' });
 
+  // Serve from nightly cache first
   const cached = valuationCache.stocks?.[ticker];
   if (cached?.fundamentals) {
     console.log(`📊 Fundamentals served from cache for ${ticker}`);
     return res.json(cached.fundamentals);
   }
 
-  // Not in cache yet — call Claude live as fallback
+  // Fallback: construct partial fundamentals from existing cache data
+  if (cached) {
+    console.log(`📊 Fundamentals partial from cache for ${ticker}`);
+    const partial = {
+      pe: cached.metric?.includes('P/E') ? cached.metric.replace('P/E ','') : 'N/A',
+      pb: 'N/A', ps: 'N/A', fps: 'N/A',
+      gm: 'N/A', om: 'N/A', roe: 'N/A', roce: 'N/A',
+      rev_yoy: 'N/A', rev_cagr: 'N/A', eps_yoy: 'N/A', eps_cagr: 'N/A',
+      de: 'N/A', cr: 'N/A', cash: 'N/A', dilution: 'N/A',
+      _note: 'Full fundamentals will load after tonight\'s cache refresh'
+    };
+    return res.json(partial);
+  }
+
+  // Live fallback using Haiku (cheapest model)
   const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return res.status(500).json({ error: 'API key not set.' });
+  if (!apiKey) return res.status(500).json({ error: 'API key not configured' });
+
   try {
-    const prompt = `Give me the latest fundamental metrics for ${ticker} stock. Return ONLY a JSON object with these exact keys, no markdown:\n{"pe":"trailing P/E or N/A","pb":"price/book or N/A","ps":"price/sales TTM or N/A","fps":"forward P/S or N/A","gm":"gross margin % or N/A","om":"operating margin % or N/A","roe":"ROE % or N/A","roce":"ROCE % or N/A","rev_yoy":"revenue YoY % or N/A","rev_cagr":"revenue 3yr CAGR or N/A","eps_yoy":"EPS YoY % or N/A","eps_cagr":"EPS 3yr CAGR or N/A","de":"debt/equity or N/A","cr":"current ratio or N/A","cash":"total cash e.g. $8.3B or N/A","dilution":"equity dilution % 3yr or N/A"}`;
+    const prompt = `Give latest fundamental metrics for ${ticker}. Return ONLY valid JSON, no markdown:\n{"pe":"P/E or N/A","pb":"P/B or N/A","ps":"P/S or N/A","fps":"fwd P/S or N/A","gm":"gross margin or N/A","om":"op margin or N/A","roe":"ROE or N/A","roce":"ROCE or N/A","rev_yoy":"rev growth YoY or N/A","rev_cagr":"rev 3yr CAGR or N/A","eps_yoy":"EPS YoY or N/A","eps_cagr":"EPS 3yr CAGR or N/A","de":"D/E or N/A","cr":"current ratio or N/A","cash":"cash e.g. $8B or N/A","dilution":"dilution 3yr or N/A"}`;
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 400, messages: [{ role: 'user', content: prompt }] })
+      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 300, messages: [{ role: 'user', content: prompt }] })
     });
     const data = await response.json();
-    if (!response.ok) throw new Error(data.error?.message || 'API error ' + response.status);
-    const text  = data.content?.[0]?.text || '{}';
-    const clean = text.replace(/```json|```/g, '').trim();
+    console.log(`📊 Fundamentals live call for ${ticker}: status ${response.status}, error: ${data.error?.message || 'none'}`);
+    if (!response.ok) throw new Error(data.error?.message || `API ${response.status}`);
+    const text   = data.content?.[0]?.text || '{}';
+    const clean  = text.replace(/```json|```/g, '').trim();
     const parsed = JSON.parse(clean);
-    // Store in cache for next time
     if (valuationCache.stocks?.[ticker]) valuationCache.stocks[ticker].fundamentals = parsed;
-    console.log(`📊 Fundamentals fetched live for ${ticker}`);
     res.json(parsed);
   } catch(e) {
-    console.error(`Fundamentals error for ${ticker}:`, e.message);
+    console.error(`Fundamentals live error for ${ticker}:`, e.message);
     res.status(500).json({ error: e.message });
   }
 });
