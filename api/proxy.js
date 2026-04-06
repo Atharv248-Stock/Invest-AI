@@ -1230,6 +1230,33 @@ app.post('/api/admin/fix-subscription', async (req, res) => {
   }
 });
 
+// POST /api/sector-insight — 1-para AI insight on portfolio sector distribution
+app.post('/api/sector-insight', async (req, res) => {
+  const { summary, total } = req.body;
+  if (!summary) return res.status(400).json({ error: 'summary required' });
+
+  try {
+    const Anthropic = require('@anthropic-ai/sdk');
+    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+    const msg = await client.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 180,
+      messages: [{
+        role: 'user',
+        content: `You are a portfolio analyst. Here is a stock portfolio breakdown (${total} stocks total): ${summary}.
+
+Write exactly ONE concise paragraph (2-3 sentences max) that notes: any overconcentration in a sector, whether any heavily-weighted sector looks stretched on valuation right now, or where genuine value exists. Be specific and direct. No preamble, no bullet points, no headers. Plain text only.`
+      }]
+    });
+
+    res.json({ insight: msg.content[0]?.text?.trim() || '' });
+  } catch(e) {
+    console.error('Sector insight error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // POST /api/fundamentals — AI-powered stock fundamentals (4 groups, 16 metrics)
 app.post('/api/fundamentals', async (req, res) => {
   const { ticker } = req.body;
