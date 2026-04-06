@@ -1151,31 +1151,61 @@ app.get('/api/stock-news/:ticker', async (req, res) => {
   if (!ticker) return res.status(400).json({ error: 'ticker required' });
 
   try {
+    // Try Yahoo Finance RSS directly (server can reach it without CORS proxy)
     const rssUrl = `https://feeds.finance.yahoo.com/rss/2.0/headline?s=${ticker}&region=US&lang=en-US`;
-    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(rssUrl)}`;
-    const response = await fetch(proxyUrl, { signal: AbortSignal.timeout(6000) });
-    if (!response.ok) throw new Error('RSS fetch failed');
-    const xml = await response.text();
+    let xml = '';
 
-    // Parse RSS items
+    try {
+      const response = await fetch(rssUrl, {
+        signal: AbortSignal.timeout(8000),
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; InvestAI/1.0)' }
+      });
+      if (response.ok) xml = await response.text();
+    } catch(e) {
+      console.warn(`Direct Yahoo RSS failed for ${ticker}: ${e.message}`);
+    }
+
+    // Fallback: use Claude to generate recent news summary if RSS fails
+    if (!xml || xml.length < 100) {
+      const apiKey = process.env.ANTHROPIC_API_KEY;
+      if (apiKey) {
+        const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+          body: JSON.stringify({
+            model: 'claude-haiku-4-5-20251001',
+            max_tokens: 400,
+            messages: [{ role: 'user', content: `List 5 recent significant news events for ${ticker} stock (earnings, launches, management changes, buybacks, analyst upgrades etc). Return ONLY a JSON array: [{"title":"...", "source":"...", "link":"https://finance.yahoo.com/quote/${ticker}"}]. No markdown.` }]
+          })
+        });
+        const aiData = await aiRes.json();
+        const text = aiData.content?.[0]?.text || '[]';
+        try {
+          const items = JSON.parse(text.replace(/```json|```/g, '').trim());
+          return res.json({ ticker, items: items.slice(0, 5), source: 'ai' });
+        } catch(e) {}
+      }
+      return res.json({ ticker, items: [] });
+    }
+
+    // Parse RSS XML
     const items = [];
     const itemMatches = xml.matchAll(/<item>([\s\S]*?)<\/item>/g);
     for (const match of itemMatches) {
       const item = match[1];
-      const title = item.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/)?.[1] ||
-                    item.match(/<title>(.*?)<\/title>/)?.[1] || '';
-      const link  = item.match(/<link>(.*?)<\/link>/)?.[1] ||
-                    item.match(/<guid[^>]*>(.*?)<\/guid>/)?.[1] || '';
+      const title   = item.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/)?.[1] ||
+                      item.match(/<title>(.*?)<\/title>/)?.[1] || '';
+      const link    = item.match(/<link>(.*?)<\/link>/)?.[1] ||
+                      item.match(/<guid[^>]*>(.*?)<\/guid>/)?.[1] || '';
       const pubDate = item.match(/<pubDate>(.*?)<\/pubDate>/)?.[1] || '';
-      const source = item.match(/<source[^>]*>(.*?)<\/source>/)?.[1] || 'Yahoo Finance';
-      if (title && link) {
-        items.push({ title: title.trim(), link: link.trim(), pubDate, source });
-      }
+      const source  = item.match(/<source[^>]*>(.*?)<\/source>/)?.[1] || 'Yahoo Finance';
+      if (title && link) items.push({ title: title.trim(), link: link.trim(), pubDate, source });
       if (items.length >= 6) break;
     }
+    console.log(`📰 News fetched for ${ticker}: ${items.length} items`);
     res.json({ ticker, items });
   } catch(e) {
-    console.warn(`News fetch failed for ${ticker}:`, e.message);
+    console.warn(`News endpoint error for ${ticker}:`, e.message);
     res.json({ ticker, items: [] });
   }
 });
@@ -1498,7 +1528,7 @@ app.post('/api/fundamentals', async (req, res) => {
   }
 });
 
-  — trigger welcome email without real payment
+// POST /api/admin/test-email — trigger welcome email without real payment
 app.post('/api/admin/test-email', async (req, res) => {
   const secret = req.headers['x-admin-secret'] || req.query.secret || req.body?.secret;
   const validSecret = process.env.CACHE_ADMIN_SECRET || 'investai2024';
