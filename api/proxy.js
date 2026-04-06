@@ -1074,9 +1074,11 @@ Rules:
 - bull: exactly 3 specific bullish points WITH data/numbers (not vague)
 - bear: exactly 3 specific bearish risks WITH data/numbers (brutally honest)
 - pills: exactly 4 items alternating [label, colorClass, label, colorClass]. Colors: pg=green pb=blue py=gold pp=purple pr=red
+- fundamentals: object with keys pe,pb,ps,fps,gm,om,roe,roce,rev_yoy,rev_cagr,eps_yoy,eps_cagr,de,cr,cash,dilution — use real values formatted cleanly e.g. "24.5x","45.2%","$8.3B" or "N/A"
+- news: array of 4 recent significant events [{title,source,type}] where type is one of: earnings|dividend|buyback|launch|management|analyst|macro
 
 Return ONLY this JSON (no other text, no markdown):
-{"marketNote":"one sentence on current market","stocks":{"TICKER":{"status":"cheap|fair|expensive","metric":"X","valNote":"X","why":"X","bull":["point1","point2","point3"],"bear":["risk1","risk2","risk3"],"pills":["l1","pg","l2","pb"]}}}`;
+{"marketNote":"one sentence on current market","stocks":{"TICKER":{"status":"cheap|fair|expensive","metric":"X","valNote":"X","why":"X","bull":["point1","point2","point3"],"bear":["risk1","risk2","risk3"],"pills":["l1","pg","l2","pb"],"fundamentals":{"pe":"X","pb":"X","ps":"X","fps":"X","gm":"X","om":"X","roe":"X","roce":"X","rev_yoy":"X","rev_cagr":"X","eps_yoy":"X","eps_cagr":"X","de":"X","cr":"X","cash":"X","dilution":"X"},"news":[{"title":"X","source":"X","type":"X"}]}}}`;
 
     try {
       const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -1088,7 +1090,7 @@ Return ONLY this JSON (no other text, no markdown):
         },
         body: JSON.stringify({
           model:      'claude-sonnet-4-20250514',
-          max_tokens: 6000,
+          max_tokens: 8000,
           messages:   [{ role: 'user', content: prompt }],
         }),
       });
@@ -1150,11 +1152,17 @@ app.get('/api/stock-news/:ticker', async (req, res) => {
   const ticker = req.params.ticker?.toUpperCase();
   if (!ticker) return res.status(400).json({ error: 'ticker required' });
 
+  // Serve from nightly cache first
+  const cached = valuationCache.stocks?.[ticker];
+  if (cached?.news?.length) {
+    console.log(`📰 News served from cache for ${ticker}`);
+    return res.json({ ticker, items: cached.news, fromCache: true });
+  }
+
+  // Fallback: fetch Yahoo RSS directly
   try {
-    // Try Yahoo Finance RSS directly (server can reach it without CORS proxy)
     const rssUrl = `https://feeds.finance.yahoo.com/rss/2.0/headline?s=${ticker}&region=US&lang=en-US`;
     let xml = '';
-
     try {
       const response = await fetch(rssUrl, {
         signal: AbortSignal.timeout(8000),
@@ -1162,28 +1170,28 @@ app.get('/api/stock-news/:ticker', async (req, res) => {
       });
       if (response.ok) xml = await response.text();
     } catch(e) {
-      console.warn(`Direct Yahoo RSS failed for ${ticker}: ${e.message}`);
+      console.warn(`Yahoo RSS failed for ${ticker}: ${e.message}`);
     }
 
-    // Fallback: use Claude to generate recent news summary if RSS fails
     if (!xml || xml.length < 100) {
+      // Fallback: Claude Haiku generates news summary
       const apiKey = process.env.ANTHROPIC_API_KEY;
       if (apiKey) {
-        const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
-          body: JSON.stringify({
-            model: 'claude-haiku-4-5-20251001',
-            max_tokens: 400,
-            messages: [{ role: 'user', content: `List 5 recent significant news events for ${ticker} stock (earnings, launches, management changes, buybacks, analyst upgrades etc). Return ONLY a JSON array: [{"title":"...", "source":"...", "link":"https://finance.yahoo.com/quote/${ticker}"}]. No markdown.` }]
-          })
-        });
-        const aiData = await aiRes.json();
-        const text = aiData.content?.[0]?.text || '[]';
         try {
-          const items = JSON.parse(text.replace(/```json|```/g, '').trim());
-          return res.json({ ticker, items: items.slice(0, 5), source: 'ai' });
-        } catch(e) {}
+          const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+            body: JSON.stringify({
+              model: 'claude-haiku-4-5-20251001', max_tokens: 300,
+              messages: [{ role: 'user', content: `List 4 recent significant news events for ${ticker} stock. Return ONLY JSON array: [{"title":"...","source":"...","type":"earnings|dividend|buyback|launch|management|analyst","link":"https://finance.yahoo.com/quote/${ticker}/news/"}]. No markdown.` }]
+            })
+          });
+          const aiData = await aiRes.json();
+          const text   = aiData.content?.[0]?.text || '[]';
+          const items  = JSON.parse(text.replace(/```json|```/g, '').trim());
+          if (valuationCache.stocks?.[ticker]) valuationCache.stocks[ticker].news = items;
+          return res.json({ ticker, items: items.slice(0, 5) });
+        } catch(e) { console.warn('AI news fallback failed:', e.message); }
       }
       return res.json({ ticker, items: [] });
     }
@@ -1192,20 +1200,19 @@ app.get('/api/stock-news/:ticker', async (req, res) => {
     const items = [];
     const itemMatches = xml.matchAll(/<item>([\s\S]*?)<\/item>/g);
     for (const match of itemMatches) {
-      const item = match[1];
-      const title   = item.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/)?.[1] ||
-                      item.match(/<title>(.*?)<\/title>/)?.[1] || '';
-      const link    = item.match(/<link>(.*?)<\/link>/)?.[1] ||
-                      item.match(/<guid[^>]*>(.*?)<\/guid>/)?.[1] || '';
+      const item    = match[1];
+      const title   = item.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/)?.[1] || item.match(/<title>(.*?)<\/title>/)?.[1] || '';
+      const link    = item.match(/<link>(.*?)<\/link>/)?.[1] || item.match(/<guid[^>]*>(.*?)<\/guid>/)?.[1] || '';
       const pubDate = item.match(/<pubDate>(.*?)<\/pubDate>/)?.[1] || '';
       const source  = item.match(/<source[^>]*>(.*?)<\/source>/)?.[1] || 'Yahoo Finance';
       if (title && link) items.push({ title: title.trim(), link: link.trim(), pubDate, source });
       if (items.length >= 6) break;
     }
-    console.log(`📰 News fetched for ${ticker}: ${items.length} items`);
+    if (items.length && valuationCache.stocks?.[ticker]) valuationCache.stocks[ticker].news = items;
+    console.log(`📰 News fetched live for ${ticker}: ${items.length} items`);
     res.json({ ticker, items });
   } catch(e) {
-    console.warn(`News endpoint error for ${ticker}:`, e.message);
+    console.warn(`News error for ${ticker}:`, e.message);
     res.json({ ticker, items: [] });
   }
 });
@@ -1475,52 +1482,70 @@ app.post('/api/admin/fix-subscription', async (req, res) => {
   }
 });
 
-// POST /api/sector-insight — 1-para AI insight on portfolio sector distribution
+// POST /api/sector-insight — compute from cache, no live API call
 app.post('/api/sector-insight', async (req, res) => {
   const { summary, total } = req.body;
   if (!summary) return res.status(400).json({ error: 'summary required' });
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return res.status(500).json({ error: 'API key not set.' });
-  try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 180,
-        messages: [{ role: 'user', content: `You are a portfolio analyst. Here is a stock portfolio breakdown (${total} stocks total): ${summary}.\n\nWrite exactly ONE concise paragraph (2-3 sentences max) that notes: any overconcentration in a sector, whether any heavily-weighted sector looks stretched on valuation right now, or where genuine value exists. Be specific and direct. No preamble, no bullet points, no headers. Plain text only.` }]
-      })
-    });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error?.message || 'API error');
-    res.json({ insight: data.content?.[0]?.text?.trim() || '' });
-  } catch(e) {
-    console.error('Sector insight error:', e.message);
-    res.status(500).json({ error: e.message });
+  // Parse summary to find dominant sector and value opportunities
+  const lines = summary.split('; ').map(l => {
+    const m = l.match(/^(.+): (\d+) stocks, (\d+) cheap$/);
+    return m ? { cat: m[1], count: +m[2], cheap: +m[3] } : null;
+  }).filter(Boolean);
+
+  if (!lines.length) return res.json({ insight: 'Portfolio diversified across multiple sectors.' });
+
+  const top     = lines[0];
+  const topPct  = Math.round((top.count / total) * 100);
+  const valueOps = lines.filter(l => l.cheap > 0 && l.cheap === l.count);
+  const stretched = lines.filter(l => l.cheap === 0 && l.count >= 2);
+
+  let insight = '';
+  if (topPct >= 35) {
+    insight += `${top.cat} represents ${topPct}% of your portfolio — significant concentration risk if that sector rotates. `;
   }
+  if (stretched.length) {
+    insight += `${stretched.map(s => s.cat).join(' and ')} ${stretched.length > 1 ? 'appear' : 'appears'} fully valued with no cheap names — consider trimming on strength. `;
+  }
+  if (valueOps.length) {
+    insight += `${valueOps.map(v => v.cat).join(' and ')} ${valueOps.length > 1 ? 'offer' : 'offers'} the best value — all holdings screen as cheap or fair value.`;
+  }
+  if (!insight) {
+    insight = `Portfolio is well-diversified across ${lines.length} sectors with ${lines.reduce((a,l) => a + l.cheap, 0)} of ${total} stocks screening as cheap or fair value.`;
+  }
+
+  res.json({ insight: insight.trim() });
 });
 
-// POST /api/fundamentals — AI-powered stock fundamentals (4 groups, 16 metrics)
+// POST /api/fundamentals — serve from nightly cache (no live API call)
 app.post('/api/fundamentals', async (req, res) => {
   const { ticker } = req.body;
   if (!ticker) return res.status(400).json({ error: 'ticker required' });
 
+  const cached = valuationCache.stocks?.[ticker];
+  if (cached?.fundamentals) {
+    console.log(`📊 Fundamentals served from cache for ${ticker}`);
+    return res.json(cached.fundamentals);
+  }
+
+  // Not in cache yet — call Claude live as fallback
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return res.status(500).json({ error: 'API key not set.' });
   try {
-    const prompt = `Give me the latest fundamental metrics for ${ticker} stock. Return ONLY a JSON object with these exact keys, no markdown, no explanation:\n{\n  "pe": "trailing P/E ratio or N/A",\n  "pb": "price to book ratio or N/A",\n  "ps": "price to sales (TTM) or N/A",\n  "fps": "forward price to sales or N/A",\n  "gm": "gross margin % e.g. 45.2% or N/A",\n  "om": "operating margin % or N/A",\n  "roe": "return on equity % or N/A",\n  "roce": "return on capital employed % or N/A",\n  "rev_yoy": "revenue growth YoY % or N/A",\n  "rev_cagr": "revenue 3yr CAGR % or N/A",\n  "eps_yoy": "EPS growth YoY % or N/A",\n  "eps_cagr": "EPS 3yr CAGR % or N/A",\n  "de": "debt to equity ratio or N/A",\n  "cr": "current ratio or N/A",\n  "cash": "total cash e.g. $12.4B or N/A",\n  "dilution": "equity dilution % last 3yrs or N/A"\n}\nUse most recent available data (TTM/annual). Format numbers cleanly e.g. 24.5x, 3.2x, 45.2%, $8.3B. If genuinely unknown use N/A.`;
+    const prompt = `Give me the latest fundamental metrics for ${ticker} stock. Return ONLY a JSON object with these exact keys, no markdown:\n{"pe":"trailing P/E or N/A","pb":"price/book or N/A","ps":"price/sales TTM or N/A","fps":"forward P/S or N/A","gm":"gross margin % or N/A","om":"operating margin % or N/A","roe":"ROE % or N/A","roce":"ROCE % or N/A","rev_yoy":"revenue YoY % or N/A","rev_cagr":"revenue 3yr CAGR or N/A","eps_yoy":"EPS YoY % or N/A","eps_cagr":"EPS 3yr CAGR or N/A","de":"debt/equity or N/A","cr":"current ratio or N/A","cash":"total cash e.g. $8.3B or N/A","dilution":"equity dilution % 3yr or N/A"}`;
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 600, messages: [{ role: 'user', content: prompt }] })
+      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 400, messages: [{ role: 'user', content: prompt }] })
     });
     const data = await response.json();
-    if (!response.ok) throw new Error(data.error?.message || 'API error');
-    const text = data.content?.[0]?.text || '{}';
+    if (!response.ok) throw new Error(data.error?.message || 'API error ' + response.status);
+    const text  = data.content?.[0]?.text || '{}';
     const clean = text.replace(/```json|```/g, '').trim();
     const parsed = JSON.parse(clean);
-    console.log(`📊 Fundamentals fetched for ${ticker}`);
+    // Store in cache for next time
+    if (valuationCache.stocks?.[ticker]) valuationCache.stocks[ticker].fundamentals = parsed;
+    console.log(`📊 Fundamentals fetched live for ${ticker}`);
     res.json(parsed);
   } catch(e) {
     console.error(`Fundamentals error for ${ticker}:`, e.message);
