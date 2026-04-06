@@ -395,9 +395,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
   if (!email) return res.status(400).json({ error: 'Email required.' });
   try {
     const supabaseClient = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
-    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-      redirectTo: 'https://atharv248-stock.github.io/Invest-AI/index.html',
-    });
+    const { error } = await supabaseClient.auth.resetPasswordForEmail(email);
     if (error) console.warn('Reset email error:', error.message);
     else console.log(`📧 Password reset email sent via Supabase for: ${email}`);
   } catch(e) {
@@ -1232,7 +1230,55 @@ app.post('/api/admin/fix-subscription', async (req, res) => {
   }
 });
 
-// POST /api/admin/test-email  — trigger welcome email without real payment
+// POST /api/fundamentals — AI-powered stock fundamentals (4 groups, 16 metrics)
+app.post('/api/fundamentals', async (req, res) => {
+  const { ticker } = req.body;
+  if (!ticker) return res.status(400).json({ error: 'ticker required' });
+
+  try {
+    const Anthropic = require('@anthropic-ai/sdk');
+    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+    const msg = await client.messages.create({
+      model: 'claude-opus-4-5-20251101',
+      max_tokens: 600,
+      messages: [{
+        role: 'user',
+        content: `Give me the latest fundamental metrics for ${ticker} stock. Return ONLY a JSON object with these exact keys, no markdown, no explanation:
+{
+  "pe": "trailing P/E ratio or N/A",
+  "pb": "price to book ratio or N/A",
+  "ps": "price to sales (TTM) or N/A",
+  "fps": "forward price to sales or N/A",
+  "gm": "gross margin % e.g. 45.2% or N/A",
+  "om": "operating margin % or N/A",
+  "roe": "return on equity % or N/A",
+  "roce": "return on capital employed % or N/A",
+  "rev_yoy": "revenue growth YoY % or N/A",
+  "rev_cagr": "revenue 3yr CAGR % or N/A",
+  "eps_yoy": "EPS growth YoY % or N/A",
+  "eps_cagr": "EPS 3yr CAGR % or N/A",
+  "de": "debt to equity ratio or N/A",
+  "cr": "current ratio or N/A",
+  "cash": "total cash e.g. $12.4B or N/A",
+  "dilution": "equity dilution % last 3yrs or N/A"
+}
+Use most recent available data (TTM/annual). Format numbers cleanly e.g. 24.5x, 3.2x, 45.2%, $8.3B. If genuinely unknown use N/A.`
+      }]
+    });
+
+    const text = msg.content[0]?.text || '{}';
+    const clean = text.replace(/```json|```/g, '').trim();
+    const data = JSON.parse(clean);
+    console.log(`📊 Fundamentals fetched for ${ticker}`);
+    res.json(data);
+  } catch(e) {
+    console.error(`Fundamentals error for ${ticker}:`, e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+  — trigger welcome email without real payment
 app.post('/api/admin/test-email', async (req, res) => {
   const secret = req.headers['x-admin-secret'] || req.query.secret || req.body?.secret;
   const validSecret = process.env.CACHE_ADMIN_SECRET || 'investai2024';
