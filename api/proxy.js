@@ -1062,7 +1062,7 @@ async function runValuationBatch() {
 
     const prompt = `You are a senior equity analyst at a top-tier hedge fund. Date: ${new Date().toLocaleDateString()}.
 
-Analyze these tickers with COMPLETELY BALANCED bull and bear cases. Be specific and data-driven. The bear case must be as compelling as the bull case — no promotional bias.
+Analyze these tickers with COMPLETELY BALANCED bull and bear cases. Be specific and data-driven.
 
 Tickers: ${chunk.join(', ')}
 
@@ -1070,15 +1070,14 @@ Rules:
 - status: "cheap" if >15% below 5yr avg multiple, "fair" if within 15%, "expensive" if >20% above
 - metric: current multiple e.g. "P/E 14x" or "PEG 1.4" or "EV/EBITDA 8x"
 - valNote: max 8 words explaining valuation
-- why: max 25 words balanced investment thesis (not one-sided)
-- bull: exactly 3 specific bullish points WITH data/numbers (not vague)
-- bear: exactly 3 specific bearish risks WITH data/numbers (brutally honest)
+- why: max 25 words balanced investment thesis
+- bull: exactly 3 specific bullish points WITH data/numbers
+- bear: exactly 3 specific bearish risks WITH data/numbers
 - pills: exactly 4 items alternating [label, colorClass, label, colorClass]. Colors: pg=green pb=blue py=gold pp=purple pr=red
-- fundamentals: object with keys pe,pb,ps,fps,gm,om,roe,roce,rev_yoy,rev_cagr,eps_yoy,eps_cagr,de,cr,cash,dilution — use real values formatted cleanly e.g. "24.5x","45.2%","$8.3B" or "N/A"
-- news: array of 4 recent significant events [{title,source,type}] where type is one of: earnings|dividend|buyback|launch|management|analyst|macro
+- news: array of 3 recent events [{title,source,type}] type=earnings|dividend|buyback|launch|management|analyst
 
 Return ONLY this JSON (no other text, no markdown):
-{"marketNote":"one sentence on current market","stocks":{"TICKER":{"status":"cheap|fair|expensive","metric":"X","valNote":"X","why":"X","bull":["point1","point2","point3"],"bear":["risk1","risk2","risk3"],"pills":["l1","pg","l2","pb"],"fundamentals":{"pe":"X","pb":"X","ps":"X","fps":"X","gm":"X","om":"X","roe":"X","roce":"X","rev_yoy":"X","rev_cagr":"X","eps_yoy":"X","eps_cagr":"X","de":"X","cr":"X","cash":"X","dilution":"X"},"news":[{"title":"X","source":"X","type":"X"}]}}}`;
+{"marketNote":"one sentence on current market","stocks":{"TICKER":{"status":"cheap|fair|expensive","metric":"X","valNote":"X","why":"X","bull":["p1","p2","p3"],"bear":["r1","r2","r3"],"pills":["l1","pg","l2","pb"],"news":[{"title":"X","source":"X","type":"X"}]}}}`;
 
     try {
       const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -1090,7 +1089,7 @@ Return ONLY this JSON (no other text, no markdown):
         },
         body: JSON.stringify({
           model:      'claude-sonnet-4-20250514',
-          max_tokens: 8000,
+          max_tokens: 4000,
           messages:   [{ role: 'user', content: prompt }],
         }),
       });
@@ -1122,8 +1121,8 @@ Return ONLY this JSON (no other text, no markdown):
 
       console.log(`✅ Chunk ${i+1} done — ${Object.keys(stocks).length} stocks`);
 
-      // 2s delay between chunks to avoid rate limits
-      if (i < chunks.length - 1) await new Promise(r => setTimeout(r, 2000));
+      // 10s delay between chunks to stay under 8k tokens/min rate limit
+      if (i < chunks.length - 1) await new Promise(r => setTimeout(r, 10000));
 
     } catch (err) {
       console.error(`❌ Chunk ${i+1} failed:`, err.message);
@@ -1138,9 +1137,50 @@ Return ONLY this JSON (no other text, no markdown):
     };
     saveCacheToDisk();
     console.log(`✅ Batch complete — ${Object.keys(allStocks).length} stocks cached.`);
+    // Run fundamentals batch after a 30s pause
+    setTimeout(runFundamentalsBatch, 30000);
   } else {
     console.error('❌ Batch produced no results.');
   }
+}
+
+// Separate fundamentals batch — runs after main batch, 5 tickers at a time
+async function runFundamentalsBatch() {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) return;
+  const tickers = Object.keys(valuationCache.stocks || {});
+  if (!tickers.length) return;
+  console.log(`📊 Starting fundamentals batch for ${tickers.length} stocks...`);
+
+  const chunks = [];
+  for (let i = 0; i < tickers.length; i += 5) chunks.push(tickers.slice(i, i + 5));
+
+  for (let i = 0; i < chunks.length; i++) {
+    const chunk = chunks[i];
+    try {
+      const prompt = `Give fundamental metrics for these stocks: ${chunk.join(', ')}. Return ONLY JSON:\n{"TICKER":{"pe":"X","pb":"X","ps":"X","fps":"X","gm":"X","om":"X","roe":"X","roce":"X","rev_yoy":"X","rev_cagr":"X","eps_yoy":"X","eps_cagr":"X","de":"X","cr":"X","cash":"X","dilution":"X"}}\nFormat: "24.5x","45.2%","$8.3B" or "N/A". No markdown.`;
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] })
+      });
+      if (!response.ok) { console.warn(`📊 Fundamentals chunk ${i+1} rate limited — skipping`); await new Promise(r => setTimeout(r, 15000)); continue; }
+      const data = await response.json();
+      const text = (data.content?.[0]?.text || '{}').replace(/```json|```/g, '').trim();
+      const parsed = JSON.parse(text);
+      // Merge into cache
+      Object.entries(parsed).forEach(([t, funds]) => {
+        if (valuationCache.stocks?.[t]) valuationCache.stocks[t].fundamentals = funds;
+      });
+      console.log(`📊 Fundamentals chunk ${i+1}/${chunks.length} done`);
+      if (i < chunks.length - 1) await new Promise(r => setTimeout(r, 12000));
+    } catch(e) {
+      console.warn(`📊 Fundamentals chunk ${i+1} error:`, e.message);
+      await new Promise(r => setTimeout(r, 10000));
+    }
+  }
+  saveCacheToDisk();
+  console.log('✅ Fundamentals batch complete');
 }
 
 cron.schedule('0 23 * * *', runValuationBatch, { timezone: 'UTC' });
