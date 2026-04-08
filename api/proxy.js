@@ -188,10 +188,10 @@ app.use((req, res, next) => {
   if (req.path.startsWith('/api/admin/') || req.path.startsWith('/api/run-cache')) {
     res.setHeader('Access-Control-Allow-Origin', origin || '*');
   } else if (!origin || allowed.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin || '*');
-  } else {
-    res.setHeader('Access-Control-Allow-Origin', 'https://atharv248-stock.github.io');
-  }
+  res.setHeader('Access-Control-Allow-Origin', origin || '*');
+} else {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+}
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-admin-secret');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
